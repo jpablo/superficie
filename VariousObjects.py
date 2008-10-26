@@ -257,11 +257,13 @@ def Tube(p1, p2, escala = 0.01, escalaVertice = 2.0, mat = None, extremos = Fals
 
     
 
-def Line(ptos,col = (1, 1, 1)):
+def Line(ptos,col = (1, 1, 1),width=1):
     coords = SoCoordinate3()
     coords.point.setValues(0,len(ptos),ptos)
     linea = SoLineSet()
     linea.numVertices.setValue(len(ptos))
+    draw = SoDrawStyle()
+    draw.lineWidth.setValue(width)
     mat = SoMaterial()
     mat.diffuseColor = col
     sep = SoSeparator()
