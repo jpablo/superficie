@@ -1,0 +1,85 @@
+#Inventor V2.1 ascii
+
+
+Separator {
+
+  Switch {
+    whichChild 0
+
+    Separator {
+
+      Coordinate3 {
+        point [ 0 0 0,
+            1 0 0,
+            0 1 0,
+            0 0 1 ]
+
+      }
+      DEF eje_X Separator {
+
+        Material {
+          diffuseColor 1 0 0
+
+        }
+        IndexedLineSet {
+          coordIndex [ 0, 1 ]
+
+        }
+        Transform {
+          translation 1 0 0
+          rotation -0 -0 -1  1.5707999
+
+        }
+        Cone {
+          bottomRadius 0.02
+          height 0.1
+
+        }
+      }
+      DEF eje_Y Separator {
+
+        Material {
+          diffuseColor 0 1 0
+
+        }
+        IndexedLineSet {
+          coordIndex [ 0, 2 ]
+
+        }
+        Transform {
+          translation 0 1 0
+          rotation 0 0 1  0
+
+        }
+        Cone {
+          bottomRadius 0.02
+          height 0.1
+          parts (SIDES | BOTTOM)
+
+        }
+      }
+      DEF eje_Z Separator {
+
+        Material {
+          diffuseColor 0 0 1
+
+        }
+        IndexedLineSet {
+          coordIndex [ 0, 3 ]
+
+        }
+        Transform {
+          translation 0 0 1
+          rotation 1 0 0  1.5707999
+
+        }
+        Cone {
+          bottomRadius 0.02
+          height 0.1
+          parts (SIDES | BOTTOM)
+
+        }
+      }
+    }
+  }
+}

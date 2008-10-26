@@ -1,0 +1,55 @@
+#Inventor V2.1 ascii
+
+
+DEF root Switch {
+
+  DEF luces Group {
+
+    LightModel {
+      model PHONG
+
+    }
+    Environment {
+      ambientIntensity 1
+      ambientColor 1 1 1
+
+    }
+    DEF principal TransformSeparator {
+
+      Transform {
+        rotation -0 -1 -0  0.5
+
+      }
+      DirectionalLight {
+        on TRUE
+        intensity 1
+        color 1 0 0
+        direction -0.70710677 0 -0.70710677
+
+      }
+      DirectionalLight {
+        on TRUE
+        intensity 1
+        color 0 1 0
+        direction -0.57735032 -0.57735032 -0.5773502
+
+      }
+      DirectionalLight {
+        on TRUE
+        intensity 1
+        color 0 0 1
+        direction 0 -0.70710677 -0.70710677
+
+      }
+    }
+    Material {
+      ambientColor 0.28999999 0.28999999 0.28999999
+      diffuseColor 1 1 1
+      specularColor 0 0 0
+      emissiveColor [ 0.11 0.11 0.11,
+          0 0 0 ]
+      shininess 0.2
+
+    }
+  }
+}
