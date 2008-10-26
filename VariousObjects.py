@@ -269,5 +269,6 @@ def Line(ptos,col = (1, 1, 1),width=1):
     sep = SoSeparator()
     sep.addChild(mat)
     sep.addChild(coords)
+    sep.addChild(draw)
     sep.addChild(linea)
     return sep
