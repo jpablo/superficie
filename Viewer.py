@@ -76,9 +76,18 @@ class Viewer(QtGui.QWidget):
         self.getSRoot().insertChild(self.lucesColor,0)
         self.lucesColor.whichChild = SO_SWITCH_ALL
         ## ============================
-#        self.lucesBlanca = SoDirectionalLight()
-#        self.getSRoot().insertChild(self.lucesBlanca,0)
-#        self.lucesBlanca.on = True
+        self.lucesBlanca = SoDirectionalLight()
+        self.getSRoot().insertChild(self.lucesBlanca,0)
+        self.lucesBlanca.on = False
+    
+    def setColorLightOn(self, val):
+        if val:
+            self.lucesColor.whichChild = SO_SWITCH_ALL
+        else:
+            self.lucesColor.whichChild = SO_SWITCH_NONE
+    
+    def setWhiteLightOn(self, val):
+        self.lucesBlanca.on = val
     
     def insertaLuz(self, luz):
         self.getSRoot().insertChild(luz, 0)
