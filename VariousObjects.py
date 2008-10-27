@@ -1,6 +1,7 @@
 from pivy.coin import *
 from PyQt4 import QtCore,QtGui
 from superficie.PuntoReflejado import creaPunto
+from superficie.util import wrap
 from math import acos
 #from superficie.util import lstToFloat,readCsv, column
 
@@ -179,15 +180,6 @@ class Polygon(QtCore.QObject):
         coor.point.setValues(0,len(self.coords),self.coords)
 
         
-def wrap(node, show = True):
-    switch = SoSwitch()
-    switch.addChild(node)
-    if show:
-        switch.whichChild = 0
-    else:
-        switch.whichChild = -1
-    return switch
-
 def Sphere(p, radius=.05, mat = None):
     sep = SoSeparator()
     tr = SoTranslation()
@@ -272,3 +264,14 @@ def Line(ptos,col = (1, 1, 1),width=1):
     sep.addChild(draw)
     sep.addChild(linea)
     return sep
+
+    
+def Bundle(c, cp, particion, col, factor=1):
+    tmin, tmax, n = particion
+    puntos = [c(t) for t in intervalPartition([tmin,tmax,n])]
+    puntosp = [c(t)+cp(t)*factor for t in intervalPartition([tmin,tmax,n])]
+    sep = SoSeparator()
+    for p,pp in zip(puntos,puntosp):
+        sep.addChild(Tube(p,pp,extremos=True,escalaVertice=3))
+    return sep
+
