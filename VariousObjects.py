@@ -270,7 +270,9 @@ def Bundle(c, cp, partition, col, factor=1):
     puntos = [c(t) for t in intervalPartition([tmin,tmax,n])]
     puntosp = [c(t)+cp(t)*factor for t in intervalPartition([tmin,tmax,n])]
     sep = SoSeparator()
+    mate = SoMaterial()
+    mate.diffuseColor = col
     for p,pp in zip(puntos,puntosp):
-        sep.addChild(Tube(p,pp,extremos=True,escalaVertice=3))
+        sep.addChild(Tube(p,pp,extremos=True,escalaVertice=3,mat=mate))
     return sep
 
