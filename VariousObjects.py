@@ -1,9 +1,8 @@
 from pivy.coin import *
 from PyQt4 import QtCore,QtGui
-from superficie.PuntoReflejado import creaPunto
 from superficie.util import wrap
 from math import acos
-#from superficie.util import lstToFloat,readCsv, column
+from superficie.util import intervalPartition
 
 def generaPuntos(coords):
     c = coords
@@ -266,8 +265,8 @@ def Line(ptos,col = (1, 1, 1),width=1):
     return sep
 
     
-def Bundle(c, cp, particion, col, factor=1):
-    tmin, tmax, n = particion
+def Bundle(c, cp, partition, col, factor=1):
+    tmin, tmax, n = partition
     puntos = [c(t) for t in intervalPartition([tmin,tmax,n])]
     puntosp = [c(t)+cp(t)*factor for t in intervalPartition([tmin,tmax,n])]
     sep = SoSeparator()
