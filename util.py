@@ -13,6 +13,7 @@ SoInput.addDirectoryFirst(mods)
 #def partial(f,a):
 #    return lambda *b:f(a,*b)
 
+Vec3 = SbVec3f
 
 class partial(object):
     def __init__(*args, **kw):
@@ -407,3 +408,12 @@ def fn(strfunc):
 
 def prueba():
     return globals()
+    
+def wrap(node, show = True):
+    switch = SoSwitch()
+    switch.addChild(node)
+    if show:
+        switch.whichChild = 0
+    else:
+        switch.whichChild = -1
+    return switch
