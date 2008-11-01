@@ -6,15 +6,15 @@ from pivy.gui.soqt import *
 from pivy.coin import *
 from PyQt4 import QtGui, QtCore, uic
 from math import sqrt, pi
-from Parametro import Parametro2
+from Parametro import Parametro
 from util import lee,  GenIntervalo, partial,  conecta
 import logging
 #from numpy import *
-import psyco
-import pp
+#import psyco
+#import pp
 
-job_server = pp.Server()
-print job_server.get_ncpus()
+#job_server = pp.Server()
+#print job_server.get_ncpus()
 
 log = logging.getLogger("MallaBase")
 log.setLevel(logging.DEBUG)
@@ -24,13 +24,13 @@ def malla2(puntos, func,xmin, xinc,nx,ymin, yinc, ny):
     for x in xrange(nx):
         for y in xrange(ny):
             puntos.append( func(xmin+xinc*x,ymin+yinc*y) )
-psyco.bind(malla2)
+#psyco.bind(malla2)
 
 def malla(puntos, func,xmin, xinc,nx,ymin, yinc, ny):
     for x in xrange(nx):
         for y in xrange(ny):
             puntos[ny*x+y] = func(xmin+xinc*x,ymin+yinc*y)
-psyco.bind(malla)
+#psyco.bind(malla)
 
 def processIter(iter, defpts ,  defname):
     if len(iter) == 2 and callable(iter[1]):
@@ -298,26 +298,8 @@ class MallaBase(QtCore.QObject):
         sep.addChild(lineSet)
         return sep
 
-## obsoleto
-#    def setX(self,val):
-#        ## changes de xrange limit. This is acomplished by drawing more or less
-#        ## points at the *same* increment (which is self.rangoX.dt)
-#        self.rangoX.reset(t=val)
-#        for q in self.quads.values():
-#            q["mesh"].verticesPerColumn = self.rangeXpoints()
-#        self.genera()
-#        self.parent.viewer.viewAll()
-#        print "setX"
-#    def setY(self,val):
-#        self.rangoY.reset(t=val)
-#        for q in self.quads.values():
-#            q["mesh"].verticesPerRow = self.rangeYpoints()
-#        self.genera()
-#        self.parent.viewer.viewAll()
 
     def setNpoints(self, nx = None, ny = None, update = True):
-#        print "setNpoints", nx, ny
-#        print len(self.quads)
         ## changes de (x|y)range limit. This is acomplished by drawing more or less
         ## points at the *same* increment (which is self.rangoX.dt)
         if nx != None:
