@@ -5,15 +5,16 @@ from PyQt4 import QtCore
 from random import random
 import os
 
-#print "util.py"
 mods =  os.getcwd()+"\\modulos"
-#print mods
 SoInput.addDirectoryFirst(mods)
 
 #def partial(f,a):
 #    return lambda *b:f(a,*b)
 
 Vec3 = SbVec3f
+
+
+###### Functions ######################
 
 class partial(object):
     def __init__(*args, **kw):
@@ -67,33 +68,17 @@ class dictRepr(dict):
         return self.items()[index][0]
 
         
-## callbaks
-def callback(field, func):
-    sensor = SoFieldSensor(func, field)
+def callback(field, func, data=None):
+    ## the function will be called as:
+    ## func(field,sensor)
+    if data == None:
+        data = field
+    sensor = SoFieldSensor(func, data)
     sensor.attach(field)
+    return sensor
 
 
-
-class OneShot(QtCore.QObject):
-    def __init__(self, duration):
-        QtCore.QObject.__init__(self)
-        self.oneshot = SoOneShot()
-        self.oneshot.duration = duration
-        self.oneshot.flags = SoOneShot.HOLD_FINAL
-        ## necesitamos un SoField para poder extraer el
-        ## valor con getValue()
-        ## ¿se puede obtener directamente el valor de un SoEngineOutput?
-        self.value = SoSFFloat()
-        self.value.connectFrom(self.oneshot.ramp)
-        self.sensor = SoFieldSensor(self.callback, self.value)
-        self.sensor.attach(self.value)
-    def callback(self, ffloat, sensor):
-        t = ffloat.getValue()
-        QtCore.QObject.emit(self, QtCore.SIGNAL("ramp(float)"), t)
-        if t == 1.0:
-            self.emit(QtCore.SIGNAL("finished(bool)"), True)
-    def start(self):
-        self.oneshot.trigger.touch()
+########## Segments, Intervals, Partitions
 
 ## este es un ejercicio no muy util
 ## en manejo de Engines
@@ -120,39 +105,57 @@ class SegmentoEngines(object):
         
 ## esto es mucho mas conciso
 ## ¿será mas rápido?
-class Segmento2(object):
-    def __init__(self, p1, p2):
-        self.v1 = SbVec3f(p1)
-        self.v2 = SbVec3f(p2)
-    def eval(self, t):
-        return tuple(self.v1 - t*(self.v1 - self.v2))
-    def p1(self):
-        return tuple(self.v1)
-    def p2(self):
-        return tuple(self.v2)
-        
-        
 class Segmento(object):
-    "calcula el punto p1 - t (p1 - p2)"
-    def __init__(self,  p1,  p2):
-        self.x1,  self.y1, self.z1 = p1
-        self.x2,  self.y2, self.z2 = p2
-        self.dx = self.x2-self.x1
-        self.dy = self.y2-self.y1
-        self.dz = self.z2-self.z1
-
+    def __init__(self, p1, p2):
+        self.v1 = p1
+        self.v2 = p2
     def eval(self, t):
-        x = t*self.dx + self.x1
-        y = t*self.dy + self.y1
-        z = t*self.dz + self.z1
-        return (x, y, z)
-    
+        return self.v1 - t*(self.v1 - self.v2)
+        
     def p1(self):
-        return (self.x1, self.y1, self.z1)
-
+        return self.v1
     def p2(self):
-        return (self.x2, self.y2, self.z2)
+        return self.v2
 
+## probablemente solo esto sea suficiente        
+def segment(p1,p2,t):
+    return p1 - t * (p1 - p2)
+        
+#class Segmento(object):
+#    "calcula el punto p1 - t (p1 - p2)"
+#    def __init__(self,  p1,  p2):
+#        self.x1,  self.y1, self.z1 = p1
+#        self.x2,  self.y2, self.z2 = p2
+#        self.dx = self.x2-self.x1
+#        self.dy = self.y2-self.y1
+#        self.dz = self.z2-self.z1
+#
+#    def eval(self, t):
+#        x = t*self.dx + self.x1
+#        y = t*self.dy + self.y1
+#        z = t*self.dz + self.z1
+#        return (x, y, z)
+#    
+#    def p1(self):
+#        return (self.x1, self.y1, self.z1)
+#
+#    def p2(self):
+#        return (self.x2, self.y2, self.z2)
+
+        
+#def param(p2,p1,t):
+#    "calcula el punto p2 - t (p2 - p1)"
+#    (x1,y1) = p1
+#    (x2,y2) = p2
+#    return (x2 - t*(x2 - x1), y2 - t*(y2 - y1))
+
+#def param3(p2,p1,t):
+#    "calcula el punto p2 - t (p2 - p1)"
+#    (x1,y1, z1) = p1
+#    (x2,y2, z2) = p2
+#    return (x2 - t*(x2 - x1), y2 - t*(y2 - y1), z2 - t*(z2 - z1))
+
+        
 class GenIntervalo(object):
     def __init__(self, iter, func = None,  tipo='t', name="I"):
         ## tipo = n | t
@@ -219,7 +222,7 @@ class GenIntervalo(object):
                 self.n = self.npoints - 1
             elif self.direccion == -1:
                 self.n = 0
-            raise StopIteration,  self.direccion
+            raise StopIteration, self.direccion
     
 def genIntervalPartition(iter,  func = None):
     "evalua una funcion en los puntos del interval dado"
@@ -245,18 +248,8 @@ def genCircular(lst):
             return
         yield lst[n]
         n = (n + 1) % len(lst)
-        
-def param(p2,p1,t):
-    "calcula el punto p2 - t (p2 - p1)"
-    (x1,y1) = p1
-    (x2,y2) = p2
-    return (x2 - t*(x2 - x1), y2 - t*(y2 - y1))
 
-def param3(p2,p1,t):
-    "calcula el punto p2 - t (p2 - p1)"
-    (x1,y1, z1) = p1
-    (x2,y2, z2) = p2
-    return (x2 - t*(x2 - x1), y2 - t*(y2 - y1), z2 - t*(z2 - z1))
+########## Geometry ##################        
     
 def border(p1,p2,k):
     "calcula la intersección con un círculo de radio k"
@@ -275,8 +268,7 @@ def border(p1,p2,k):
     yfin = y2 - t2 * y2my1
     return [(xini, yini), (xfin, yfin)]
 
-def proyeccion(q, p1, p2):
-    "la proyección"
+def projection(q, p1, p2):
     (x1,y1) = p1
     (x2,y2) = p2
     (x3,y3) = q
@@ -285,40 +277,29 @@ def proyeccion(q, p1, p2):
     y = y2 + (y2-y1) * c
     return (x,y)
 
-def proyeccionVecs(a, u):  
+def projectionVecs(a, u):  
     ## segun mathworld la formula es:
     ## proj_v (a) = (a.u)/|u|^2 * u
     return mult( dot(a, u)/pow(norma(u) , 2),  u )
     
-def reflejado(q, p1, p2):
+def mirror(q, p1, p2):
     m = proyeccion(q, p1, p2)
     return param(q,m,2)
 
-def norma(vec): 
-    return sqrt(sum(i*i for i in vec))
 
-def dot(a, b):
-    return sum(i*j for i, j in zip(a, b))
-    
-def mult(a, vec):
-    return type(vec)(a*i for i in vec)
+########### Open Inventor ##################    
 
-def suma(a, b):
-    return type(a)(i+j for i, j in zip(a, b))
-
-def resta(a, b):
-    return type(a)(i-j for i, j in zip(a, b))
-
-def cross3(a, b):
-    return (-a[2]*b[1] + a[1]*b[2], a[2]*b[0] - a[0]*b[2], -a[1]*b[0] + a[0]*b[1])
-    
-def lee(texto):
+def readBuffer(texto):
     input = SoInput()
     input.setBuffer(texto)
     return SoDB.readAll(input)
 
+def readFile(file):
+    myInput = SoInput()
+    myInput.openFile(file)
+    return SoDB.readAll(myInput)
 
-def buscaTodo(nodo,label):
+def searchAll(nodo,label):
     if nodo.getName().getString() == label:
         return nodo
     childList = nodo.getChildren()
@@ -329,10 +310,10 @@ def buscaTodo(nodo,label):
             ret = buscaTodo(n, label)
             if ret != None:
                 return n
-    ## en cualquier otro caso:
+    ## in any other case
     return None
 
-def busca(nodo,label):
+def search(nodo,label):
     for c in nodo.getChildren():
         if c.getName().getString() == label:
             return c
@@ -361,21 +342,17 @@ def searchByNodeType(root, type, default = None, interest = SoSearchAction.FIRST
         return default
 
 
-def envuelve(nodo, mostrar = True):
+def wrap(node, show = True):
+    if hasattr(node, "root"):
+        node = node.root
     switch = SoSwitch()
-    switch.addChild(nodo)
-    if mostrar:
+    switch.addChild(node)
+    if show:
         switch.whichChild = 0
     else:
         switch.whichChild = -1
     return switch
-
         
-def leeArchivo(file):
-    myInput2 = SoInput()
-    myInput2.openFile(file)
-    return SoDB.readAll(myInput2)
-
    
 def main(args=None):
     if args == None:
@@ -409,11 +386,3 @@ def fn(strfunc):
 def prueba():
     return globals()
     
-def wrap(node, show = True):
-    switch = SoSwitch()
-    switch.addChild(node)
-    if show:
-        switch.whichChild = 0
-    else:
-        switch.whichChild = -1
-    return switch
