@@ -4,7 +4,7 @@ import sys
 from pivy.gui.soqt import *
 from pivy.coin import *
 from PyQt4 import QtGui, QtCore, uic
-from util import main, leeArchivo,  conecta,  buscaTodo,  norma, dictRepr
+from util import main, readFile,  conecta,  dictRepr, callback
 from math import sqrt, cos, sin, asin, pi, pow
 import logging
 
@@ -63,16 +63,27 @@ class Viewer(QtGui.QWidget):
         camera.setStereoAdjustment(val)
 
     def rotacionInicial(self):
-        "Escoge un punto de vista inicial adecuado"
+        "Chose an adecuate initial pov"
         camera = self.viewer.getCamera()
         camera.position = (7,7,7)
         camera.pointAt(SbVec3f(0, 0, 0),  SbVec3f(0, 0, 1))
         camera.farDistance = 25
         camera.nearDistance = .01
-        
+    
+    def trackCameraPosition(self, val):
+        if val:
+            camera = self.viewer.getCamera()
+            if not hasattr(self, "cameraSensor"):
+                def fn(camera, sensor):
+                    print camera.position.getValue().getValue()
+                self.cameraSensor = callback(camera.position, fn, camera)
+            else:
+                self.cameraSensor.attach(camera.position)
+        elif hasattr(self, "cameraSensor"):
+            self.cameraSensor.detach()
         
     def agregaLuces(self, root):
-        self.lucesColor = leeArchivo(modulosPath + "Viewer/lights.iv").getChild(0)
+        self.lucesColor = readFile(modulosPath + "Viewer/lights.iv").getChild(0)
         self.getSRoot().insertChild(self.lucesColor,0)
         self.lucesColor.whichChild = SO_SWITCH_ALL
         ## ============================
@@ -97,6 +108,12 @@ class Viewer(QtGui.QWidget):
         self.__previousChapter = -1
         ## ============================
         self.viewer = SoQtExaminerViewer(self)
+        ## ============================
+        ## copy some attributes
+        for attr in ["viewAll", "setDecoration", "setHeadlight", "setTransparencyType"]:
+            setattr(self, attr, getattr(self.viewer, attr))
+        ## ============================
+        
         self.viewer.setAlphaChannel(True)
         self.viewer.setSceneGraph(root)
         self.viewer.setTransparencyType(SoGLRenderAction.SORTED_LAYERS_BLEND)
@@ -130,7 +147,7 @@ class Viewer(QtGui.QWidget):
         self.setStereoAdjustment(.2)
         ## ===========================
         if 0:
-            self.ejes = leeArchivo("Viewer/axis.iv")[0]
+            self.ejes = readFile("Viewer/axis.iv")[0]
             root.addChild(self.ejes)
             self.ejes.show = lambda val: self.ejes.whichChild.setValue(int(val)-1)
             self.ejes.show(False)
@@ -412,8 +429,9 @@ class Viewer(QtGui.QWidget):
 
     def setDrawStyle(self,type):
         self.viewer.setDrawStyle(SoQtExaminerViewer.STILL, type)
-
-
+    
+    def viewAll(self):
+        self.viewer.viewAll()
 
 if __name__ == "__main__":
     from util import  main
