@@ -2,7 +2,7 @@ from pivy.coin import *
 from PyQt4 import QtCore,QtGui
 from superficie.util import wrap
 from math import acos
-from superficie.util import intervalPartition
+from superficie.util import intervalPartition, Vec3, dictRepr, segment
 
 def generaPuntos(coords):
     c = coords
@@ -28,9 +28,15 @@ indicesCubo = (
 
 
 class Base(QtCore.QObject):
+    "The base class of a container node"
     def __init__(self,name = ""):
         QtCore.QObject.__init__(self)
         self.name = name
+        ## Viewer.addChild will set the correct value
+        self.parent = None
+        ## =========================
+        self.root = SoSeparator()
+        self.children = dictRepr()
         ## =========================
         layout  =  QtGui.QVBoxLayout()
         self.widget = QtGui.QWidget()
@@ -43,6 +49,19 @@ class Base(QtCore.QObject):
 
     def addWidget(self,widget):
         self.widget.layout().addWidget(widget)
+        
+    def addChild(self, node):
+        root = getattr(node, "root", node)
+        self.root.addChild(root)
+        self.children[root] = node
+    
+    def addWidgetChild(self, arg):
+        widget, node = arg
+        self.addWidget(widget)
+        self.addChild(node)
+    
+    def getChildren(self):
+        return self.children.values()
 
 class Cube(QtCore.QObject):
     def __init__(self, mincoord,maxcoord):
@@ -181,6 +200,7 @@ class Polygon(QtCore.QObject):
         
 def Sphere(p, radius=.05, mat = None):
     sep = SoSeparator()
+    sep.setName("Sphere")
     tr = SoTranslation()
     sp = SoSphere()
     sp.radius = radius
@@ -196,83 +216,123 @@ def Sphere(p, radius=.05, mat = None):
     sep.addChild(sp)
     return sep
 
-def Tube(p1, p2, escala = 0.01, escalaVertice = 2.0, mat = None, extremos = False):
-    sep = SoSeparator()
-    if extremos:
-        sep.addChild(Sphere(p1, escala*escalaVertice))
-        #~ sep.addChild(esfera(p2, escala*escalaVertice))
-    tr1 = SoTransform()
-    tr2 = SoTransform()
-    if mat == None:
+class Tube(object):
+    def __init__(self, p1, p2, escala = 0.01, escalaVertice = 2.0, mat = None, extremos = False):
+        self.p1 = p1
+        self.p2inicial = self.p2 = p2
+        self.escala = 0.01
+        self.escalaVertice = escalaVertice
+        ## ============================
+        sep = SoSeparator()
+        sep.setName("Tube")
+        if extremos:
+            sep.addChild(Sphere(p1, escala*escalaVertice))
+            #~ sep.addChild(esfera(p2, escala*escalaVertice))
+        self.tr1 = SoTransform()
+        self.tr2 = SoTransform()
+        if mat == None:
+            mat = SoMaterial()
+            mat.ambientColor.setValue(.0, .0, .0)
+            mat.diffuseColor.setValue(.4, .4, .4)
+            mat.specularColor.setValue(.8, .8, .8)
+            mat.shininess = .1
+        self.cil = wrap(SoCylinder())
+        self.cil.setName("segmento")
+        ## ==========================
+        conoSep = SoSeparator()
+        self.conoTr = SoTransform()
+        cono = SoCone()
+        cono.bottomRadius = .025
+        cono.height = .1
+        mat2 = SoMaterial()
+        mat2.ambientColor.setValue(.33, .22, .27)
+        mat2.diffuseColor.setValue(.78, .57, .11)
+        mat2.specularColor.setValue(.99, .94, .81)
+        mat2.shininess = .28
+        conoSep.addChild(mat2)
+        conoSep.addChild(self.conoTr)
+        conoSep.addChild(cono)
+        ## ==========================
+        sep.addChild(self.tr2)
+        sep.addChild(self.tr1)
+        sep.addChild(mat)
+        sep.addChild(self.cil)
+        sep.addChild(conoSep)
+        ## ============================
+        self.calcTransformation()
+        self.root = sep
+
+    def calcTransformation(self):
+        vec = self.p2-self.p1
+        t = vec.length() if vec.length() != 0 else .00001
+        self.tr1.translation = (0, t/2.0, 0)
+        self.conoTr.translation = (0, t/2.0, 0)
+        self.cil[0].radius = self.escala
+        self.cil[0].height = t
+        self.tr2.translation = self.p1
+        zt = Vec3(0,t,0)
+        ejeRot = zt.cross(vec)
+        ang = acos(zt.dot(vec)/t**2)
+        if ejeRot.length() < .0001:
+            ejeRot = Vec3(1, 0, 0)
+        self.tr2.rotation.setValue(ejeRot, ang)
+
+    def setRadius(self, r):
+        self.cil[0].radius = r
+    
+    def setP2(self, pt):
+        self.p2 = pt
+        self.calcTransformation()
+    
+    def setLengthFactor(self, factor):
+        self.lengthFactor = factor
+        self.setP2(segment(self.p1, self.p2inicial, factor))
+    
+
+class Line(object):
+    def __init__(self, ptos,col = (1, 1, 1),width=1, nvertices = -1):
+        sep = SoSeparator()
+        sep.setName("Line")
+        self.coords = SoCoordinate3()
+        self.lineset = SoLineSet()
+        draw = SoDrawStyle()
         mat = SoMaterial()
-        mat.ambientColor.setValue(.0, .0, .0)
-        mat.diffuseColor.setValue(.4, .4, .4)
-        mat.specularColor.setValue(.8, .8, .8)
-        mat.shininess = .1
-    cil = wrap(SoCylinder())
-    cil.setName("segmento")
-    ## ==========================
-    conoSep = SoSeparator()
-    conoTr = SoTransform()
-    cono = SoCone()
-    cono.bottomRadius = .025
-    cono.height = .1
-    mat2 = SoMaterial()
-    mat2.ambientColor.setValue(.33, .22, .27)
-    mat2.diffuseColor.setValue(.78, .57, .11)
-    mat2.specularColor.setValue(.99, .94, .81)
-    mat2.shininess = .28
-    conoSep.addChild(mat2)
-    conoSep.addChild(conoTr)
-    conoSep.addChild(cono)
-    ## ==========================
-    sep.addChild(tr2)
-    sep.addChild(tr1)
-    sep.addChild(mat)
-    sep.addChild(cil)
-    sep.addChild(conoSep)
-    vec = p2-p1
-    t = vec.length()
-    tr1.translation = (0, t/2.0, 0)
-    conoTr.translation = (0, t/2.0, 0)
-    cil[0].radius = escala
-    cil[0].height = t
-    tr2.translation = p1
-    zt = SbVec3f(0,t,0)
-    ejeRot = zt.cross(vec)
-    ang = acos(zt.dot(vec)/t**2)
-    if ejeRot.length() < .0001:
-        ejeRot = (1, 0, 0)
-    tr2.rotation.setValue(ejeRot, ang)
-    return sep
-
+        ## ============================
+        self.setCoordinates(ptos, nvertices)
+        draw.lineWidth.setValue(width)
+        mat.diffuseColor = col
+        ## ============================
+        sep.addChild(self.coords)
+        sep.addChild(mat)
+        sep.addChild(draw)
+        sep.addChild(self.lineset)
+        self.root = sep
+        
+    def setNumVertices(self, n):
+        self.lineset.numVertices.setValue(n)
+        
+    def setCoordinates(self, ptos, nvertices = -1):
+        ## sometimes we don't want to show all points
+        if nvertices == -1:
+            nvertices = len(ptos)
+        self.coords.point.setValues(0,len(ptos),ptos)
+        self.setNumVertices(nvertices)
     
 
-def Line(ptos,col = (1, 1, 1),width=1):
-    coords = SoCoordinate3()
-    coords.point.setValues(0,len(ptos),ptos)
-    linea = SoLineSet()
-    linea.numVertices.setValue(len(ptos))
-    draw = SoDrawStyle()
-    draw.lineWidth.setValue(width)
-    mat = SoMaterial()
-    mat.diffuseColor = col
-    sep = SoSeparator()
-    sep.addChild(mat)
-    sep.addChild(coords)
-    sep.addChild(draw)
-    sep.addChild(linea)
-    return sep
-
+class Bundle(Base):
+    def __init__(self, c, cp, partition, col, factor=1, name=""):
+        Base.__init__(self,name)
+        tmin, tmax, n = partition
+        puntos = [c(t) for t in intervalPartition([tmin,tmax,n])]
+        puntosp = [c(t)+cp(t)*factor for t in intervalPartition([tmin,tmax,n])]
+        for p,pp in zip(puntos,puntosp):
+            self.addChild(Tube(p,pp,extremos=True,escalaVertice=3))
     
-def Bundle(c, cp, partition, col, factor=1):
-    tmin, tmax, n = partition
-    puntos = [c(t) for t in intervalPartition([tmin,tmax,n])]
-    puntosp = [c(t)+cp(t)*factor for t in intervalPartition([tmin,tmax,n])]
-    sep = SoSeparator()
-    mate = SoMaterial()
-    mate.diffuseColor = col
-    for p,pp in zip(puntos,puntosp):
-        sep.addChild(Tube(p,pp,extremos=True,escalaVertice=3,mat=mate))
-    return sep
-
+    def setRadius(self, r):
+        for c in self.getChildren():
+            c.setRadius(r)
+    
+    def setLengthFactor(self, factor):
+        for c in self.getChildren():
+            c.setLengthFactor(factor)
+    
