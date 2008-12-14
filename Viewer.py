@@ -4,17 +4,16 @@ import sys
 from pivy.gui.soqt import *
 from pivy.coin import *
 from PyQt4 import QtGui, QtCore, uic
-from util import main, readFile,  conecta,  dictRepr, callback
+from util import main, readFile,  conecta,  dictRepr, callback, pjoin
 from math import sqrt, cos, sin, asin, pi, pow
 import logging
 
-modulosPath = "superficie/"
-#modulosPath = ""
+modulosPath = "superficie"
 
 log = logging.getLogger("Viewer")
 log.setLevel(logging.DEBUG)
 
-cambia_figura_fclass, base_class = uic.loadUiType(modulosPath + "Viewer/change-page.ui")
+cambia_figura_fclass, base_class = uic.loadUiType(pjoin(modulosPath,"Viewer","change-page.ui"))
 
 ## para no tener que cargar el mismo archivo varias veces
 class CambiaFigura(base_class, cambia_figura_fclass):
@@ -83,7 +82,7 @@ class Viewer(QtGui.QWidget):
             self.cameraSensor.detach()
         
     def agregaLuces(self, root):
-        self.lucesColor = readFile(modulosPath + "Viewer/lights.iv").getChild(0)
+        self.lucesColor = readFile(pjoin(modulosPath,"Viewer","lights.iv")).getChild(0)
         self.getSRoot().insertChild(self.lucesColor,0)
         self.lucesColor.whichChild = SO_SWITCH_ALL
         ## ============================
@@ -147,7 +146,7 @@ class Viewer(QtGui.QWidget):
         self.setStereoAdjustment(.2)
         ## ===========================
         if 0:
-            self.ejes = readFile("Viewer/axis.iv")[0]
+            self.ejes = readFile(pjoin("Viewer","axis.iv"))[0]
             root.addChild(self.ejes)
             self.ejes.show = lambda val: self.ejes.whichChild.setValue(int(val)-1)
             self.ejes.show(False)
@@ -454,5 +453,5 @@ if __name__ == "__main__":
     visor.whichPage = 0
     visor.resize(400, 400)
     visor.show()
-    visor.chaptersStack.show()
+#    visor.chaptersStack.show()
     SoQt.mainLoop()
