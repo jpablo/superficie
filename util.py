@@ -4,6 +4,7 @@ from pivy.coin import SoInput, SoDB,  SoSearchAction,  SbVec3f, SoSFVec3f, SoSFF
 from PyQt4 import QtCore
 from random import random
 import os
+from os.path import join as pjoin
 
 mods =  os.getcwd()+"\\modulos"
 SoInput.addDirectoryFirst(mods)
