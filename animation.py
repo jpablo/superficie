@@ -4,7 +4,7 @@ from pivy.coin import SoOneShot, SoSFFloat
 from PyQt4 import QtCore
 from superficie.util import conecta, GenIntervalo
 
-
+## This is probably obsoleted by QTimeLine
 
 class AnimeType:
     unavez, vaiven, continuo = range(3)
