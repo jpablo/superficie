@@ -118,44 +118,8 @@ class Segmento(object):
     def p2(self):
         return self.v2
 
-## probablemente solo esto sea suficiente        
 def segment(p1,p2,t):
     return p1 - t * (p1 - p2)
-        
-#class Segmento(object):
-#    "calcula el punto p1 - t (p1 - p2)"
-#    def __init__(self,  p1,  p2):
-#        self.x1,  self.y1, self.z1 = p1
-#        self.x2,  self.y2, self.z2 = p2
-#        self.dx = self.x2-self.x1
-#        self.dy = self.y2-self.y1
-#        self.dz = self.z2-self.z1
-#
-#    def eval(self, t):
-#        x = t*self.dx + self.x1
-#        y = t*self.dy + self.y1
-#        z = t*self.dz + self.z1
-#        return (x, y, z)
-#    
-#    def p1(self):
-#        return (self.x1, self.y1, self.z1)
-#
-#    def p2(self):
-#        return (self.x2, self.y2, self.z2)
-
-        
-#def param(p2,p1,t):
-#    "calcula el punto p2 - t (p2 - p1)"
-#    (x1,y1) = p1
-#    (x2,y2) = p2
-#    return (x2 - t*(x2 - x1), y2 - t*(y2 - y1))
-
-#def param3(p2,p1,t):
-#    "calcula el punto p2 - t (p2 - p1)"
-#    (x1,y1, z1) = p1
-#    (x2,y2, z2) = p2
-#    return (x2 - t*(x2 - x1), y2 - t*(y2 - y1), z2 - t*(z2 - z1))
-
         
 class GenIntervalo(object):
     def __init__(self, iter, func = None,  tipo='t', name="I"):
@@ -226,7 +190,7 @@ class GenIntervalo(object):
             raise StopIteration, self.direccion
     
 def genIntervalPartition(iter,  func = None):
-    "evalua una funcion en los puntos del interval dado"
+    "evaluate a function on the points of the interval partition"
     vmin, vmax, npoints = iter
     dt = float(vmax - vmin) / ( npoints - 1 )
     n = 0
