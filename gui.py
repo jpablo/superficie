@@ -37,37 +37,47 @@ def CheckBox(parent, funcOn, funcOff, text="", state=False):
 
 
 class Slider(QtGui.QWidget):
-    def __init__(self, range=('w', 0, 1, 101, 0), func=identity, time=1000, parent=None):
+    def __init__(self, rangep=('w', 0, 1, 0, 10), func=identity, duration=1000, parent=None):
+        ## rangep = (name, vmin, vmax, vini, npoints)
         QtGui.QWidget.__init__(self, parent)
         uic.loadUi(pjoin(modulosPath,"Gui","paramTemplate.ui"), self)
-        self.name = range[0]
+        self.timeline = QtCore.QTimeLine(duration)
+        self.name = rangep[0]
+        self.npoints = rangep[-1]
         self.func = func
         ## ============================
-        self.range = range[1:]
-        self.vmin, self.vmax, self.npoints, self.vini = self.range
-        ## valueChanged(qreal) always is in the range 0 <= x <= 1
-        ## whereas func not necesarily
+        self.updateRange(rangep[1:-1])
+        self.setupUi()
+    
+    def updateRange(self, rangep):
+        ## rangep = (vmin, vmax, vini)
+        self.timeline = QtCore.QTimeLine(self.timeline.duration())
+        self.range = rangep + type(rangep)([self.npoints])
+        self.vmin, self.vmax, self.vini, self.npoints = self.range
         self.funcTrans = partial(segment, self.vmin, self.vmax)
-        self.timeline = QtCore.QTimeLine(time)
         self.timeline.setFrameRange(0, self.npoints-1)
-        curTime = float(self.vini) /(self.vmax - self.vmin) * time
+        curTime = float(self.vini - self.vmin) /(self.vmax - self.vmin) * self.timeline.duration()
         self.timeline.setCurrentTime(curTime)
         ## ============================
         conecta(self.timeline, QtCore.SIGNAL("valueChanged(qreal)"), lambda t: self.func(self.funcTrans(t)))
         conecta(self.timeline, QtCore.SIGNAL("valueChanged(qreal)"), lambda t: self.updateLabel(self.funcTrans(t)))
-        conecta(self.timeline, QtCore.SIGNAL("frameChanged(int)"), self.slider.setValue)
+        conecta(self.timeline, QtCore.SIGNAL("frameChanged(int)"), self.updateSlider)
         ## ============================
-        self.setupUi()
+        self.nombre.setTitle(self.name + ": %.3f" % self.vini)
+        self.slider.setValue(self.timeline.currentFrame())
         
     def setupUi(self,):
-        self.nombre.setTitle(self.name + ": %.3f" % self.vini)
         self.slider.setMaximum(self.npoints-1)
-        self.slider.setValue(self.timeline.currentFrame())
         conecta(self.slider, QtCore.SIGNAL("valueChanged(int)"), self.updateFromSlider)
         self._d = []
         for f, i in zip([self.atras, self.pausa, self.adelante], [-1, 0, 1]):
             self._d.append(partial(self.estadoAnimacion,i))
             conecta(f, QtCore.SIGNAL("clicked()"), self._d[-1])
+    
+    def updateSlider(self, n):
+        self.slider.blockSignals(True)
+        self.slider.setValue(n)
+        self.slider.blockSignals(False)
             
     def estadoAnimacion(self,dir):
         tl = self.timeline
@@ -76,14 +86,14 @@ class Slider(QtGui.QWidget):
                 tl.setPaused(True)
         elif dir == 1 and tl.currentValue() < 1.0:
             tl.setDirection(tl.Forward)
-            tl.resume()
+            if tl.state()  != tl.Running:
+                tl.resume()
         elif dir == -1 and tl.currentValue() > 0.0:
             tl.setDirection(tl.Backward)
-            tl.resume()
-
+            if tl.state()  != tl.Running:
+                tl.resume()
+    
     def updateFromSlider(self,n):
-        if self.timeline.state() == self.timeline.Running:
-            return
         prop = float(n) / (self.npoints-1)
         curTime = prop * self.timeline.duration()
         ## ============================
@@ -92,10 +102,14 @@ class Slider(QtGui.QWidget):
         self.func(self.funcTrans(prop))
         self.updateLabel(self.funcTrans(prop))
         self.timeline.blockSignals(False)
-        ## probably this triggers the signals
-
+    
     def updateLabel(self, t):
         self.nombre.setTitle(self.name + ": %.3f" % t)
+        self.emit(QtCore.SIGNAL("labelChanged(float)"), t)
+
+    def getValue(self):
+        return self.funcTrans(self.timeline.currentValue())
+
 
         
         
