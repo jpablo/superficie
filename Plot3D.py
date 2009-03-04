@@ -8,6 +8,7 @@ from random import random
 import operator
 from util import partial,  conecta, intervalPartition
 from gui import Slider
+from Equation import createVars
 import logging
 from math import sin, cos, pi
 
@@ -281,6 +282,8 @@ if __name__ == "__main__":
     visor.addPageChild(p2)
     ## ============================
     p3 = RevolutionPlot3D(lambda r,t: r**2 ,(.1,1),(.1,2*pi), name="p3")
+    r, t = createVars(["r", "t"])
+    p3.addEqn(t == r**2)
     visor.addPageChild(p3)
     ## ============================
     visor.lucesBlanca.on = False
