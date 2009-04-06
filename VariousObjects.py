@@ -27,13 +27,33 @@ indicesCubo = (
     )
 
 
+    
+class Page(QtCore.QObject):
+    "The base class of a child node"
+    def __init__(self,parent = None, name = ""):
+        QtCore.QObject.__init__(self)
+        self.parent = parent
+        self.name = name
+        self.objects = []
+    
+    def getPages(self):
+        return self.objects
+    
+    def addChild(self, ob):
+        self.objects.append(ob)
+
+    def chapterSpecificIn(self):
+        pass
+        
+    def chapterSpecificOut(self):
+        pass
+
+    
 class Base(QtCore.QObject):
     "The base class of a container node"
     def __init__(self,name = ""):
         QtCore.QObject.__init__(self)
         self.name = name
-        ## Viewer.addChild will set the correct value
-        self.parent = None
         ## =========================
         self.root = SoSeparator()
         self.children = dictRepr()
