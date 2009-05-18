@@ -2,7 +2,8 @@ from pivy.coin import *
 from PyQt4 import QtCore,QtGui
 from superficie.util import wrap
 from math import acos
-from superficie.util import intervalPartition, Vec3, dictRepr, segment
+from superficie.util import intervalPartition, Vec3, segment
+from superficie.base import PageContainer
 
 def generaPuntos(coords):
     c = coords
@@ -28,60 +29,7 @@ indicesCubo = (
 
 
     
-class Page(QtCore.QObject):
-    "The base class of a child node"
-    def __init__(self,parent = None, name = ""):
-        QtCore.QObject.__init__(self)
-        self.parent = parent
-        self.name = name
-        self.objects = []
     
-    def getPages(self):
-        return self.objects
-    
-    def addChild(self, ob):
-        self.objects.append(ob)
-
-    def chapterSpecificIn(self):
-        pass
-        
-    def chapterSpecificOut(self):
-        pass
-
-    
-class Base(QtCore.QObject):
-    "The base class of a container node"
-    def __init__(self,name = ""):
-        QtCore.QObject.__init__(self)
-        self.name = name
-        ## =========================
-        self.root = SoSeparator()
-        self.children = dictRepr()
-        ## =========================
-        layout  =  QtGui.QVBoxLayout()
-        self.widget = QtGui.QWidget()
-        self.widget.setLayout(layout)
-        if self.name != "":
-            layout.addWidget(QtGui.QLabel("<center><h1>%s</h1></center>" % self.name))
-
-    def getGui(self):
-        return self.widget
-
-    def addWidget(self,widget):
-        self.widget.layout().addWidget(widget)
-        
-    def addChild(self, node):
-        root = getattr(node, "root", node)
-        self.root.addChild(root)
-        self.children[root] = node
-    
-    def addWidgetChild(self, arg):
-        widget, node = arg
-        self.addWidget(widget)
-        self.addChild(node)
-    
-    def getChildren(self):
-        return self.children.values()
 
 class Cube(QtCore.QObject):
     def __init__(self, mincoord,maxcoord):
@@ -101,9 +49,9 @@ class Cube(QtCore.QObject):
         root.addChild(indices)
         return root
 
-class Points(Base):
+class Points(PageContainer):
     def __init__(self,coords=[],colors = [(1,1,1)],name="",file=""):
-        Base.__init__(self,name)
+        PageContainer.__init__(self,name)
         if file != "":
             ## assume is an csv file
             coords = lstToFloat(readCsv(file))
@@ -339,9 +287,9 @@ class Line(object):
         self.setNumVertices(nvertices)
     
 
-class Bundle(Base):
+class Bundle(PageContainer):
     def __init__(self, c, cp, partition, col, factor=1, name=""):
-        Base.__init__(self,name)
+        PageContainer.__init__(self,name)
         tmin, tmax, n = partition
         puntos = [c(t) for t in intervalPartition([tmin,tmax,n])]
         puntosp = [c(t)+cp(t)*factor for t in intervalPartition([tmin,tmax,n])]
