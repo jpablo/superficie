@@ -2,7 +2,7 @@ import sys
 from pivy.coin import *
 from pivy.gui.soqt import *
 from PyQt4 import QtCore, QtGui, uic
-from superficie.util import conectaParcial, wrap, conecta, identity, partial, pjoin, segment
+from superficie.util import conectaParcial, wrap, conecta, identity, partial, segment, pegaNombres
 from superficie.animation import AnimeType, Timer
 
 modulosPath = "superficie"
@@ -40,7 +40,7 @@ class Slider(QtGui.QWidget):
     def __init__(self, rangep=('w', 0, 1, 0, 10), func=identity, duration=1000, parent=None):
         ## rangep = (name, vmin, vmax, vini, npoints)
         QtGui.QWidget.__init__(self, parent)
-        uic.loadUi(pjoin(modulosPath,"Gui","paramTemplate.ui"), self)
+        uic.loadUi(pegaNombres("Gui","paramTemplate.ui"), self)
         self.timeline = QtCore.QTimeLine(duration)
         self.name = rangep[0]
         self.npoints = rangep[-1]
@@ -116,7 +116,7 @@ class Slider(QtGui.QWidget):
 class Slider2(QtGui.QWidget):
     def __init__(self, iter=('w', 0, 1, 101), tini=0,  func=identity,  preF = None,  postF = None,  tipoAnim = AnimeType.unavez, parent=None):
         QtGui.QWidget.__init__(self, parent)
-        uic.loadUi(pjoin(modulosPath,"Gui","paramTemplate.ui"), self)
+        uic.loadUi(pegaNombres("Gui","paramTemplate.ui"), self)
         self.name = iter[0]
         self.motor = Timer( iter[1:], self.updateFromMotor, tipo = 'n',  preF=preF,  postF=postF, tipoAnim=tipoAnim, parent=parent)
         ## ============================

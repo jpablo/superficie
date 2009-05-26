@@ -4,7 +4,14 @@ from pivy.coin import SoInput, SoDB,  SoSearchAction,  SbVec3f, SoSFVec3f, SoSFF
 from PyQt4 import QtCore
 from random import random
 import os
-from os.path import join as pjoin
+from os.path import join
+import util
+
+modulosPath = os.path.dirname(util.__file__)
+
+def pegaNombres(folder,archivo):
+    return join(modulosPath,folder,archivo)
+
 
 mods =  os.getcwd()+"\\modulos"
 SoInput.addDirectoryFirst(mods)
