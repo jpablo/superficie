@@ -3,6 +3,7 @@
 
 from PyQt4 import QtCore
 from PyQt4 import QtGui
+from PyQt4 import QtOpenGL
 from PyQt4 import uic
 import logging
 from pivy.quarter import QuarterWidget
@@ -55,6 +56,9 @@ class Viewer(QtGui.QWidget):
     def __init__(self,parent=None,uiLayout=None,luces=True):
         QtGui.QWidget.__init__(self,parent)
         # ============================
+        fmt = QtOpenGL.QGLFormat()
+        fmt.setAlpha(True)
+        QtOpenGL.QGLFormat.setDefaultFormat(fmt)
         self.direccion = 1
         self.moviendo = False
         self.moviendoOb = None
@@ -480,11 +484,15 @@ if __name__ == "__main__":
     visor = Viewer()
     ## ============================
     visor.createChapter()
+    ## ============================
     visor.createPage()
+    sep = SoSeparator()
+    sep.getGui = lambda: QtGui.QLabel("<center><h1>Esfera+Cono</h1></center>")
     esfera = SoSphere()
-    esfera.getGui = lambda: QtGui.QLabel("<center><h1>Esfera+Cono</h1></center>")
-    visor.addChild(esfera)
-    visor.addChild(SoCone())
+    cono = SoCone()
+    sep.addChild(esfera)
+    sep.addChild(cono)
+    visor.addChild(sep)
     ## ============================
     visor.createPage()
     cubo = SoCube()
