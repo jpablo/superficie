@@ -3,7 +3,7 @@ from PyQt4 import QtCore,QtGui
 from superficie.util import wrap
 from math import acos
 from superficie.util import intervalPartition, Vec3, segment
-from superficie.base import PageContainer
+from superficie.base import Page
 
 def generaPuntos(coords):
     c = coords
@@ -49,9 +49,9 @@ class Cube(QtCore.QObject):
         root.addChild(indices)
         return root
 
-class Points(PageContainer):
+class Points(Page):
     def __init__(self,coords=[],colors = [(1,1,1)],name="",file=""):
-        PageContainer.__init__(self,name)
+        Page.__init__(self,name)
         if file != "":
             ## assume is an csv file
             coords = lstToFloat(readCsv(file))
@@ -287,9 +287,9 @@ class Line(object):
         self.setNumVertices(nvertices)
     
 
-class Bundle(PageContainer):
+class Bundle(Page):
     def __init__(self, c, cp, partition, col, factor=1, name=""):
-        PageContainer.__init__(self,name)
+        Page.__init__(self,name)
         tmin, tmax, n = partition
         puntos = [c(t) for t in intervalPartition([tmin,tmax,n])]
         puntosp = [c(t)+cp(t)*factor for t in intervalPartition([tmin,tmax,n])]

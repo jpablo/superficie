@@ -56,19 +56,26 @@ def evalIfDef(ob, fn, arg):
     
 def identity(x): return x
 
-class dictRepr(dict):
-    "a dictionary which uses string representation of keys instead of keys themselves"
+class nodeDict(dict):
+    "a dictionary which searches keys using comparison operator =="
     def __init__(self, **args):
         dict.__init__(self, args)
-    def __setitem__(self, key, val):
-        dict.__setitem__(self, str(key), val)
+        
     def __getitem__(self, key):
-        return dict.__getitem__(self, str(key))
-    def __contains__(self, arg):
-        sarg = str(arg)
-        return self.has_key(sarg)
+        for k,v in self.items():
+            if k == key:
+                return v
+        raise KeyError, key
+
+    def has_key(self,key):
+        return any(k == key for k in self.keys())
+
+    def __contains__(self, key):
+        return self.has_key(key)
+    
     def __delitem__(self, key):
-        dict.__delitem__(self, str(key))
+        dict.__delitem__(self, key)
+        
     def fromitem(self, item):
         ## es la función inversa de __getitem__
         ## (mas o menos, regresa el primer elemento)

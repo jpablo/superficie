@@ -1,13 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import sys
-import os
-from pivy.gui.soqt import *
-from pivy.coin import *
-from PyQt4 import QtGui, QtCore, uic
-from util import main, readFile,  conecta,  dictRepr, callback, pegaNombres
-from math import sqrt, cos, sin, asin, pi, pow
+
+from PyQt4 import QtCore
+from PyQt4 import QtGui
+from PyQt4 import uic
 import logging
+from pivy.quarter import QuarterWidget
+from pivy.coin import *
+from pivy.gui.soqt import *
+import superficie.base
+from superficie.util import callback
+from superficie.util import conecta
+from superficie.util import nodeDict
+from superficie.util import main
+from superficie.util import pegaNombres
+from superficie.util import readFile
 
 #modulosPath = "superficie"
 
@@ -45,27 +52,31 @@ TransparencyType= [
 
 class Viewer(QtGui.QWidget):
     "Viewer"
-    def __init__(self,parent=None,uilayout=None, noestiloIni = False, luces = True):
+    def __init__(self,parent=None,uiLayout=None,luces=True):
         QtGui.QWidget.__init__(self,parent)
         # ============================
         self.direccion = 1
         self.moviendo = False
         self.moviendoOb = None
         ## ============================
-        self.inicializarVisor(noestiloIni, luces)
-        self.inicializarUi(uilayout)
+        self.inicializarVisor(luces)
+        self.inicializarUi(uiLayout)
         ## por el momento cada figura es unicamente un SoSeparator
-        self.objetos = dictRepr()
+        self.objetos = nodeDict()
+        self.chaptersObjects = nodeDict()
         ## ============================
+
+    def getCamera(self):
+        return self.viewer.getSoRenderManager().getCamera()
 
     
     def setStereoAdjustment(self, val):
-        camera = self.viewer.getCamera()
+        camera = self.getCamera()
         camera.setStereoAdjustment(val)
 
     def rotacionInicial(self):
         "Chose an adecuate initial pov"
-        camera = self.viewer.getCamera()
+        camera = self.getCamera()
         camera.position = (7,7,7)
         camera.pointAt(SbVec3f(0, 0, 0),  SbVec3f(0, 0, 1))
         camera.farDistance = 25
@@ -73,7 +84,7 @@ class Viewer(QtGui.QWidget):
     
     def trackCameraPosition(self, val):
         if val:
-            camera = self.viewer.getCamera()
+            camera = self.getCamera()
             if not hasattr(self, "cameraSensor"):
                 def fn(camera, sensor):
                     print camera.position.getValue().getValue()
@@ -104,23 +115,34 @@ class Viewer(QtGui.QWidget):
     def insertaLuz(self, luz):
         self.getSRoot().insertChild(luz, 0)
 
-    def inicializarVisor(self, noestiloIni, luces):
-        root = SoSeparator()
-        self.__previousChapter = -1
+    def inicializarVisor(self, luces):
+        root = self.root = SoSeparator()
+        self.__previousChapter = None
         ## ============================
-        self.viewer = SoQtExaminerViewer(self)
+#        self.viewer = SoQtExaminerViewer(self)
+        ## ============================
+        ## si usamos:
+        self.viewer = QuarterWidget()
+        layout = QtGui.QVBoxLayout()
+        self.setLayout(layout)
+        layout.addWidget(self.viewer)
+        ## metodos disponibles:
+        # viewAll
+        # setTransparencyType
+        # setSceneGraph
         ## ============================
         ## copy some attributes
-        for attr in ["viewAll", "setDecoration", "setHeadlight", "setTransparencyType"]:
+#        for attr in ["viewAll", "setDecoration", "setHeadlight", "setTransparencyType"]:
+        for attr in ["viewAll", "setTransparencyType"]:
             setattr(self, attr, getattr(self.viewer, attr))
         ## ============================
         
-        self.viewer.setAlphaChannel(True)
+#        self.viewer.setAlphaChannel(True)
         self.viewer.setSceneGraph(root)
-        self.viewer.setTransparencyType(SoGLRenderAction.SORTED_LAYERS_BLEND)
+#        self.viewer.setTransparencyType(SoGLRenderAction.SORTED_LAYERS_BLEND)
 #        self.viewer.setTransparencyType(SoGLRenderAction.SORTED_OBJECT_BLEND)
 #        self.viewer.setAntialiasing(True, 0)
-        self.viewer.setWireframeOverlayColor(SbColor(0.5, 0, 0))
+#        self.viewer.setWireframeOverlayColor(SbColor(0.5, 0, 0))
         ## en la sala ixtli
 #        self.viewer.setStereoType(SoQtViewer.STEREO_QUADBUFFER)
         ## en el resto del mundo
@@ -128,9 +150,9 @@ class Viewer(QtGui.QWidget):
         ## esto es principalmente por los poliedros
 #        if not noestiloIni:
 #        self.setDrawStyle(SoQtViewer.VIEW_WIREFRAME_OVERLAY)
-        self.viewer.setHeadlight(False)
-        self.viewer.setFeedbackVisibility(False)
-        self.viewer.setDecoration(False)
+#        self.viewer.setHeadlight(False)
+#        self.viewer.setFeedbackVisibility(False)
+#        self.viewer.setDecoration(False)
         ## ============================
         self.mouseEventCB = SoEventCallback()
         self.getSRoot().addChild(self.mouseEventCB)
@@ -159,10 +181,9 @@ class Viewer(QtGui.QWidget):
         root.addChild(self.prolog)
         ## ============================
         self.chapters = SoSwitch()
-        self.chaptersObjects = []
         ## ============================
         root.addChild(self.chapters)
-        self.root = root
+        
         ## ============================
 #        self.capturaMouseClicked(self.mouse1Clicked, self.mouse2Clicked)
 #        self.capturaMouseMoved(self.mouseMoved)
@@ -183,7 +204,8 @@ class Viewer(QtGui.QWidget):
         self.ejes.show(b)
 
     def getSRoot(self):
-        return self.viewer.getSceneManager().getSceneGraph()
+        return self.viewer.getSoRenderManager().getSceneGraph()
+#        return self.viewer.getSceneManager().getSceneGraph()
         
     def mouseMoved(self, pickedList):
         chapterob = self.getChapterObject()
@@ -260,23 +282,6 @@ class Viewer(QtGui.QWidget):
         "Esta funcion es utilizada por el usuario"
         conecta(self, QtCore.SIGNAL("mouseMoved"), slot)
 
-    def setWhichPage(self,n):
-        self.getChapter().whichChild = n
-        self.setWhichPageWidget(n)
-#        self.viewer.getCamera().viewAll(self.getPage(), self.viewer.getViewportRegion())
-#        self.viewer.viewAll()
-
-    def getWhichPage(self):
-        return self.getChapter().whichChild.getValue()
-
-    whichPage = property(getWhichPage,setWhichPage)
-    
-    def getPage(self):
-        return self.getChapter()[self.whichPage]
-    
-    def getPageWidget(self):
-        return self.getChapterWidget().parametrosStack.widget(self.whichPage)
-
     def cambiaFigura(self,sentido):
         self.whichPage = (self.whichPage + sentido) % self.numPages()
         self.emit(QtCore.SIGNAL("cambiaFigura(int)"), self.whichPage)
@@ -287,15 +292,22 @@ class Viewer(QtGui.QWidget):
     def previa(self):
         self.cambiaFigura(-1)
 
-    def addChapter(self, object = None):
+    def createChapter(self):
+        chapter = superficie.base.Chapter()
+        self.addChapter(chapter)
+
+    def addChapter(self, chapter):
         "A chapter contains several pages"
-        self.chaptersObjects.append(object)
+        chapter.setViewer(self)
         sep = SoSeparator()
         ## el "prologo"
         sep.addChild(SoGroup())
-        sep.addChild(SoSwitch())
+        switch = SoSwitch()
+        switch.setName("switch")
+        sep.addChild(switch)
         self.chapters.addChild(sep)
         self.chapters.whichChild = len(self.chapters) - 1
+        self.chaptersObjects[switch] = chapter
         ## ============================
         ui = CambiaFigura()
         ui.setStyleSheet("QWidget { background:white }")
@@ -306,6 +318,12 @@ class Viewer(QtGui.QWidget):
         ## ============================
         ui.previa.hide()
         ui.siguiente.hide()
+        ## ============================
+        if hasattr(chapter, "getProlog"):
+            self.addChapterProlog(chapter.getProlog())
+        for page in chapter.getPages():
+            self.addPage(page)
+
     
     def addChapterProlog(self, node):
         ## node tiene que ser derivado de SoNode
@@ -315,22 +333,31 @@ class Viewer(QtGui.QWidget):
         return self.chapters.whichChild.getValue()
         
     def getChapter(self):
+        """returns: SoSeparator"""
+        if self.whichChapter() < 0:
+            return None
+        ## self.chapters[i] tiene dos elementos: el "prólogo" y el switch
         return self.chapters[self.whichChapter()][1]
     
     def getChapterObject(self):
-        return self.chaptersObjects[self.whichChapter()]
+        if self.whichChapter() < 0:
+            return None
+        return self.chaptersObjects[self.getChapter()]
         
     def setWhichChapter(self,n):
-        self.__previousChapter = self.whichChapter()
-        self.chapters.whichChild = n
-        self.chaptersStack.setCurrentIndex(n)
-        if self.__previousChapter != -1:
+        ## only the == operator test for identity of the underlying
+        ## OpenInventor object (the python proxy object is changed every time)
+        chapterChanged = not(self.__previousChapter == self.getChapter())
+        if self.__previousChapter != None and chapterChanged:
             obAnterior = self.chaptersObjects[self.__previousChapter]
             if hasattr(obAnterior, "chapterSpecificOut"):
                 obAnterior.chapterSpecificOut()
+        self.chapters.whichChild = n
+        self.chaptersStack.setCurrentIndex(n)
         chapterob = self.getChapterObject()
-        if hasattr(chapterob, "chapterSpecific"):
-            chapterob.chapterSpecific()
+        if hasattr(chapterob, "chapterSpecificIn") and chapterChanged:
+            chapterob.chapterSpecificIn()
+        self.__previousChapter = self.getChapter()
         self.viewer.viewAll()
 
         
@@ -343,12 +370,24 @@ class Viewer(QtGui.QWidget):
     
     def getChapterWidget(self):
         return self.chaptersStack.widget(self.whichChapter())
+
+    def createPage(self):
+        page = superficie.base.Page()
+        self.addPage(page)
+        return page
     
-    def addPage(self):
-        "A page contains several objects"
+    def addPage(self, page):
+        ""
         ## ============================
-        self.getChapter().addChild(SoSeparator())
+        if not self.getChapter():
+            self.createChapter()
+        ## ============================
+        ## esto es lo que regresa self.getPage()
+        root = getattr(page, "root", page)
+        ## chapter es un SoSwitch!!
+        self.getChapter().addChild(root)
         self.whichPage = self.numPages() - 1
+        self.objetos[root] = page
         ## ============================
         layout  =  QtGui.QVBoxLayout()
         layout.setMargin(0)
@@ -359,6 +398,9 @@ class Viewer(QtGui.QWidget):
         ui = self.getChapterWidget()
         ui.parametrosStack.addWidget(widget)
         ui.parametrosStack.setCurrentWidget(widget)
+        ## ============================
+        if hasattr(page,  "getGui"):
+            self.addPageGui(page.getGui())
         ## ============================
         if self.numPages() == 2:
             ui.previa.show()
@@ -377,41 +419,43 @@ class Viewer(QtGui.QWidget):
             stack.removeWidget(stack.widget(0))
         self.objetos = dictRepr()
 
-    def addObjectGui(self, widget):
+    def setWhichPage(self,n):
+        if self.getChapter():
+            self.getChapter().whichChild = n
+            self.setWhichPageWidget(n)
+#        self.getCamera().viewAll(self.getPage(), self.viewer.getViewportRegion())
+#        self.viewer.viewAll()
+
+    def getWhichPage(self):
+        return self.getChapter().whichChild.getValue() if self.getChapter() else -1
+
+    whichPage = property(getWhichPage,setWhichPage)
+
+    def getPage(self):
+        "returns a SoSwitch"
+        if self.getChapter():
+            return self.getChapter()[self.whichPage]
+
+    def getPageWidget(self):
+        return self.getChapterWidget().parametrosStack.widget(self.whichPage)
+
+    def addPageGui(self, widget):
         self.getPageWidget().layout().addWidget(widget)
 
-    def addChild(self,ob, viewAll = True):
-        "inserta ob en la figura actual"
-        def __add_child(ob):
-            if hasattr(ob,  "getGui"):
-                self.addObjectGui(ob.getGui())
-            ## ==============================
-            if hasattr(ob, "updateAll"):
-                ob.updateAll()
-            if hasattr(ob, "parent"):
-                ob.parent = self
-            ## 'root' tiene que ser un derivado de SoNode
-            root = getattr(ob, "root", ob)
-            self.getPage().addChild(root)
-            if viewAll:
-                self.viewer.viewAll()
-            ## ==============================
-            self.objetos[root] = ob
-        if type(ob) == list:
-            for o in ob:
-                __add_child(o)
-        else:        
-            __add_child(ob)
-        
+    def addChildren(self, obs, viewAll = True):
+        for o in obs:
+            self.addChild(o, viewAll)
 
-    def addPageChild(self,ob,viewAll=True):
-        if type(ob) == list:
-            for o in ob:
-                self.addPage()
-                self.addChild(o,viewAll)
-        else:        
-            self.addPage()
-            self.addChild(ob,viewAll)
+    def addChild(self,ob, viewAll = True):
+        "inserta ob en la página actual o en una página nueva"
+        if not self.getPage():
+            self.createPage()
+        separator = self.getPage()
+        pageOb = self.objetos[separator]
+        pageOb.addChild(ob)
+        if viewAll:
+            self.viewAll()
+
 
     def removeChild(self, ob):
         ## como en addChild() se tiene la construcción:
@@ -423,25 +467,26 @@ class Viewer(QtGui.QWidget):
         self.switch.getChild(self.whichPage).removeChild(root)
 
     def setDrawStyle(self,type):
-        self.viewer.setDrawStyle(SoQtExaminerViewer.STILL, type)
+        print "not implemented"
+        return
+#        self.viewer.setDrawStyle(SoQtExaminerViewer.STILL, type)
     
     def viewAll(self):
         self.viewer.viewAll()
 
 if __name__ == "__main__":
-    from util import  main
-    from math import  cos,  sin,  pi
-
-    app = main()
+    import sys
+    app = QtGui.QApplication(sys.argv)
     visor = Viewer()
-    
-    visor.addChapter()
-    visor.addPage()
-    esfera = SoSphere()
-    esfera.getGui = lambda: QtGui.QLabel("<center><h1>Esfera</h1></center>")
-    visor.addChild(esfera)
     ## ============================
-    visor.addPage()
+    visor.createChapter()
+    visor.createPage()
+    esfera = SoSphere()
+    esfera.getGui = lambda: QtGui.QLabel("<center><h1>Esfera+Cono</h1></center>")
+    visor.addChild(esfera)
+    visor.addChild(SoCone())
+    ## ============================
+    visor.createPage()
     cubo = SoCube()
     cubo.getGui = lambda: QtGui.QLabel("<center><h1>Cubo</h1></center>")
     visor.addChild(cubo)
@@ -449,5 +494,6 @@ if __name__ == "__main__":
     visor.whichPage = 0
     visor.resize(400, 400)
     visor.show()
-#    visor.chaptersStack.show()
-    SoQt.mainLoop()
+    visor.chaptersStack.show()
+#    SoQt.mainLoop()
+    sys.exit(app.exec_())
