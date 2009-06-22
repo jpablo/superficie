@@ -49,6 +49,8 @@ def conecta(ob, signal,  func):
 #        signal = QtCore.SIGNAL(signal)
     QtCore.QObject.connect(ob, signal, func)
 
+def connect(ob,signal,func):
+    QtCore.QObject.connect(ob, QtCore.SIGNAL(signal), func)
     
 def evalIfDef(ob, fn, arg):
     if hasattr(ob, fn):

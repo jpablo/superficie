@@ -2,7 +2,7 @@ import sys
 from pivy.coin import *
 from pivy.gui.soqt import *
 from PyQt4 import QtCore, QtGui, uic
-from superficie.util import conectaParcial, wrap, conecta, identity, partial, segment, pegaNombres
+from superficie.util import conectaParcial, wrap, conecta, identity, partial, segment, pegaNombres,connect
 from superficie.animation import AnimeType, Timer
 
 modulosPath = "superficie"
@@ -24,17 +24,22 @@ def onOff(ob, text="", show=True):
     return box, switch
 
 
-def CheckBox(parent, funcOn, funcOff, text="", state=False):
-    box = QtGui.QCheckBox(text)
-    box.setChecked(state)
-    def checkBoxCB(n):
-        if n == 2:
-            funcOn()
-        elif n == 0:
-            funcOff()
-    conecta(box,QtCore.SIGNAL("stateChanged(int)"), checkBoxCB)
-    return box
+class CheckBox(QtGui.QCheckBox):
+    def __init__(self, funcOn, funcOff, text="", state=False):
+        QtGui.QCheckBox.__init__(self,text)
+        self.setChecked(state)
+        def checkBoxCB(n):
+            if n == 2:
+                funcOn()
+            elif n == 0:
+                funcOff()
+        connect(self, "stateChanged(int)", checkBoxCB)
 
+class VisibleCheckBox(CheckBox):
+    def __init__(self,ob,text="",state=True):
+        CheckBox.__init__(self,ob.show,ob.hide,text,state)
+        if ob.parent:
+            ob.parent.addWidget(self)
 
 class Slider(QtGui.QWidget):
     def __init__(self, rangep=('w', 0, 1, 0, 10), func=identity, duration=1000, parent=None):
@@ -169,4 +174,12 @@ class Slider2(QtGui.QWidget):
         self.func(t)
         self.nombre.setTitle(self.name + ": %.3f" % t)
         self.emit(QtCore.SIGNAL("actualiza(float)"), t)
+
+
+class Button(QtGui.QPushButton):
+    def __init__(self,text,func,parent=None):
+        QtGui.QPushButton.__init__(self,text)
+        connect(self,"clicked(bool)", lambda x: func())
+        if parent:
+            parent.addWidget(self)
 

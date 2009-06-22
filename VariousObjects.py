@@ -28,8 +28,27 @@ indicesCubo = (
     )
 
 
-    
-    
+class GraphicObject(SoSwitch):
+    def __init__(self,parent=None):
+        SoSwitch.__init__(self)
+        self.qobject = QtCore.QObject()
+        self.parent = parent
+        ## ============================
+        if parent:
+            parent.addChild(self)
+
+    def show(self):
+        self.setVisible(True)
+        
+    def hide(self):
+        self.setVisible(False)
+
+    def setVisible(self, visible):
+        if not visible:
+            self.whichChild = -1
+        else:
+            self.whichChild = 0
+
 
 class Cube(QtCore.QObject):
     def __init__(self, mincoord,maxcoord):
@@ -257,8 +276,9 @@ class Tube(object):
         self.setP2(segment(self.p1, self.p2inicial, factor))
     
 
-class Line(object):
-    def __init__(self, ptos,col = (1, 1, 1),width=1, nvertices = -1):
+class Line(GraphicObject):
+    def __init__(self,ptos,color=(1, 1, 1),width=1,nvertices = -1,name="Line",parent=None):
+        GraphicObject.__init__(self,parent)
         sep = SoSeparator()
         sep.setName("Line")
         self.coords = SoCoordinate3()
@@ -268,13 +288,14 @@ class Line(object):
         ## ============================
         self.setCoordinates(ptos, nvertices)
         draw.lineWidth.setValue(width)
-        mat.diffuseColor = col
+        mat.diffuseColor = color
         ## ============================
         sep.addChild(self.coords)
         sep.addChild(mat)
         sep.addChild(draw)
         sep.addChild(self.lineset)
-        self.root = sep
+        self.addChild(sep)
+        self.whichChild = 0
         
     def setNumVertices(self, n):
         self.lineset.numVertices.setValue(n)

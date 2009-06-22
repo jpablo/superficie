@@ -13,7 +13,6 @@ import superficie.base
 from superficie.util import callback
 from superficie.util import conecta
 from superficie.util import nodeDict
-from superficie.util import main
 from superficie.util import pegaNombres
 from superficie.util import readFile
 
