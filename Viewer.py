@@ -6,9 +6,13 @@ from PyQt4 import QtGui
 from PyQt4 import QtOpenGL
 from PyQt4 import uic
 import logging
-from pivy.quarter import QuarterWidget
 from pivy.coin import *
-from pivy.gui.soqt import *
+try:
+    from pivy.quarter import QuarterWidget
+    Quarter = True
+except ImportError:
+    from pivy.gui.soqt import *
+    Quarter = False
 import superficie.base
 from superficie.util import callback
 from superficie.util import conecta
@@ -17,6 +21,8 @@ from superficie.util import pegaNombres
 from superficie.util import readFile
 
 #modulosPath = "superficie"
+
+
 
 
 log = logging.getLogger("Viewer")
@@ -70,7 +76,11 @@ class Viewer(QtGui.QWidget):
         ## ============================
 
     def getCamera(self):
-        return self.viewer.getSoRenderManager().getCamera()
+        if Quarter:
+            return self.viewer.getSoRenderManager().getCamera()
+        else:
+            return self.viewer.getCamera()
+        
 
     
     def setStereoAdjustment(self, val):
@@ -122,30 +132,36 @@ class Viewer(QtGui.QWidget):
         root = self.root = SoSeparator()
         self.__previousChapter = None
         ## ============================
-#        self.viewer = SoQtExaminerViewer(self)
-        ## ============================
-        ## si usamos:
-        self.viewer = QuarterWidget()
-        layout = QtGui.QVBoxLayout()
-        self.setLayout(layout)
-        layout.addWidget(self.viewer)
+        if Quarter:
+            self.viewer = QuarterWidget()
+            layout = QtGui.QVBoxLayout()
+            self.setLayout(layout)
+            layout.addWidget(self.viewer)
+        else:
+            self.viewer = SoQtExaminerViewer(self)
         ## metodos disponibles:
         # viewAll
         # setTransparencyType
         # setSceneGraph
         ## ============================
         ## copy some attributes
-#        for attr in ["viewAll", "setDecoration", "setHeadlight", "setTransparencyType"]:
-        for attr in ["viewAll", "setTransparencyType"]:
-            setattr(self, attr, getattr(self.viewer, attr))
-        ## ============================
-        
-#        self.viewer.setAlphaChannel(True)
+        if Quarter:
+            for attr in ["viewAll", "setTransparencyType"]:
+                setattr(self, attr, getattr(self.viewer, attr))
+        else:
+            for attr in ["viewAll", "setDecoration", "setHeadlight", "setTransparencyType"]:
+                setattr(self, attr, getattr(self.viewer, attr))
+        ## ============================        
         self.viewer.setSceneGraph(root)
-#        self.viewer.setTransparencyType(SoGLRenderAction.SORTED_LAYERS_BLEND)
-#        self.viewer.setTransparencyType(SoGLRenderAction.SORTED_OBJECT_BLEND)
-#        self.viewer.setAntialiasing(True, 0)
-#        self.viewer.setWireframeOverlayColor(SbColor(0.5, 0, 0))
+        if not Quarter:
+            self.viewer.setAlphaChannel(True)
+            self.viewer.setTransparencyType(SoGLRenderAction.SORTED_LAYERS_BLEND)
+            self.viewer.setTransparencyType(SoGLRenderAction.SORTED_OBJECT_BLEND)
+            self.viewer.setAntialiasing(True, 0)
+            self.viewer.setWireframeOverlayColor(SbColor(0.5, 0, 0))
+            self.viewer.setHeadlight(False)
+            self.viewer.setFeedbackVisibility(False)
+            self.viewer.setDecoration(False)
         ## en la sala ixtli
 #        self.viewer.setStereoType(SoQtViewer.STEREO_QUADBUFFER)
         ## en el resto del mundo
@@ -153,9 +169,6 @@ class Viewer(QtGui.QWidget):
         ## esto es principalmente por los poliedros
 #        if not noestiloIni:
 #        self.setDrawStyle(SoQtViewer.VIEW_WIREFRAME_OVERLAY)
-#        self.viewer.setHeadlight(False)
-#        self.viewer.setFeedbackVisibility(False)
-#        self.viewer.setDecoration(False)
         ## ============================
         self.mouseEventCB = SoEventCallback()
         self.getSRoot().addChild(self.mouseEventCB)
@@ -207,8 +220,10 @@ class Viewer(QtGui.QWidget):
         self.ejes.show(b)
 
     def getSRoot(self):
-        return self.viewer.getSoRenderManager().getSceneGraph()
-#        return self.viewer.getSceneManager().getSceneGraph()
+        if Quarter:
+            return self.viewer.getSoRenderManager().getSceneGraph()
+        else:
+            return self.viewer.getSceneManager().getSceneGraph()
         
     def mouseMoved(self, pickedList):
         chapterob = self.getChapterObject()
@@ -502,5 +517,8 @@ if __name__ == "__main__":
     visor.resize(400, 400)
     visor.show()
     visor.chaptersStack.show()
-#    SoQt.mainLoop()
-    sys.exit(app.exec_())
+
+    if Quarter:
+        sys.exit(app.exec_())
+    else:
+        SoQt.mainLoop()
