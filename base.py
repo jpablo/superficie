@@ -2,8 +2,10 @@ __author__="jpablo"
 __date__ ="$18/05/2009 12:47:43 AM$"
 
 from PyQt4 import QtCore, QtGui
+from pivy.coin import SoCoordinate3
 from pivy.coin import *
 from superficie.util import nodeDict
+
 
 class Chapter(QtCore.QObject):
     "A Chapter"
@@ -74,7 +76,6 @@ class Page(QtCore.QObject):
         if hasattr(node,  "getGui"):
             self.addWidget(node.getGui())
 
-
     def addWidgetChild(self, arg):
         widget, node = arg
         self.addWidget(widget)
@@ -82,6 +83,65 @@ class Page(QtCore.QObject):
 
     def getChildren(self):
         return self.children.values()
+
+    def setupPlanes(self):
+        def plano(pos):
+            vertices = [[-1,1],[1,1],[-1,-1],[1,-1]]
+            for p in vertices:
+                p.insert(pos,0)
+            sh = SoShapeHints()
+            sh.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
+            sh.faceType = SoShapeHints.UNKNOWN_FACE_TYPE
+            sh.shapeType = SoShapeHints.UNKNOWN_SHAPE_TYPE
+            coords = SoCoordinate3()
+            coords.point.setValues(0,len(vertices),vertices)
+            mesh = SoQuadMesh()
+            mesh.verticesPerColumn = 2
+            mesh.verticesPerRow = 2
+            nb = SoNormalBinding()
+#            nb.value = SoNormalBinding.PER_VERTEX_INDEXED
+            ## ============================
+            root = GraphicObject(visible=True,parent=self)
+            root.addChild(sh)
+            root.addChild(nb)
+            root.addChild(coords)
+            root.addChild(mesh)
+            return root
+        self.planos = [plano(0),plano(1),plano(2)]
+
+
+class GraphicObject(SoSwitch):
+    def __init__(self, visible=False, parent=None):
+        SoSwitch.__init__(self)
+        self.qobject = QtCore.QObject()
+        self.parent = parent
+        self.children = nodeDict()
+        self.setVisible(visible)
+        ## ============================
+        if parent:
+            parent.addChild(self)
+
+
+    def addChild(self, node):
+        root = getattr(node, "root", node)
+        SoSwitch.addChild(self,root)
+        self.children[root] = node
+
+    def getChildren(self):
+        return self.children.values()
+
+    def show(self):
+        self.setVisible(True)
+
+    def hide(self):
+        self.setVisible(False)
+
+    def setVisible(self, visible):
+        if not visible:
+            self.whichChild = SO_SWITCH_NONE
+        else:
+            self.whichChild = SO_SWITCH_ALL
+
 
 
 if __name__ == "__main__":

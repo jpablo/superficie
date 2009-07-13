@@ -13,6 +13,9 @@ class Animation(QtCore.QTimeLine):
         self.setCurveShape(self.LinearCurve)
         self.setFrameRange(nmin, nmax)
         connect(self, "frameChanged(int)", func)
+        ## ======================================
+        ## This is used for the static method "chain"
+        ## it is the pause between animations
         self.pauseTimer = QtCore.QTimer()
         self.pauseTimer.setSingleShot(True)
 

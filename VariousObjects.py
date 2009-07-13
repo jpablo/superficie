@@ -3,7 +3,9 @@ from PyQt4 import QtCore,QtGui
 from superficie.util import wrap
 from math import acos
 from superficie.util import intervalPartition, Vec3, segment
+from superficie.util import nodeDict
 from superficie.base import Page
+from superficie.base import GraphicObject
 
 def generaPuntos(coords):
     c = coords
@@ -27,27 +29,6 @@ indicesCubo = (
     4,5,6,7,SO_END_FACE_INDEX,
     )
 
-
-class GraphicObject(SoSwitch):
-    def __init__(self,parent=None):
-        SoSwitch.__init__(self)
-        self.qobject = QtCore.QObject()
-        self.parent = parent
-        ## ============================
-        if parent:
-            parent.addChild(self)
-
-    def show(self):
-        self.setVisible(True)
-        
-    def hide(self):
-        self.setVisible(False)
-
-    def setVisible(self, visible):
-        if not visible:
-            self.whichChild = -1
-        else:
-            self.whichChild = 0
 
 
 class Cube(QtCore.QObject):
@@ -308,9 +289,9 @@ class Line(GraphicObject):
         self.setNumVertices(nvertices)
     
 
-class Bundle(Page):
-    def __init__(self, c, cp, partition, col, factor=1, name=""):
-        Page.__init__(self,name)
+class Bundle(GraphicObject):
+    def __init__(self, c, cp, partition, col, factor=1, name="", parent = None):
+        GraphicObject.__init__(self,parent)
         tmin, tmax, n = partition
         puntos = [c(t) for t in intervalPartition([tmin,tmax,n])]
         puntosp = [c(t)+cp(t)*factor for t in intervalPartition([tmin,tmax,n])]

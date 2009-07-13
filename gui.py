@@ -36,15 +36,15 @@ class CheckBox(QtGui.QCheckBox):
         connect(self, "stateChanged(int)", checkBoxCB)
 
 class VisibleCheckBox(CheckBox):
-    def __init__(self,ob,text="",state=True):
+    def __init__(self, text,ob, state=True, parent = None):
         CheckBox.__init__(self,ob.show,ob.hide,text,state)
-        if ob.parent:
-            ob.parent.addWidget(self)
+        if parent:
+            parent.addWidget(self)
 
 class Slider(QtGui.QWidget):
     def __init__(self, rangep=('w', 0, 1, 0, 10), func=identity, duration=1000, parent=None):
         ## rangep = (name, vmin, vmax, vini, npoints)
-        QtGui.QWidget.__init__(self, parent)
+        QtGui.QWidget.__init__(self)
         uic.loadUi(pegaNombres("Gui","paramTemplate.ui"), self)
         self.timeline = QtCore.QTimeLine(duration)
         self.name = rangep[0]
@@ -53,6 +53,9 @@ class Slider(QtGui.QWidget):
         ## ============================
         self.updateRange(rangep[1:-1])
         self.setupUi()
+        if parent:
+            parent.addWidget(self)
+
     
     def updateRange(self, rangep):
         ## rangep = (vmin, vmax, vini)
