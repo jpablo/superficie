@@ -85,29 +85,7 @@ class Page(QtCore.QObject):
         return self.children.values()
 
     def setupPlanes(self):
-        def plano(pos):
-            vertices = [[-1,1],[1,1],[-1,-1],[1,-1]]
-            for p in vertices:
-                p.insert(pos,0)
-            sh = SoShapeHints()
-            sh.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
-            sh.faceType = SoShapeHints.UNKNOWN_FACE_TYPE
-            sh.shapeType = SoShapeHints.UNKNOWN_SHAPE_TYPE
-            coords = SoCoordinate3()
-            coords.point.setValues(0,len(vertices),vertices)
-            mesh = SoQuadMesh()
-            mesh.verticesPerColumn = 2
-            mesh.verticesPerRow = 2
-            nb = SoNormalBinding()
-#            nb.value = SoNormalBinding.PER_VERTEX_INDEXED
-            ## ============================
-            root = GraphicObject(visible=True,parent=self)
-            root.addChild(sh)
-            root.addChild(nb)
-            root.addChild(coords)
-            root.addChild(mesh)
-            return root
-        self.planos = [plano(0),plano(1),plano(2)]
+        self.addChild(Planos(True))
 
 
 class GraphicObject(SoSwitch):
@@ -120,7 +98,6 @@ class GraphicObject(SoSwitch):
         ## ============================
         if parent:
             parent.addChild(self)
-
 
     def addChild(self, node):
         root = getattr(node, "root", node)
@@ -137,11 +114,54 @@ class GraphicObject(SoSwitch):
         self.setVisible(False)
 
     def setVisible(self, visible):
-        if not visible:
-            self.whichChild = SO_SWITCH_NONE
-        else:
+        if visible:
             self.whichChild = SO_SWITCH_ALL
+        else:
+            self.whichChild = SO_SWITCH_NONE
 
+
+class Plano(GraphicObject):
+    """
+    Documentation
+    """
+    def __init__(self, pos, visible=True, parent=None):
+        GraphicObject.__init__(self,visible,parent)
+        self.altura = -1
+        vertices = [[-1,1],[1,1],[-1,-1],[1,-1]]
+        for p in vertices:
+            p.insert(pos,self.altura)
+        sh = SoShapeHints()
+        sh.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
+        sh.faceType = SoShapeHints.UNKNOWN_FACE_TYPE
+        sh.shapeType = SoShapeHints.UNKNOWN_SHAPE_TYPE
+        coords = SoCoordinate3()
+        coords.point.setValues(0,len(vertices),vertices)
+        mesh = SoQuadMesh()
+        mesh.verticesPerColumn = 2
+        mesh.verticesPerRow = 2
+        nb = SoNormalBinding()
+#            nb.value = SoNormalBinding.PER_VERTEX_INDEXED
+        mat = SoMaterial()
+        mat.transparency = 0.5
+        ## ============================
+        root = SoSeparator()
+        root.addChild(sh)
+        root.addChild(mat)
+        root.addChild(nb)
+        root.addChild(coords)
+        root.addChild(mesh)
+        self.addChild(root)
+
+    def setAltura(val):
+        pass
+
+
+class Planos(GraphicObject):
+    def __init__(self, visible=False, parent=None):
+        GraphicObject.__init__(self,visible,parent)
+        self.addChild(Plano(0))
+        self.addChild(Plano(1))
+        self.addChild(Plano(2))
 
 
 if __name__ == "__main__":

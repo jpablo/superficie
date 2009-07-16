@@ -258,8 +258,8 @@ class Tube(object):
     
 
 class Line(GraphicObject):
-    def __init__(self,ptos,color=(1, 1, 1),width=1,nvertices = -1,name="Line",parent=None):
-        GraphicObject.__init__(self,parent)
+    def __init__(self,ptos,color=(1, 1, 1),width=1,nvertices = -1,name="Line",visible = False,parent=None):
+        GraphicObject.__init__(self,visible,parent)
         sep = SoSeparator()
         sep.setName("Line")
         self.coords = SoCoordinate3()
@@ -279,6 +279,7 @@ class Line(GraphicObject):
         self.whichChild = 0
         
     def setNumVertices(self, n):
+#        print "setNumVertices:", n
         self.lineset.numVertices.setValue(n)
         
     def setCoordinates(self, ptos, nvertices = -1):
@@ -290,8 +291,8 @@ class Line(GraphicObject):
     
 
 class Bundle(GraphicObject):
-    def __init__(self, c, cp, partition, col, factor=1, name="", parent = None):
-        GraphicObject.__init__(self,parent)
+    def __init__(self, c, cp, partition, col, factor=1, name="", visible = False, parent = None):
+        GraphicObject.__init__(self,visible,parent)
         tmin, tmax, n = partition
         puntos = [c(t) for t in intervalPartition([tmin,tmax,n])]
         puntosp = [c(t)+cp(t)*factor for t in intervalPartition([tmin,tmax,n])]

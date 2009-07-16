@@ -5,7 +5,7 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 from PyQt4 import QtOpenGL
 from PyQt4 import uic
-import logging
+#import logging
 from pivy.coin import *
 try:
     from pivy.quarter import QuarterWidget
@@ -21,12 +21,8 @@ from superficie.util import pegaNombres
 from superficie.util import readFile
 
 #modulosPath = "superficie"
-
-
-
-
-log = logging.getLogger("Viewer")
-log.setLevel(logging.DEBUG)
+#log = logging.getLogger("Viewer")
+#log.setLevel(logging.DEBUG)
 
 cambia_figura_fclass, base_class = uic.loadUiType(pegaNombres("Viewer","change-page.ui"))
 
@@ -109,11 +105,11 @@ class Viewer(QtGui.QWidget):
         
     def agregaLuces(self, root):
         self.lucesColor = readFile(pegaNombres("Viewer","lights.iv")).getChild(0)
-        self.getSRoot().insertChild(self.lucesColor,0)
+        self.insertaLuz(self.lucesColor)
         self.lucesColor.whichChild = SO_SWITCH_ALL
         ## ============================
         self.lucesBlanca = SoDirectionalLight()
-        self.getSRoot().insertChild(self.lucesBlanca,0)
+        self.insertaLuz(self.lucesBlanca)
         self.lucesBlanca.on = False
     
     def setColorLightOn(self, val):
