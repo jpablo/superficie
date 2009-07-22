@@ -2,7 +2,7 @@ import sys
 from pivy.coin import *
 from pivy.gui.soqt import *
 from PyQt4 import QtCore, QtGui, uic
-from superficie.util import conectaParcial, wrap, conecta, identity, partial, segment, pegaNombres,connect
+from superficie.util import connectPartial, wrap, conecta, identity, partial, segment, pegaNombres,connect
 from superficie.animation import AnimeType, Timer
 
 modulosPath = "superficie"
@@ -20,7 +20,7 @@ def onOff(ob, text="", show=True):
     switch = wrap(ob, show)
     box = QtGui.QCheckBox(text)
     box.setChecked(show)
-    conectaParcial(box,"stateChanged(int)", setWhichChildCB, switch)
+    connectPartial(box,"stateChanged(int)", setWhichChildCB, switch)
     return box, switch
 
 

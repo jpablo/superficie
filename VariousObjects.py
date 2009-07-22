@@ -184,6 +184,23 @@ def Sphere(p, radius=.05, mat = None):
     sep.addChild(sp)
     return sep
 
+class Sphere2(GraphicObject):
+    def __init__(self,center,radius = .05,color=(1,1,1),visible = False,parent=None):
+        GraphicObject.__init__(self,visible,parent)
+        sp = SoSphere()
+        sp.radius = radius
+        ## ===================
+        mat = SoMaterial()
+        mat.ambientColor.setValue(.33, .22, .27)
+        mat.diffuseColor.setValue(.78, .57, .11)
+        mat.specularColor.setValue(.99, .94, .81)
+        mat.shininess = .28
+        ## ===================
+        self.addChild(mat)
+        self.addChild(sp)
+        self.setOrigin(center)
+
+
 class Tube(object):
     def __init__(self, p1, p2, escala = 0.01, escalaVertice = 2.0, mat = None, extremos = False):
         self.p1 = p1
@@ -247,6 +264,12 @@ class Tube(object):
 
     def setRadius(self, r):
         self.cil[0].radius = r
+
+    def setPoints(self,p1,p2):
+        """Documentation"""
+        self.p1 = p1
+        self.p2 = p2
+        self.calcTransformation()
     
     def setP2(self, pt):
         self.p2 = pt
@@ -258,7 +281,7 @@ class Tube(object):
     
 
 class Line(GraphicObject):
-    def __init__(self,ptos,color=(1, 1, 1),width=1,nvertices = -1,name="Line",visible = False,parent=None):
+    def __init__(self,ptos,color=(1,1,1),width=1,nvertices = -1,name="Line",visible = False,parent=None):
         GraphicObject.__init__(self,visible,parent)
         sep = SoSeparator()
         sep.setName("Line")
@@ -277,6 +300,12 @@ class Line(GraphicObject):
         sep.addChild(self.lineset)
         self.addChild(sep)
         self.whichChild = 0
+
+    def __getitem__(self, i):
+        return self.coords.point[i]
+
+    def __len__(self):
+        return len(self.coords.point)
         
     def setNumVertices(self, n):
 #        print "setNumVertices:", n
@@ -288,7 +317,31 @@ class Line(GraphicObject):
             nvertices = len(ptos)
         self.coords.point.setValues(0,len(ptos),ptos)
         self.setNumVertices(nvertices)
+
+    def project(self, x = None, y = None, z = None, color = (1,1,1), width=1, nvertices = -1):
+        """"""
+        pts = self.coords.point.getValues()
+        if x != None:
+            ptosProj = [Vec3(x,p[1],p[2]) for p in pts]
+        elif y != None:
+            ptosProj = [Vec3(p[0],y,p[2]) for p in pts]
+        elif z != None:
+            ptosProj = [Vec3(p[0],p[1],z) for p in pts]
+        return Line(ptosProj,color,width,nvertices,parent=self.parent)
     
+
+class Curve3D(Line):
+    """
+    """
+    def __init__(self,iter,func,  color = (1,1,1), width=1, nvertices = -1, parent = None):
+        c   = lambda t: Vec3(func(t))
+        ## ============================
+        points = intervalPartition(iter, c)
+        Line.__init__(self, points, color, width, nvertices, parent=parent)
+        self.func = func
+        self.iter = iter
+
+
 
 class Bundle(GraphicObject):
     def __init__(self, c, cp, partition, col, factor=1, name="", visible = False, parent = None):

@@ -36,13 +36,13 @@ class partial(object):
             d = kw or self.kw
         return self.fn(*(self.args + args), **d)
 
-def conectaParcial(emisor, signal, metodo,  *args):
+def connectPartial(emisor, signal, metodo,  *args):
 #    conecta(emisor, QtCore.SIGNAL(signal),  partial(metodo, arg))
     ## si lo anterior no funciona, entonces usamos esto:
     if not hasattr(emisor, "__parciales"):
         emisor.__parciales = []
     emisor.__parciales.append(partial(metodo, *args))
-    conecta(emisor, QtCore.SIGNAL(signal),  emisor.__parciales[-1])
+    connect(emisor, signal,  emisor.__parciales[-1])
 
 def conecta(ob, signal,  func):
 #    if type(signal) == str:

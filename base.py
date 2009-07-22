@@ -85,7 +85,7 @@ class Page(QtCore.QObject):
         return self.children.values()
 
     def setupPlanes(self):
-        self.addChild(Planos(True))
+        self.addChild(Planes(True))
 
 
 class GraphicObject(SoSwitch):
@@ -96,12 +96,20 @@ class GraphicObject(SoSwitch):
         self.children = nodeDict()
         self.setVisible(visible)
         ## ============================
+        self.separator = SoSeparator()
+        SoSwitch.addChild(self,self.separator)
+        ## ============================
+        self.translation = SoTranslation()
+        self.translation.translation = (0,0,0)
+        self.addChild(self.translation)
+        ## ============================
         if parent:
             parent.addChild(self)
 
     def addChild(self, node):
         root = getattr(node, "root", node)
-        SoSwitch.addChild(self,root)
+#        SoSwitch.addChild(self,root)
+        self.separator.addChild(root)
         self.children[root] = node
 
     def getChildren(self):
@@ -119,8 +127,14 @@ class GraphicObject(SoSwitch):
         else:
             self.whichChild = SO_SWITCH_NONE
 
+    def setOrigin(self,pos):
+        """Documentation"""
+        self.translation.translation = pos
+    def getOrigin(self):
+        return self.translation.translation.getValue()
 
-class Plano(GraphicObject):
+
+class Plane(GraphicObject):
     """
     Documentation
     """
@@ -156,12 +170,12 @@ class Plano(GraphicObject):
         pass
 
 
-class Planos(GraphicObject):
+class Planes(GraphicObject):
     def __init__(self, visible=False, parent=None):
         GraphicObject.__init__(self,visible,parent)
-        self.addChild(Plano(0))
-        self.addChild(Plano(1))
-        self.addChild(Plano(2))
+        self.addChild(Plane(0))
+        self.addChild(Plane(1))
+        self.addChild(Plane(2))
 
 
 if __name__ == "__main__":
