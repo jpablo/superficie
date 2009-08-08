@@ -94,6 +94,8 @@ class GraphicObject(SoSwitch):
         self.qobject = QtCore.QObject()
         self.parent = parent
         self.children = nodeDict()
+        ## this permits get at children by position
+        self.childrenList = []
         self.setVisible(visible)
         ## ============================
         self.separator = SoSeparator()
@@ -101,16 +103,19 @@ class GraphicObject(SoSwitch):
         ## ============================
         self.translation = SoTranslation()
         self.translation.translation = (0,0,0)
-        self.addChild(self.translation)
+        self.separator.addChild(self.translation)
         ## ============================
         if parent:
             parent.addChild(self)
 
+    def __getitem__(self,key):
+        return self.childrenList[key]
+
     def addChild(self, node):
         root = getattr(node, "root", node)
-#        SoSwitch.addChild(self,root)
         self.separator.addChild(root)
         self.children[root] = node
+        self.childrenList.append(node)
 
     def getChildren(self):
         return self.children.values()

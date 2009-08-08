@@ -64,6 +64,7 @@ class nodeDict(dict):
         dict.__init__(self, args)
         
     def __getitem__(self, key):
+        "this is what diferentiates nodeDic from a regular dict"
         for k,v in self.items():
             if k == key:
                 return v
