@@ -465,7 +465,7 @@ class Bundle(GraphicObject):
         puntos = [c(t) for t in intervalPartition([tmin,tmax,n])]
         puntosp = [c(t)+cp(t)*factor for t in intervalPartition([tmin,tmax,n])]
         for p,pp in zip(puntos,puntosp):
-            self.addChild(Arrow(p,pp,extremos=True,escalaVertice=3))
+            self.addChild(Arrow(p,pp,extremos=True,escalaVertice=3,visible=True))
 
     def setRadius(self, r):
         for c in self.getChildren():
@@ -476,3 +476,6 @@ class Bundle(GraphicObject):
             if hasattr(c,"setLengthFactor"):
                 c.setLengthFactor(factor)
     
+    def hideAllArrows(self):
+        for arrow in self.getChildren():
+            arrow.hide()
