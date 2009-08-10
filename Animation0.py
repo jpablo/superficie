@@ -53,11 +53,13 @@ class OneShot(QtCore.QObject):
         self.value.connectFrom(self.oneshot.ramp)
         self.sensor = SoFieldSensor(self.callback, self.value)
         self.sensor.attach(self.value)
+
     def callback(self, ffloat, sensor):
         t = ffloat.getValue()
         QtCore.QObject.emit(self, QtCore.SIGNAL("ramp(float)"), t)
         if t == 1.0:
             self.emit(QtCore.SIGNAL("finished(bool)"), True)
+            
     def start(self):
         self.oneshot.trigger.touch()
 
