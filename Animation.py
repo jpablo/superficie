@@ -25,3 +25,17 @@ class Animation(QtCore.QTimeLine):
             animations[i].pauseTimer.setInterval(pause)
             connect(animations[i],"finished()",animations[i].pauseTimer.start)
             connect(animations[i].pauseTimer,"timeout()",animations[i+1].start)
+
+
+if __name__ == "__main__":
+    import sys
+    from PyQt4 import QtGui
+    app = QtGui.QApplication(sys.argv)
+    tl = QtCore.QTimeLine(1000)
+    tl.setFrameRange(1,1000)
+    def fn(n): print n
+    QtCore.QObject.connect(tl,QtCore.SIGNAL("frameChanged(int)"), fn)
+    b = QtGui.QPushButton("correr")
+    b.show()
+    QtCore.QObject.connect(b,QtCore.SIGNAL("clicked(bool)"), tl.start)
+    sys.exit(app.exec_())
