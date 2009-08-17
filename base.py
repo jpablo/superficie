@@ -5,7 +5,8 @@ from PyQt4 import QtCore, QtGui
 from pivy.coin import SoCoordinate3
 from pivy.coin import *
 from superficie.util import nodeDict
-
+from superficie.Animation import Animation
+from superficie.gui import Button
 
 class Chapter(QtCore.QObject):
     "A Chapter"
@@ -57,6 +58,9 @@ class Page(QtCore.QObject):
         self.root = SoSeparator()
         self.children = nodeDict()
         ## =========================
+        self.animations = []
+        self.objectsForAnimate = []
+        ## =========================
         layout  =  QtGui.QVBoxLayout()
         self.widget = QtGui.QWidget()
         self.widget.setLayout(layout)
@@ -87,6 +91,18 @@ class Page(QtCore.QObject):
     def setupPlanes(self):
         self.addChild(Planes(True))
 
+    def setupAnimations(self,objects):
+        self.objectsForAnimate = objects
+        self.animations = [ ob.getAnimation() for ob in objects ]
+        Animation.chain(self.animations, pause=1000)
+
+        Button("inicio", self.animate, parent=self)
+
+    def animate(self):
+        for ob in self.objectsForAnimate:
+            ob.resetObjectForAnimation()
+        self.animations[0].start()
+
 
 class GraphicObject(SoSwitch):
     def __init__(self, visible=False, parent=None):
@@ -104,6 +120,7 @@ class GraphicObject(SoSwitch):
         self.translation = SoTranslation()
         self.translation.translation = (0,0,0)
         self.separator.addChild(self.translation)
+        self.animation = None
         ## ============================
         if parent:
             parent.addChild(self)
@@ -137,6 +154,14 @@ class GraphicObject(SoSwitch):
         self.translation.translation = pos
     def getOrigin(self):
         return self.translation.translation.getValue()
+
+    def getAnimation(self):
+        return self.animation
+
+    def resetObjectForAnimation(self):
+        pass
+
+
 
 
 class Plane(GraphicObject):

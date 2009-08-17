@@ -7,6 +7,7 @@ from superficie.util import genIntervalPartition
 from superficie.util import nodeDict
 from superficie.base import Page
 from superficie.base import GraphicObject
+from superficie.Animation import Animation
 
 def generaPuntos(coords):
     c = coords
@@ -380,6 +381,11 @@ class Line(GraphicObject):
         sep.addChild(self.lineset)
         self.addChild(sep)
         self.whichChild = 0
+        ## ============================
+        self.animation = Animation(self.setNumVertices,(4000,1,len(ptos)))
+
+    def resetObjectForAnimation(self):
+        self.setNumVertices(1)
 
     def __getitem__(self, i):
         "overwrite GraphicObject.__getitem__"
@@ -414,7 +420,7 @@ class Line(GraphicObject):
         elif z != None:
             ptosProj = [Vec3(p[0],p[1],z) for p in pts]
         return Line(ptosProj,color,width,nvertices,parent=self.parent)
-    
+
 
 class Curve3D(Line):
     """
@@ -438,6 +444,10 @@ class Bundle2(GraphicObject):
         for p,pp in zip(points,pointsp):
             self.addChild(Arrow(p,pp,visible=True,escala=.005,extremos=True))
 
+        self.animation = Animation(lambda num: self[num-1].show(),(4000,1,len(points)))
+
+    def resetObjectForAnimation(self):
+        self.hideAllArrows()
 
     def setRadius(self, r):
         for c in self.getChildren():
@@ -466,6 +476,11 @@ class Bundle(GraphicObject):
         puntosp = [c(t)+cp(t)*factor for t in intervalPartition([tmin,tmax,n])]
         for p,pp in zip(puntos,puntosp):
             self.addChild(Arrow(p,pp,extremos=True,escalaVertice=3,visible=True))
+
+        self.animation = Animation(lambda num: self[num-1].show(),(4000,1,n))
+
+    def resetObjectForAnimation(self):
+        self.hideAllArrows()
 
     def setRadius(self, r):
         for c in self.getChildren():
