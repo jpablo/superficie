@@ -420,6 +420,9 @@ class Viewer(QtGui.QWidget):
             ui.previa.show()
             ui.siguiente.show()
 
+        self.viewAll()
+
+
     def removePage(self,n):
         ## TODO: hay que borrar todos los objetos (en self.objetos) asociados a la figura!
         self.switch.removeChild(n)
@@ -446,7 +449,7 @@ class Viewer(QtGui.QWidget):
     whichPage = property(getWhichPage,setWhichPage)
 
     def getPage(self):
-        "returns a SoSwitch"
+        "returns a Separator"
         if self.getChapter():
             return self.getChapter()[self.whichPage]
 
@@ -467,6 +470,7 @@ class Viewer(QtGui.QWidget):
         separator = self.getPage()
         pageOb = self.objetos[separator]
         pageOb.addChild(ob)
+
         if viewAll:
             self.viewAll()
 
@@ -486,6 +490,7 @@ class Viewer(QtGui.QWidget):
 #        self.viewer.setDrawStyle(SoQtExaminerViewer.STILL, type)
     
     def viewAll(self):
+        print "viewAll"
         self.viewer.viewAll()
 
 if __name__ == "__main__":

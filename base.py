@@ -79,6 +79,8 @@ class Page(QtCore.QObject):
         self.children[root] = node
         if hasattr(node,  "getGui"):
             self.addWidget(node.getGui())
+        if hasattr(node, "updateAll"):
+            node.updateAll()
 
     def addWidgetChild(self, arg):
         widget, node = arg

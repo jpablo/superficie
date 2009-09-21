@@ -1,7 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from pivy.gui.soqt import SoQt
+
 from pivy.coin import *
+try:
+    from pivy.quarter import QuarterWidget
+    Quarter = True
+except ImportError:
+    from pivy.gui.soqt import *
+    Quarter = False
+
+
 from PyQt4 import QtGui, QtCore, uic
 from types import FunctionType
 from random import random
@@ -11,6 +19,8 @@ from gui import Slider
 from Equation import createVars
 import logging
 from math import sin, cos, pi
+
+
 
 log = logging.getLogger("Mesh")
 log.setLevel(logging.DEBUG)
@@ -32,7 +42,7 @@ def getFreeVariables(func):
             val = f(*args)
             break
         except NameError, error:
-            freevar = error.message.split(" ")[2].replace("'","")
+            freevar = error.args[0].split(" ")[2].replace("'","")
             ## this occurs when func has an inner function with
             ## free variables
             if freevar in vars1:
@@ -89,7 +99,6 @@ class Quad(object):
         self.root.addChild(nb)
         self.root.addChild(self.coords)
         self.root.addChild(self.mesh)
-
         
 class Mesh(QtCore.QObject):
     def __init__(self, rangeX=(0,1,40),  rangeY=(0,1,40), name=""):
@@ -259,40 +268,52 @@ if __name__ == "__main__":
     from util import  main
     from math import  cos,  sin,  pi
     from Viewer import Viewer
+    import sys
 
-    app = main()
+    app = QtGui.QApplication(sys.argv)
     visor = Viewer()
-    visor.addChapter()
+    visor.createChapter()
     ## ============================
-    m = Mesh((-1, 1, 20), (-1, 1, 20))
-    m.addQuad(lambda x, y:(x,y,   v*x**2 - w*y**2))
-    m.addQuad(lambda x, y:(x,y, - x**2 - y**2))
-    visor.addPageChild(m)
+#    visor.createPage()
+#    m = Mesh((-1, 1, 20), (-1, 1, 20))
+#    m.addQuad(lambda x, y:(x,y,   v*x**2 - w*y**2))
+#    m.addQuad(lambda x, y:(x,y, - x**2 - y**2))
+#    visor.addChild(m)
     ## ============================
+    visor.createPage()
     pp = ParametricPlot3D(lambda x,y:(x,y, a*x**2 + b*y**2),(-1,1),(-1,1))
-    pp.setRange("a", (-1, 1, 0))
-    pp.setRange("b", (-1, 1, 0))
-    
+#
     for t in intervalPartition((0, 3, 6)):
         pp.addQuad(lambda x,y,t=t:(x,y, x**2 + b*y**2 + t))
-    
-    visor.addPageChild(pp)
-    ## ============================
+#
+    pp.setRange("a", (-1, 1, 0))
+    pp.setRange("b", (-1, 1, 0))
+    visor.addChild(pp)
+#    ## ============================
+    visor.createPage()
     p2 = Plot3D(lambda x,y:a*x**2 - y**2,(-1,1),(-1,1))
-    visor.addPageChild(p2)
-    ## ============================
+    ## si el parámetro no se define explícitamente, el resultado es equivalente
+    ## a esto:
+    ## p2.setRange("a", (0, 1, 0))
+    visor.addChild(p2)
+#    ## ============================
+    visor.createPage()
     p3 = RevolutionPlot3D(lambda r,t: r**2 ,(.1,1),(.1,2*pi), name="p3")
     r, t = createVars(["r", "t"])
     p3.addEqn(t == r**2)
-    visor.addPageChild(p3)
-    ## ============================
+    visor.addChild(p3)
+#    ## ============================
     visor.lucesBlanca.on = False
     visor.lucesColor.whichChild = SO_SWITCH_ALL
-    ## ============================
+#    ## ============================
+    
+    visor.whichPage = 0
     visor.resize(400, 400)
     visor.show()
     visor.chaptersStack.show()
-    SoQt.mainLoop()
 
-    
+    if Quarter:
+        sys.exit(app.exec_())
+    else:
+        SoQt.mainLoop()
     
