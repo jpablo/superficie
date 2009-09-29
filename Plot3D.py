@@ -18,7 +18,10 @@ from util import partial,  conecta, intervalPartition
 from gui import Slider
 from Equation import createVars
 import logging
-from math import sin, cos, pi
+## TODO: el código necesita averiguar qué símbolos están definidos
+## en el bloque que llama a *Plot3D, para que este código
+## use las funciones ya definidas, y no tener que definirlas aquí
+from math import *
 
 
 
@@ -111,6 +114,14 @@ class Mesh(QtCore.QObject):
         self.sHints.creaseAngle = 0.0
         self.root.addChild(self.sHints)
         ## ============================
+        self.material = SoMaterial()
+#        self.material.emissiveColor = col
+#        self.material.diffuseColor = col
+#        self.material.transparency.setValue(0.4)
+        self.transType = SoTransparencyType()
+        self.root.addChild(self.material)
+        self.root.addChild(self.transType)
+        ## ============================
         self.quads = {}
         self.parameters = {}
         self.rangeX = Range(*rangeX)
@@ -130,7 +141,13 @@ class Mesh(QtCore.QObject):
         
     def __len__(self):
         return len(self.rangeX) * len(self.rangeY)
-    
+
+    def setTransparency(self, val):
+        self.material.transparency.setValue(val)
+
+    def setTransparencyType(self, trans):
+        self.transType.value = trans
+
     def checkReturnValue(self, func, val):
         if not operator.isSequenceType(val) or len(val) != 3:
             raise TypeError, "function %s does not produces a 3-tuple" % func

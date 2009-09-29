@@ -73,6 +73,9 @@ class Page(QtCore.QObject):
     def addWidget(self,widget):
         self.widget.layout().addWidget(widget)
 
+    def addLayout(self,layout):
+        self.widget.layout().addLayout(layout)
+
     def addChild(self, node):
         root = getattr(node, "root", node)
         self.root.addChild(root)

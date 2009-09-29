@@ -433,6 +433,11 @@ class Curve3D(Line):
         self.func = func
         self.iter = iter
 
+    def updatePoints(self,func):
+        self.func = func
+        c = lambda t: Vec3(func(t))
+        points = intervalPartition(self.iter, c)
+        self.setCoordinates(points)
 
 
 class Bundle2(GraphicObject):

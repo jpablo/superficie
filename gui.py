@@ -138,7 +138,7 @@ class Slider2(QtGui.QWidget):
         self.func = func
         self.intervalo.reset(t=tini)
         self.setupUi()
-        
+
     def setValue(self, t):
         ## esta es la interfaz para poner el control en un valor arbitrario
         self.intervalo.reset(t=t)
@@ -186,4 +186,42 @@ class Button(QtGui.QPushButton):
         connect(self,"clicked(bool)", lambda x: func())
         if parent:
             parent.addWidget(self)
+
+class SpinBox(QtGui.QSpinBox):
+    def __init__(self, text,iter,func,parent=None):
+        QtGui.QSpinBox.__init__(self)
+        (vmin, vmax, vini) = iter
+        self.setMinimum(vmin)
+        self.setMaximum(vmax)
+        self.setValue(vini)
+        self.func = func
+        connect(self,"valueChanged(int)", lambda x: func(x))
+
+        layout  =  QtGui.QHBoxLayout()
+        lab = QtGui.QLabel(text)
+        layout.addWidget(lab)
+        layout.addWidget(self)
+
+        if parent:
+            parent.addLayout(layout)
+
+class DoubleSpinBox(QtGui.QDoubleSpinBox):
+    def __init__(self, text,iter,func,parent=None):
+        QtGui.QSpinBox.__init__(self)
+        (vmin, vmax, vini) = iter
+        self.setMinimum(vmin)
+        self.setMaximum(vmax)
+        self.setSingleStep(.1)
+        self.setValue(vini)
+        self.func = func
+        connect(self,"valueChanged(double)", lambda x: func(x))
+
+        layout  =  QtGui.QHBoxLayout()
+        lab = QtGui.QLabel(text)
+        layout.addWidget(lab)
+        layout.addWidget(self)
+
+        if parent:
+            parent.addLayout(layout)
+
 
