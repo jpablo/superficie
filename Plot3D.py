@@ -98,8 +98,11 @@ class Quad(object):
         nb = SoNormalBinding()
         nb.value = SoNormalBinding.PER_VERTEX_INDEXED
         ## ============================
+        self.scale = SoScale()
+        ## ============================
         self.root = SoSeparator()
         self.root.addChild(nb)
+        self.root.addChild(self.scale)
         self.root.addChild(self.coords)
         self.root.addChild(self.mesh)
         
@@ -148,6 +151,14 @@ class Mesh(QtCore.QObject):
     def setTransparencyType(self, trans):
         self.transType.value = trans
 
+    def setScaleFactor(self,vec3):
+        for quad in self.quads.values():
+            quad.scale.scaleFactor = vec3
+
+    def setVerticesPerColumn(self,n):
+        for quad in self.quads.values():
+            quad.mesh.verticesPerColumn = int(round(n)) 
+            
     def checkReturnValue(self, func, val):
         if not operator.isSequenceType(val) or len(val) != 3:
             raise TypeError, "function %s does not produces a 3-tuple" % func
