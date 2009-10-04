@@ -118,9 +118,6 @@ class Mesh(QtCore.QObject):
         self.root.addChild(self.sHints)
         ## ============================
         self.material = SoMaterial()
-#        self.material.emissiveColor = col
-#        self.material.diffuseColor = col
-#        self.material.transparency.setValue(0.4)
         self.transType = SoTransparencyType()
         self.root.addChild(self.material)
         self.root.addChild(self.transType)
@@ -147,6 +144,12 @@ class Mesh(QtCore.QObject):
 
     def setTransparency(self, val):
         self.material.transparency.setValue(val)
+
+    def setEmissiveColor(self, val):
+        self.material.emissiveColor.setValue(val)
+
+    def setDiffuseColor(self, val):
+        self.material.diffuseColor.setValue(val)
 
     def setTransparencyType(self, trans):
         self.transType.value = trans

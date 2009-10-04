@@ -369,14 +369,14 @@ class Line(GraphicObject):
         self.coords = SoCoordinate3()
         self.lineset = SoLineSet()
         draw = SoDrawStyle()
-        mat = SoMaterial()
+        self.material = SoMaterial()
         ## ============================
         self.setCoordinates(ptos, nvertices)
         draw.lineWidth.setValue(width)
-        mat.diffuseColor = color
+        self.material.diffuseColor = color
         ## ============================
         sep.addChild(self.coords)
-        sep.addChild(mat)
+        sep.addChild(self.material)
         sep.addChild(draw)
         sep.addChild(self.lineset)
         self.addChild(sep)
@@ -425,9 +425,13 @@ class Line(GraphicObject):
 class Curve3D(Line):
     """
     """
-    def __init__(self,iter,func,  color = (1,1,1), width=1, nvertices = -1, parent = None):
+    def __init__(self,iter,func,  color = (1,1,1), width=1, nvertices = -1, parent = None, domTrans=None):
         c   = lambda t: Vec3(func(t))
         ## ============================
+        if domTrans:
+            ptsTr = intervalPartition(iter, domTrans)
+            print max(ptsTr), min(ptsTr)
+            points = map(c,ptsTr)
         points = intervalPartition(iter, c)
         Line.__init__(self, points, color, width, nvertices, parent=parent)
         self.func = func
@@ -440,9 +444,54 @@ class Curve3D(Line):
         self.setCoordinates(points)
 
 
+class Bundle3(GraphicObject):
+    def __init__(self, curve, cp, col, factor=1, name="", visible = False, parent = None):
+        """curve is something derived from Line"""
+        GraphicObject.__init__(self,visible,parent)
+
+        self.material = SoMaterial()
+#        self.material.transparency.setValue(0.)
+        self.transType = SoTransparencyType()
+#        self.transType.value = SoTransparencyType.SORTED_OBJECT_SORTED_TRIANGLE_BLEND
+
+        self.addChild(self.material)
+        self.addChild(self.transType)
+
+        points = curve.getCoordinates()
+        pointsp = [curve[i]+cp(t)*factor for i,t in enumerate(intervalPartition(curve.iter))]
+        pointsRow = zip(map(tuple,points),map(tuple,pointsp))
+        pointsRowFlatten = []
+        for p,pp in pointsRow:
+            l = Line((p,pp))
+            l.material.transparency.setValue(0.9)
+            self.addChild(l)
+            pointsRowFlatten.append(p)
+            pointsRowFlatten.append(pp)
+
+        self.coords = SoCoordinate3()
+        self.coords.point.setValues(0,len(pointsRowFlatten),pointsRowFlatten)
+        self.mesh = SoQuadMesh()
+        self.mesh.verticesPerColumn = len(points)
+        self.mesh.verticesPerRow = 2
+        nb = SoNormalBinding()
+        nb.value = SoNormalBinding.PER_VERTEX_INDEXED
+        ## ============================
+        self.scale = SoScale()
+        ## ============================
+        sep = SoSeparator()
+        sep.addChild(nb)
+        sep.addChild(self.scale)
+        sep.addChild(self.coords)
+        sep.addChild(self.mesh)
+        self.addChild(sep)
+
+
+        self.animation = Animation(lambda num: self[num-1].show(),(4000,1,len(points)))
+
+
 class Bundle2(GraphicObject):
     def __init__(self, curve, cp, col, factor=1, name="", visible = False, parent = None):
-        """"""
+        """curve is something derived from Line"""
         GraphicObject.__init__(self,visible,parent)
         points = curve.getCoordinates()
         pointsp = [curve[i]+cp(t)*factor for i,t in enumerate(intervalPartition(curve.iter))]
@@ -457,7 +506,7 @@ class Bundle2(GraphicObject):
     def setRadius(self, r):
         for c in self.getChildren():
             c.setRadius(r)
-    
+
     def setLengthFactor(self, factor):
         for c in filter(lambda c: isinstance(c,Arrow), self.getChildren()):
             c.setLengthFactor(factor)
