@@ -337,6 +337,7 @@ def wrap(node, show = True):
         
    
 def main(args=None):
+    print "main"
     if args == None:
         import sys
         args = sys.argv

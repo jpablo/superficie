@@ -102,6 +102,7 @@ class Quad(object):
         self.scale = SoScale()
         ## ============================
         self.root = SoSeparator()
+#        self.root.addChild(SoCube())
         self.root.addChild(nb)
         self.root.addChild(self.scale)
         self.root.addChild(self.coords)
@@ -112,16 +113,16 @@ class Mesh(GraphicObject):
         GraphicObject.__init__(self,visible,parent)
         self.name = name
         ## ============================
-        self.root = SoSeparator()
+#        self.root = SoSeparator()
         self.sHints = SoShapeHints()
         self.sHints.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
         self.sHints.creaseAngle = 0.0
-        self.root.addChild(self.sHints)
+#        self.root.addChild(self.sHints)
         ## ============================
-        self.material = SoMaterial()
-        self.transType = SoTransparencyType()
-        self.root.addChild(self.material)
-        self.root.addChild(self.transType)
+#        self.material = SoMaterial()
+#        self.transType = SoTransparencyType()
+#        self.root.addChild(self.material)
+#        self.root.addChild(self.transType)
         ## ============================
         self.quads = {}
         self.parameters = {}
@@ -134,8 +135,8 @@ class Mesh(GraphicObject):
         if self.name != "":
             layout.addWidget(QtGui.QLabel("<center><h1>%s</h1></center>" % self.name))
             
-    def getGui(self):
-        return self.widget
+#    def getGui(self):
+#        return self.widget
 
     def addWidget(self,widget):
         self.widget.layout().addWidget(widget)
@@ -143,17 +144,17 @@ class Mesh(GraphicObject):
     def __len__(self):
         return len(self.rangeX) * len(self.rangeY)
 
-    def setTransparency(self, val):
-        self.material.transparency.setValue(val)
-
-    def setEmissiveColor(self, val):
-        self.material.emissiveColor.setValue(val)
-
-    def setDiffuseColor(self, val):
-        self.material.diffuseColor.setValue(val)
-
-    def setTransparencyType(self, trans):
-        self.transType.value = trans
+#    def setTransparency(self, val):
+#        self.material.transparency.setValue(val)
+#
+#    def setEmissiveColor(self, val):
+#        self.material.emissiveColor.setValue(val)
+#
+#    def setDiffuseColor(self, val):
+#        self.material.diffuseColor.setValue(val)
+#
+#    def setTransparencyType(self, trans):
+#        self.transType.value = trans
 
     def setScaleFactor(self,vec3):
         for quad in self.quads.values():
@@ -189,7 +190,9 @@ class Mesh(GraphicObject):
         self.checkReturnValue(func, val)
         ## ============================
         self.quads[func] = quad
-        self.root.addChild(quad.root)
+#        self.root.addChild(quad.root)
+#        self.separator.addChild(quad.root)
+        self.addChild(quad)
         
     def updateParameters(self):
         d = self.getParametersValues()
@@ -197,8 +200,9 @@ class Mesh(GraphicObject):
             quad.function = bindFreeVariables(func, d)
         
     def updateAll(self, val = 0):
-        self.updateParameters()
-        self.updateMesh()
+        if hasattr(self,"parameters"):
+            self.updateParameters()
+            self.updateMesh()
 
     def updateMesh(self):
         for quad in self.quads.values():
@@ -256,20 +260,21 @@ class Mesh(GraphicObject):
 
 
 class ParametricPlot3D(Mesh):
-    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None):
-        Mesh.__init__(self,rangeX=rangeX,rangeY=rangeY,name=name)
+    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = False, parent = None):
+        Mesh.__init__(self,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
         if not type(funcs) in (list, tuple):
             funcs = [funcs]
         for fn in funcs:
             self.addQuad(fn)
+
         ## ============================
 #        if eq != None:
 #            self.addEqn(eq)
         ## ============================
 
 class Plot3D(ParametricPlot3D):
-    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None):
-        ParametricPlot3D.__init__(self,funcs,rangeX=rangeX,rangeY=rangeY,name=name)
+    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = False, parent = None):
+        ParametricPlot3D.__init__(self,funcs,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
         
     def checkReturnValue(self, func, val):
         if not operator.isNumberType(val):
@@ -283,8 +288,8 @@ class Plot3D(ParametricPlot3D):
 
             
 class RevolutionPlot3D(ParametricPlot3D):
-    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None):
-        ParametricPlot3D.__init__(self,funcs,rangeX=rangeX,rangeY=rangeY,name=name)
+    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = False, parent = None):
+        ParametricPlot3D.__init__(self,funcs,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
         
     def checkReturnValue(self, func, val):
         if not operator.isNumberType(val):
@@ -313,32 +318,31 @@ if __name__ == "__main__":
 #    visor.addChild(m)
     ## ============================
     visor.createPage()
-    pp = ParametricPlot3D(lambda x,y:(x,y, a*x**2 + b*y**2),(-1,1),(-1,1))
-#
+    pp = ParametricPlot3D(lambda x,y:(x,y, a*x**2 + b*y**2),(-1,1),(-1,1),visible=True)
+
     for t in intervalPartition((0, 3, 6)):
         pp.addQuad(lambda x,y,t=t:(x,y, x**2 + b*y**2 + t))
-#
+
     pp.setRange("a", (-1, 1, 0))
     pp.setRange("b", (-1, 1, 0))
     visor.addChild(pp)
-#    ## ============================
+    ## ============================
     visor.createPage()
-    p2 = Plot3D(lambda x,y:a*x**2 - y**2,(-1,1),(-1,1))
+    p2 = Plot3D(lambda x,y:a*x**2 - y**2,(-1,1),(-1,1),visible=True)
     ## si el parámetro no se define explícitamente, el resultado es equivalente
     ## a esto:
     ## p2.setRange("a", (0, 1, 0))
     visor.addChild(p2)
-#    ## ============================
+    ## ============================
     visor.createPage()
-    p3 = RevolutionPlot3D(lambda r,t: r**2 ,(.1,1),(.1,2*pi), name="p3")
+    p3 = RevolutionPlot3D(lambda r,t: r**2 ,(.1,1),(.1,2*pi), name="p3",visible=True)
     r, t = createVars(["r", "t"])
     p3.addEqn(t == r**2)
     visor.addChild(p3)
-#    ## ============================
+    ## ============================
     visor.lucesBlanca.on = False
     visor.lucesColor.whichChild = SO_SWITCH_ALL
-#    ## ============================
-    
+    ## ============================    
     visor.whichPage = 0
     visor.resize(400, 400)
     visor.show()

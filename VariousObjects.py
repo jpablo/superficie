@@ -283,7 +283,7 @@ class Tube(object):
 
 
 class Arrow(GraphicObject):
-    def __init__(self, p1, p2, escala = 0.01, escalaVertice = 2.0, mat = None, extremos = False,visible = False,parent=None):
+    def __init__(self, p1, p2, escala = 0.01, escalaVertice = 2.0, extremos = False,visible = False,parent=None):
         GraphicObject.__init__(self,visible,parent)
         self.p1 = p1
         self.p2inicial = self.p2 = p2
@@ -296,12 +296,16 @@ class Arrow(GraphicObject):
             self.addChild(Sphere(p1, escala*escalaVertice))
         self.tr1 = SoTransform()
         self.tr2 = SoTransform()
-        if mat == None:
-            mat = SoMaterial()
-            mat.ambientColor.setValue(.0, .0, .0)
-            mat.diffuseColor.setValue(.4, .4, .4)
-            mat.specularColor.setValue(.8, .8, .8)
-            mat.shininess = .1
+
+        self.setAmbientColor((.0, .0, .0))
+        self.setDiffuseColor((.4,.4,.4))
+        self.setSpecularColor((.8, .8, .8))
+        self.setShininess(.1)
+#        self.matBase = SoMaterial()
+#        self.matBase.ambientColor.setValue(.0, .0, .0)
+#        self.matBase.diffuseColor.setValue(.4, .4, .4)
+#        self.matBase.specularColor.setValue(.8, .8, .8)
+#        self.matBase.shininess = .1
         self.cil = wrap(SoCylinder())
         self.cil.setName("segmento")
         ## ==========================
@@ -310,18 +314,18 @@ class Arrow(GraphicObject):
         self.cono = SoCone()
         self.cono.bottomRadius = self.escala * 2
         self.cono.height = .1
-        mat2 = SoMaterial()
-        mat2.ambientColor.setValue(.33, .22, .27)
-        mat2.diffuseColor.setValue(.78, .57, .11)
-        mat2.specularColor.setValue(.99, .94, .81)
-        mat2.shininess = .28
-        conoSep.addChild(mat2)
+        self.matHead = SoMaterial()
+        self.matHead.ambientColor  = (.33, .22, .27)
+        self.matHead.diffuseColor  = (.78, .57, .11)
+        self.matHead.specularColor = (.99, .94, .81)
+        self.matHead.shininess = .28
+        conoSep.addChild(self.matHead)
         conoSep.addChild(self.conoTr)
         conoSep.addChild(self.cono)
         ## ==========================
         sep.addChild(self.tr2)
         sep.addChild(self.tr1)
-        sep.addChild(mat)
+#        sep.addChild(self.matBase)
         sep.addChild(self.cil)
         sep.addChild(conoSep)
         ## ============================
@@ -460,7 +464,7 @@ class Bundle3(GraphicObject):
         self.mesh.verticesPerColumn = len(curve)
         self.mesh.verticesPerRow = 2
         nb = SoNormalBinding()
-        nb.value = SoNormalBinding.PER_VERTEX_INDEXED
+#        nb.value = SoNormalBinding.PER_VERTEX_INDEXED
         sHints = SoShapeHints()
         sHints.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
 
@@ -469,12 +473,12 @@ class Bundle3(GraphicObject):
         self.scale = SoScale()
         ## ============================
         sep = SoSeparator()
-#        sep.addChild(nb)
+        sep.addChild(nb)
         sep.addChild(sHints)
         sep.addChild(self.scale)
         sep.addChild(self.coords)
         sep.addChild(self.mesh)
-        self.addChild(self.line)
+#        self.addChild(self.line)
         self.addChild(sep)
 
         self.animation = Animation(lambda num: float(num)/len(curve) * self.material.transparency.getValue(),(4000,1,len(curve)))
@@ -495,6 +499,7 @@ class Bundle3(GraphicObject):
         pointsRowFlatten = []
         vertexIndexes = []
         for p,pp in pointsRow:
+            ## TODO: triangular!!
             pointsRowFlatten.append(p)
             pointsRowFlatten.append(pp)
             vertexIndexes.append(2)
@@ -506,11 +511,11 @@ class Bundle3(GraphicObject):
 
     def setTransparency(self, val):
         GraphicObject.setTransparency(self,val)
-        self.line.setTransparency(val)
+#        self.line.setTransparency(val)
 
     def setTransparencyType(self, trans):
         GraphicObject.setTransparencyType(self,trans)
-        self.line.setTransparencyType(trans)
+#        self.line.setTransparencyType(trans)
 
     def setNumVisibleArrows(self, num):
         """set the number of arrow to show"""
@@ -527,6 +532,20 @@ class Bundle2(GraphicObject):
             self.addChild(Arrow(p,pp,visible=True,escala=.005,extremos=True))
 
         self.animation = Animation(lambda num: self[num-1].show(),(4000,1,len(points)))
+
+    def setMaterial(self,mat):
+        for c in self.getChildren():
+            c.material.ambientColor  = mat.ambientColor
+            c.material.diffuseColor  = mat.diffuseColor
+            c.material.specularColor = mat.specularColor
+            c.material.shininess     = mat.shininess
+
+    def setHeadMaterial(self,mat):
+        for c in self.getChildren():
+            c.matHead.ambientColor  = mat.ambientColor
+            c.matHead.diffuseColor  = mat.diffuseColor
+            c.matHead.specularColor = mat.specularColor
+            c.matHead.shininess     = mat.shininess
 
     def resetObjectForAnimation(self):
         self.hideAllArrows()

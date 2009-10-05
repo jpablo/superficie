@@ -181,6 +181,15 @@ class GraphicObject(SoSwitch):
     def setDiffuseColor(self, val):
         self.material.diffuseColor.setValue(val)
 
+    def setAmbientColor(self, val):
+        self.material.ambientColor.setValue(val)
+
+    def setSpecularColor(self, val):
+        self.material.specularColor.setValue(val)
+
+    def setShininess(self,val):
+        self.material.shininess = val
+
     def setTransparencyType(self, trans):
         self.transType.value = trans
 
