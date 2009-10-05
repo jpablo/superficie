@@ -526,6 +526,10 @@ class Bundle2(GraphicObject):
     def __init__(self, curve, cp, col, factor=1, name="", visible = False, parent = None):
         """curve is something derived from Line"""
         GraphicObject.__init__(self,visible,parent)
+        comp = SoComplexity()
+        comp.value.setValue(.1)
+        self.separator.addChild(comp)
+        ## ============================
         points = curve.getCoordinates()
         pointsp = [curve[i]+cp(t)*factor for i,t in enumerate(intervalPartition(curve.iter))]
         for p,pp in zip(points,pointsp):
