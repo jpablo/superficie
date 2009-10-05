@@ -113,16 +113,10 @@ class Mesh(GraphicObject):
         GraphicObject.__init__(self,visible,parent)
         self.name = name
         ## ============================
-#        self.root = SoSeparator()
         self.sHints = SoShapeHints()
         self.sHints.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
         self.sHints.creaseAngle = 0.0
-#        self.root.addChild(self.sHints)
-        ## ============================
-#        self.material = SoMaterial()
-#        self.transType = SoTransparencyType()
-#        self.root.addChild(self.material)
-#        self.root.addChild(self.transType)
+        self.addChild(self.sHints)
         ## ============================
         self.quads = {}
         self.parameters = {}
@@ -135,26 +129,14 @@ class Mesh(GraphicObject):
         if self.name != "":
             layout.addWidget(QtGui.QLabel("<center><h1>%s</h1></center>" % self.name))
             
-#    def getGui(self):
-#        return self.widget
+    def getGui(self):
+        return self.widget
 
     def addWidget(self,widget):
         self.widget.layout().addWidget(widget)
         
     def __len__(self):
         return len(self.rangeX) * len(self.rangeY)
-
-#    def setTransparency(self, val):
-#        self.material.transparency.setValue(val)
-#
-#    def setEmissiveColor(self, val):
-#        self.material.emissiveColor.setValue(val)
-#
-#    def setDiffuseColor(self, val):
-#        self.material.diffuseColor.setValue(val)
-#
-#    def setTransparencyType(self, trans):
-#        self.transType.value = trans
 
     def setScaleFactor(self,vec3):
         for quad in self.quads.values():
@@ -260,7 +242,7 @@ class Mesh(GraphicObject):
 
 
 class ParametricPlot3D(Mesh):
-    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = False, parent = None):
+    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = True, parent = None):
         Mesh.__init__(self,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
         if not type(funcs) in (list, tuple):
             funcs = [funcs]
@@ -273,7 +255,7 @@ class ParametricPlot3D(Mesh):
         ## ============================
 
 class Plot3D(ParametricPlot3D):
-    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = False, parent = None):
+    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = True, parent = None):
         ParametricPlot3D.__init__(self,funcs,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
         
     def checkReturnValue(self, func, val):
@@ -288,7 +270,7 @@ class Plot3D(ParametricPlot3D):
 
             
 class RevolutionPlot3D(ParametricPlot3D):
-    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = False, parent = None):
+    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = True, parent = None):
         ParametricPlot3D.__init__(self,funcs,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
         
     def checkReturnValue(self, func, val):
