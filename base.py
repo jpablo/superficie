@@ -154,6 +154,7 @@ class GraphicObject(SoSwitch):
         self.setVisible(False)
 
     def setVisible(self, visible):
+#        print "setVisible:", visible
         if visible:
             self.whichChild = SO_SWITCH_ALL
         else:

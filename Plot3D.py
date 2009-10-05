@@ -15,6 +15,7 @@ from types import FunctionType
 from random import random
 import operator
 from util import partial,  conecta, intervalPartition
+from base import GraphicObject
 from gui import Slider
 from Equation import createVars
 import logging
@@ -106,9 +107,9 @@ class Quad(object):
         self.root.addChild(self.coords)
         self.root.addChild(self.mesh)
         
-class Mesh(QtCore.QObject):
-    def __init__(self, rangeX=(0,1,40),  rangeY=(0,1,40), name=""):
-        QtCore.QObject.__init__(self)
+class Mesh(GraphicObject):
+    def __init__(self, rangeX=(0,1,40),  rangeY=(0,1,40), name="",visible = False, parent = None):
+        GraphicObject.__init__(self,visible,parent)
         self.name = name
         ## ============================
         self.root = SoSeparator()
