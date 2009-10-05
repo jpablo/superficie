@@ -369,14 +369,12 @@ class Line(GraphicObject):
         self.coords = SoCoordinate3()
         self.lineset = SoLineSet()
         draw = SoDrawStyle()
-        self.material = SoMaterial()
         ## ============================
         self.setCoordinates(ptos, nvertices)
         draw.lineWidth.setValue(width)
         self.material.diffuseColor = color
         ## ============================
         sep.addChild(self.coords)
-        sep.addChild(self.material)
         sep.addChild(draw)
         sep.addChild(self.lineset)
         self.addChild(sep)
@@ -396,8 +394,12 @@ class Line(GraphicObject):
         return len(self.coords.point)
         
     def setNumVertices(self, n):
-#        print "setNumVertices:", n
+        "Defines the first n vertices to be drawn"
         self.lineset.numVertices.setValue(n)
+
+    def setVertexIndexes(self, lst):
+        "Controls which vertices are drawn"
+        self.lineset.numVertices.setValues(lst)
         
     def setCoordinates(self, ptos, nvertices = -1):
         ## sometimes we don't want to show all points
@@ -445,48 +447,74 @@ class Curve3D(Line):
 
 
 class Bundle3(GraphicObject):
-    def __init__(self, curve, cp, col, factor=1, name="", visible = False, parent = None):
+    def __init__(self, curve, cp, factor=1, name="", visible = False, parent = None):
         """curve is something derived from Line"""
         GraphicObject.__init__(self,visible,parent)
-
-        self.material = SoMaterial()
-#        self.material.transparency.setValue(0.)
-        self.transType = SoTransparencyType()
-#        self.transType.value = SoTransparencyType.SORTED_OBJECT_SORTED_TRIANGLE_BLEND
-
-        self.addChild(self.material)
-        self.addChild(self.transType)
-
-        points = curve.getCoordinates()
-        pointsp = [curve[i]+cp(t)*factor for i,t in enumerate(intervalPartition(curve.iter))]
-        pointsRow = zip(map(tuple,points),map(tuple,pointsp))
-        pointsRowFlatten = []
-        for p,pp in pointsRow:
-            l = Line((p,pp))
-            l.material.transparency.setValue(0.9)
-            self.addChild(l)
-            pointsRowFlatten.append(p)
-            pointsRowFlatten.append(pp)
-
+        self.curve = curve
+        self.cp = cp
+        self.factor = factor
+        self.line = Line(())
+        ## ============================
         self.coords = SoCoordinate3()
-        self.coords.point.setValues(0,len(pointsRowFlatten),pointsRowFlatten)
         self.mesh = SoQuadMesh()
-        self.mesh.verticesPerColumn = len(points)
+        self.mesh.verticesPerColumn = len(curve)
         self.mesh.verticesPerRow = 2
         nb = SoNormalBinding()
         nb.value = SoNormalBinding.PER_VERTEX_INDEXED
+        sHints = SoShapeHints()
+        sHints.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
+
+        self.generateArrows()
         ## ============================
         self.scale = SoScale()
         ## ============================
         sep = SoSeparator()
-        sep.addChild(nb)
+#        sep.addChild(nb)
+        sep.addChild(sHints)
         sep.addChild(self.scale)
         sep.addChild(self.coords)
         sep.addChild(self.mesh)
+        self.addChild(self.line)
         self.addChild(sep)
 
+        self.animation = Animation(lambda num: float(num)/len(curve) * self.material.transparency.getValue(),(4000,1,len(curve)))
 
-        self.animation = Animation(lambda num: self[num-1].show(),(4000,1,len(points)))
+    def __len__(self):
+        "the same lengh as the base curve"
+        return len(self.curve)
+
+    def setFactor(self,factor):
+        self.factor = factor
+        self.generateArrows()
+
+    def generateArrows(self):
+        points = self.curve.getCoordinates()
+        pointsp = [self.curve[i]+self.cp(t)*self.factor for i,t in enumerate(intervalPartition(self.curve.iter))]
+        pointsRow = zip(map(tuple,points),map(tuple,pointsp))
+
+        pointsRowFlatten = []
+        vertexIndexes = []
+        for p,pp in pointsRow:
+            pointsRowFlatten.append(p)
+            pointsRowFlatten.append(pp)
+            vertexIndexes.append(2)
+        ## ============================
+        self.line.setCoordinates(pointsRowFlatten)
+        self.line.setVertexIndexes(vertexIndexes)
+        self.coords.point.setValues(0,len(pointsRowFlatten),pointsRowFlatten)
+
+
+    def setTransparency(self, val):
+        GraphicObject.setTransparency(self,val)
+        self.line.setTransparency(val)
+
+    def setTransparencyType(self, trans):
+        GraphicObject.setTransparencyType(self,trans)
+        self.line.setTransparencyType(trans)
+
+    def setNumVisibleArrows(self, num):
+        """set the number of arrow to show"""
+        self.mesh.verticesPerColumn = num
 
 
 class Bundle2(GraphicObject):

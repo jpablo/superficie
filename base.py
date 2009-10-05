@@ -127,6 +127,11 @@ class GraphicObject(SoSwitch):
         self.separator.addChild(self.translation)
         self.animation = None
         ## ============================
+        self.material = SoMaterial()
+        self.transType = SoTransparencyType()
+        self.separator.addChild(self.material)
+        self.separator.addChild(self.transType)
+        ## ============================
         if parent:
             parent.addChild(self)
 
@@ -166,6 +171,17 @@ class GraphicObject(SoSwitch):
     def resetObjectForAnimation(self):
         pass
 
+    def setTransparency(self, val):
+        self.material.transparency.setValue(val)
+
+    def setEmissiveColor(self, val):
+        self.material.emissiveColor.setValue(val)
+
+    def setDiffuseColor(self, val):
+        self.material.diffuseColor.setValue(val)
+
+    def setTransparencyType(self, trans):
+        self.transType.value = trans
 
 
 
