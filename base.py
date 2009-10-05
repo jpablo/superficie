@@ -132,6 +132,9 @@ class GraphicObject(SoSwitch):
         self.separator.addChild(self.material)
         self.separator.addChild(self.transType)
         ## ============================
+        self.drawStyle = SoDrawStyle()
+        self.separator.addChild(self.drawStyle)
+        ## ============================
         if parent:
             parent.addChild(self)
 

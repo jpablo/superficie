@@ -102,7 +102,6 @@ class Quad(object):
         self.scale = SoScale()
         ## ============================
         self.root = SoSeparator()
-#        self.root.addChild(SoCube())
         self.root.addChild(nb)
         self.root.addChild(self.scale)
         self.root.addChild(self.coords)
