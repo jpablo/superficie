@@ -156,6 +156,9 @@ class GraphicObject(SoSwitch):
     def hide(self):
         self.setVisible(False)
 
+    def setDrawStyle(self,style):
+        self.drawStyle.style = style
+
     def setVisible(self, visible):
 #        print "setVisible:", visible
         if visible:

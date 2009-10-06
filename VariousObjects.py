@@ -584,6 +584,20 @@ class Bundle(GraphicObject):
 
         self.animation = Animation(lambda num: self[num-1].show(),(4000,1,n))
 
+    def setMaterial(self,mat):
+        for c in self.getChildren():
+            c.material.ambientColor  = mat.ambientColor
+            c.material.diffuseColor  = mat.diffuseColor
+            c.material.specularColor = mat.specularColor
+            c.material.shininess     = mat.shininess
+
+    def setHeadMaterial(self,mat):
+        for c in self.getChildren():
+            c.matHead.ambientColor  = mat.ambientColor
+            c.matHead.diffuseColor  = mat.diffuseColor
+            c.matHead.specularColor = mat.specularColor
+            c.matHead.shininess     = mat.shininess
+
     def resetObjectForAnimation(self):
         self.hideAllArrows()
 
