@@ -14,7 +14,7 @@ from PyQt4 import QtGui, QtCore, uic
 from types import FunctionType
 from random import random
 import operator
-from util import partial,  conecta, intervalPartition
+from util import partial,  conecta, intervalPartition, Range, malla
 from base import GraphicObject
 from gui import Slider
 from Equation import createVars
@@ -55,39 +55,9 @@ def getFreeVariables(func):
     return vars1
 
 
-def malla(puntos,func,xmin,xinc,nx,ymin,yinc,ny):
-    for x in xrange(nx):
-        for y in xrange(ny):
-            puntos[ny*x+y] = func(xmin+xinc*x,ymin+yinc*y)
-
-def malla2(puntos, func,xmin, xinc,nx,ymin, yinc, ny):
-    for x in xrange(nx):
-        for y in xrange(ny):
-            puntos.append( func(xmin+xinc*x,ymin+yinc*y) )
-            
-def malla3(puntos, func, rangex, rangey):
-    ny = len(rangey)
-    for ix, x in enumerate(rangex):
-        for iy, y in enumerate(rangey):
-            puntos[ny*ix+iy] = func(x, y)
-
 
 def genVarsVals(vars, args):
     return ";".join([v+"="+str(a) for v, a in zip(vars, args)])
-
-class Range(object):
-    def __init__(self, vmin, vmax, npoints = 30):
-        self.min = vmin
-        self.max = vmax
-        self.xrange = xrange(npoints)
-        self.dt = float(self.max - self.min) / (npoints - 1)
-    
-    def __len__(self):
-        return len(self.xrange)
-        
-    def __getitem__(self, i):
-        ival = self.xrange[i]
-        return self.min+self.dt*ival
         
 class Quad(object):
     def __init__(self, func=None, nx = 10, ny = 10):

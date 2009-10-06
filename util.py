@@ -223,6 +223,22 @@ def intervalPartition(iter, func=None):
 #    l = b - a
 #    return [l*(i/(n-1.)) + a for i in range(n)]
 
+class Range(object):
+    ""
+    def __init__(self, vmin, vmax, npoints = 30):
+        self.min = vmin
+        self.max = vmax
+        self.xrange = xrange(npoints)
+        self.dt = float(self.max - self.min) / (npoints - 1)
+
+    def __len__(self):
+        return len(self.xrange)
+
+    def __getitem__(self, i):
+        ival = self.xrange[i]
+        return self.min+self.dt*ival
+
+
 def genCircular(lst): 
     n = 0
     while 1:
@@ -322,6 +338,22 @@ def searchByNodeType(root, type, default = None, interest = SoSearchAction.FIRST
         return [path.getTail() for path in  sa.getPaths()]
     else:
         return default
+
+def malla(puntos,func,xmin,xinc,nx,ymin,yinc,ny):
+    for x in xrange(nx):
+        for y in xrange(ny):
+            puntos[ny*x+y] = func(xmin+xinc*x,ymin+yinc*y)
+
+def malla2(puntos, func,xmin, xinc,nx,ymin, yinc, ny):
+    for x in xrange(nx):
+        for y in xrange(ny):
+            puntos.append( func(xmin+xinc*x,ymin+yinc*y) )
+
+def malla3(puntos, func, rangex, rangey):
+    ny = len(rangey)
+    for ix, x in enumerate(rangex):
+        for iy, y in enumerate(rangey):
+            puntos[ny*ix+iy] = func(x, y)
 
 
 def wrap(node, show = True):

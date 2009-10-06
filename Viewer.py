@@ -33,6 +33,7 @@ class CambiaFigura(base_class, cambia_figura_fclass):
         self.setupUi(self)
 
 
+
 def getPickedPoint(root, myPickAction, cursorPosition):
     myPickAction.setPoint(cursorPosition)
     myPickAction.setRadius(8.0)
@@ -76,7 +77,6 @@ class Viewer(QtGui.QWidget):
             return self.viewer.getSoRenderManager().getCamera()
         else:
             return self.viewer.getCamera()
-        
 
     
     def setStereoAdjustment(self, val):

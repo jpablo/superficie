@@ -8,6 +8,7 @@ from superficie.util import nodeDict
 from superficie.base import Page
 from superficie.base import GraphicObject
 from superficie.Animation import Animation
+from superficie.util import malla2, Range
 
 def generaPuntos(coords):
     c = coords
@@ -613,3 +614,27 @@ class Bundle(GraphicObject):
     def hideAllArrows(self):
         for arrow in self.getChildren():
             arrow.hide()
+
+
+class BasePlane(GraphicObject):
+    def __init__(self, visible = True, parent = None):
+        GraphicObject.__init__(self,visible,parent)
+        ## ============================
+        self.setDiffuseColor((.5,.5,.5))
+        self.setAmbientColor((.5,.5,.5))
+        ## ============================
+        self.coords = SoCoordinate3()
+        self.ptos = []
+        r = Range(-2,2,7)
+        malla2(self.ptos,lambda x,y:(x,y,0), r.min, r.dt, len(r),r.min, r.dt, len(r))
+        self.coords.point.setValues(0,len(self.ptos),self.ptos)
+        self.mesh = SoQuadMesh()
+        self.mesh.verticesPerColumn = len(r)
+        self.mesh.verticesPerRow = len(r)
+        self.sHints = SoShapeHints()
+        self.sHints.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
+        self.separator.addChild(self.sHints)
+        self.separator.addChild(self.coords)
+        self.separator.addChild(self.mesh)
+
+
