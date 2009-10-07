@@ -192,14 +192,7 @@ class Sphere(GraphicObject):
         GraphicObject.__init__(self,visible,parent)
         sp = SoSphere()
         sp.radius = radius
-        ## ===================
-        mat = SoMaterial()
-        mat.ambientColor.setValue(.33, .22, .27)
-        mat.diffuseColor.setValue(.78, .57, .11)
-        mat.specularColor.setValue(.99, .94, .81)
-        mat.shininess = .28
-        ## ===================
-        self.addChild(mat)
+#        ## ===================
         self.addChild(sp)
         self.setOrigin(center)
 
@@ -285,6 +278,7 @@ class Tube(object):
 
 class Arrow(GraphicObject):
     def __init__(self, p1, p2, escala = 0.01, escalaVertice = 2.0, extremos = False,visible = False,parent=None):
+        "p1,p2: Vec3"
         GraphicObject.__init__(self,visible,parent)
         self.p1 = p1
         self.p2inicial = self.p2 = p2

@@ -14,10 +14,11 @@ from PyQt4 import QtGui, QtCore, uic
 from types import FunctionType
 from random import random
 import operator
-from util import partial,  conecta, intervalPartition, Range, malla, wrap
+from util import partial,  conecta, intervalPartition, Range, malla, wrap, Vec3
 from base import GraphicObject
 from gui import Slider
 from Equation import createVars
+from VariousObjects import Arrow
 import logging
 ## TODO: el código necesita averiguar qué símbolos están definidos
 ## en el bloque que llama a *Plot3D, para que este código
@@ -62,6 +63,7 @@ def genVarsVals(vars, args):
 class Quad(object):
     def __init__(self, func=None, nx = 10, ny = 10):
         self.function= func
+        self.vectorFieldFunc = None
         self.coords = SoCoordinate3()
         self.mesh = wrap(SoQuadMesh())
         self.getMesh().verticesPerColumn = nx
@@ -98,6 +100,9 @@ class Quad(object):
 
     def getVerticesPerRow(self):
         return self.getMesh().verticesPerRow.getValue()
+
+    def addVectorField(self,func):
+        self.vectorFieldFunc = func
         
 class Mesh(GraphicObject):
     def __init__(self, rangeX=(0,1,40),  rangeY=(0,1,40), name="",visible = False, parent = None):
@@ -128,6 +133,10 @@ class Mesh(GraphicObject):
         
     def __len__(self):
         return len(self.rangeX) * len(self.rangeY)
+
+    def addVectorField(self, func):
+        for quad in self.quads.values():
+            quad.addVectorField(func)
 
     def setMeshVisible(self, visible):
         if visible:
@@ -205,6 +214,8 @@ class Mesh(GraphicObject):
                 self.rangeX.min, self.rangeX.dt, len(self.rangeX),
                 self.rangeY.min, self.rangeY.dt, len(self.rangeY))
             quad.coords.point.setValues(0,len(vertices),vertices)
+            ## ============================
+            ## the lines
             vpc = quad.getVerticesPerColumn()
             vpr = quad.getVerticesPerRow()
             lstX = [vpr for i in range(vpc)]
@@ -217,7 +228,14 @@ class Mesh(GraphicObject):
                     verticesY.append(vertices[j*vpr+i])
             quad.linesetYcoor.point.setValues(0,len(verticesY),verticesY)
             quad.getLineSetY().numVertices.setValues(lstY)
-            
+            ## ============================
+            ## the vector field
+            if quad.vectorFieldFunc:
+                for v in vertices:
+                    vf = quad.vectorFieldFunc(Vec3(v))
+                    self.addChild(Arrow(Vec3(v),vf,visible=True,escala=.005,extremos=True))
+
+
     def addParameter(self, rangep=('w', 0, 1, 0), qlabel = None):
         ## rangep = (name, vmin, vmax, vini)
         ##        | (name, vmin, vmax)
@@ -319,6 +337,56 @@ class RevolutionParametricPlot3D(ParametricPlot3D):
                 R,T,Z = g(r,t)
                 return(R*cos(T),R*sin(T),Z)
             quad.function = fn
+
+
+class VectorField3D(GraphicObject):
+    def __init__(self, curve, cp, col, factor=1, name="", visible = False, parent = None):
+        """curve is something derived from Line"""
+        GraphicObject.__init__(self,visible,parent)
+        comp = SoComplexity()
+        comp.value.setValue(.1)
+        self.separator.addChild(comp)
+        ## ============================
+        points = curve.getCoordinates()
+        pointsp = [curve[i]+cp(t)*factor for i,t in enumerate(intervalPartition(curve.iter))]
+        for p,pp in zip(points,pointsp):
+            self.addChild(Arrow(p,pp,visible=True,escala=.005,extremos=True))
+
+        self.animation = Animation(lambda num: self[num-1].show(),(4000,1,len(points)))
+
+    def setMaterial(self,mat):
+        for c in self.getChildren():
+            c.material.ambientColor  = mat.ambientColor
+            c.material.diffuseColor  = mat.diffuseColor
+            c.material.specularColor = mat.specularColor
+            c.material.shininess     = mat.shininess
+
+    def setHeadMaterial(self,mat):
+        for c in self.getChildren():
+            c.matHead.ambientColor  = mat.ambientColor
+            c.matHead.diffuseColor  = mat.diffuseColor
+            c.matHead.specularColor = mat.specularColor
+            c.matHead.shininess     = mat.shininess
+
+    def resetObjectForAnimation(self):
+        self.hideAllArrows()
+
+    def setRadius(self, r):
+        for c in self.getChildren():
+            c.setRadius(r)
+
+    def setLengthFactor(self, factor):
+        for c in filter(lambda c: isinstance(c,Arrow), self.getChildren()):
+            c.setLengthFactor(factor)
+
+    def hideAllArrows(self):
+        for arrow in self.getChildren():
+            arrow.hide()
+
+    def setNumVisibleArrows(self, num):
+        """set the number of arrow to show"""
+        print "setNumVisibleArrows:", num
+
 
 if __name__ == "__main__":
     from util import  main
