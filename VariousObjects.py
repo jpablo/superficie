@@ -623,18 +623,32 @@ class BasePlane(GraphicObject):
         self.setDiffuseColor((.5,.5,.5))
         self.setAmbientColor((.5,.5,.5))
         ## ============================
-        self.coords = SoCoordinate3()
-        self.ptos = []
-        r = Range(-2,2,7)
-        malla2(self.ptos,lambda x,y:(x,y,0), r.min, r.dt, len(r),r.min, r.dt, len(r))
-        self.coords.point.setValues(0,len(self.ptos),self.ptos)
+        self.translation = SoTranslation()
+        ## ============================
+        self.coords = SoCoordinate3()        
         self.mesh = SoQuadMesh()
-        self.mesh.verticesPerColumn = len(r)
-        self.mesh.verticesPerRow = len(r)
         self.sHints = SoShapeHints()
         self.sHints.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
+        self.separator.addChild(self.translation)
         self.separator.addChild(self.sHints)
         self.separator.addChild(self.coords)
         self.separator.addChild(self.mesh)
+        self.setRange((-2,2,7))
+        self.setTransparency(0.5)
+        self.setTransparencyType(8)
+
+    def setZ(self,val):
+        oldVal = list(self.translation.translation.getValue())
+        oldVal[2] = val
+        self.translation.translation = oldVal
+
+    def setRange(self,r0):
+        r = Range(*r0)
+        self.ptos = []
+        malla2(self.ptos,lambda x,y:(x,y,0), r.min, r.dt, len(r),r.min, r.dt, len(r))
+        self.coords.point.setValues(0,len(self.ptos),self.ptos)
+        self.mesh.verticesPerColumn = len(r)
+        self.mesh.verticesPerRow = len(r)
+
 
 

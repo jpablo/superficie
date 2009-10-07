@@ -160,7 +160,6 @@ class GraphicObject(SoSwitch):
         self.drawStyle.style = style
 
     def setVisible(self, visible):
-#        print "setVisible:", visible
         if visible:
             self.whichChild = SO_SWITCH_ALL
         else:

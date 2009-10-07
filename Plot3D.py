@@ -14,7 +14,7 @@ from PyQt4 import QtGui, QtCore, uic
 from types import FunctionType
 from random import random
 import operator
-from util import partial,  conecta, intervalPartition, Range, malla
+from util import partial,  conecta, intervalPartition, Range, malla, wrap
 from base import GraphicObject
 from gui import Slider
 from Equation import createVars
@@ -63,19 +63,41 @@ class Quad(object):
     def __init__(self, func=None, nx = 10, ny = 10):
         self.function= func
         self.coords = SoCoordinate3()
-        self.mesh = SoQuadMesh()
-        self.mesh.verticesPerColumn = nx
-        self.mesh.verticesPerRow = ny
+        self.mesh = wrap(SoQuadMesh())
+        self.getMesh().verticesPerColumn = nx
+        self.getMesh().verticesPerRow = ny
         nb = SoNormalBinding()
         nb.value = SoNormalBinding.PER_VERTEX_INDEXED
         ## ============================
         self.scale = SoScale()
+        self.linesetX = wrap(SoLineSet(),False)
+        self.linesetY = wrap(SoLineSet(),False)
+        self.linesetYcoor = SoCoordinate3()
+        self.lineColor = SoMaterial()
+        self.lineColor.diffuseColor = (1,0,0)
         ## ============================
         self.root = SoSeparator()
         self.root.addChild(nb)
         self.root.addChild(self.scale)
         self.root.addChild(self.coords)
         self.root.addChild(self.mesh)
+        self.root.addChild(self.lineColor)
+        self.root.addChild(self.linesetX)
+        self.root.addChild(self.linesetYcoor)
+        self.root.addChild(self.linesetY)
+
+    def getMesh(self):
+        return self.mesh[0]
+    def getLineSetX(self):
+        return self.linesetX[0]
+    def getLineSetY(self):
+        return self.linesetY[0]
+
+    def getVerticesPerColumn(self):
+        return self.getMesh().verticesPerColumn.getValue()
+
+    def getVerticesPerRow(self):
+        return self.getMesh().verticesPerRow.getValue()
         
 class Mesh(GraphicObject):
     def __init__(self, rangeX=(0,1,40),  rangeY=(0,1,40), name="",visible = False, parent = None):
@@ -107,13 +129,34 @@ class Mesh(GraphicObject):
     def __len__(self):
         return len(self.rangeX) * len(self.rangeY)
 
+    def setMeshVisible(self, visible):
+        if visible:
+            val = SO_SWITCH_ALL
+        else:
+            val = SO_SWITCH_NONE
+        for quad in self.quads.values():
+            quad.mesh.whichChild = val
+
+    def setLinesVisible(self, visible):
+        if visible:
+            val = SO_SWITCH_ALL
+        else:
+            val = SO_SWITCH_NONE
+        for quad in self.quads.values():
+            quad.linesetX.whichChild = val
+            quad.linesetY.whichChild = val
+
+    def setMeshDiffuseColor(self,val):
+        for quad in self.quads.values():
+            quad.lineColor.diffuseColor = val
+
     def setScaleFactor(self,vec3):
         for quad in self.quads.values():
             quad.scale.scaleFactor = vec3
 
     def setVerticesPerColumn(self,n):
         for quad in self.quads.values():
-            quad.mesh.verticesPerColumn = int(round(n)) 
+            quad.getMesh().verticesPerColumn = int(round(n))
             
     def checkReturnValue(self, func, val):
         if not operator.isSequenceType(val) or len(val) != 3:
@@ -162,6 +205,18 @@ class Mesh(GraphicObject):
                 self.rangeX.min, self.rangeX.dt, len(self.rangeX),
                 self.rangeY.min, self.rangeY.dt, len(self.rangeY))
             quad.coords.point.setValues(0,len(vertices),vertices)
+            vpc = quad.getVerticesPerColumn()
+            vpr = quad.getVerticesPerRow()
+            lstX = [vpr for i in range(vpc)]
+            lstY = [vpc for i in range(vpr)]
+            quad.getLineSetX().numVertices.setValues(lstX)
+            ## we need the "transpose of the first list
+            verticesY = []
+            for i in range(vpr):
+                for j in range(vpc):
+                    verticesY.append(vertices[j*vpr+i])
+            quad.linesetYcoor.point.setValues(0,len(verticesY),verticesY)
+            quad.getLineSetY().numVertices.setValues(lstY)
             
     def addParameter(self, rangep=('w', 0, 1, 0), qlabel = None):
         ## rangep = (name, vmin, vmax, vini)
@@ -239,7 +294,7 @@ class Plot3D(ParametricPlot3D):
 
             
 class RevolutionPlot3D(ParametricPlot3D):
-    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = True, parent = None):
+    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,2*pi,40), name = '', eq = None,visible = True, parent = None):
         ParametricPlot3D.__init__(self,funcs,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
         
     def checkReturnValue(self, func, val):
@@ -249,8 +304,21 @@ class RevolutionPlot3D(ParametricPlot3D):
     def updateParameters(self):
         d = self.getParametersValues()
         for func,quad in self.quads.items():
-            f2 = bindFreeVariables(func, d)
-            quad.function = lambda r,t: (r*cos(t), r*sin(t),f2(r,t))
+            fz = bindFreeVariables(func, d)
+            quad.function = lambda r,t: (r*cos(t), r*sin(t),fz(r,t))
+
+class RevolutionParametricPlot3D(ParametricPlot3D):
+    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = True, parent = None):
+        ParametricPlot3D.__init__(self,funcs,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
+
+    def updateParameters(self):
+        d = self.getParametersValues()
+        for func,quad in self.quads.items():
+            g = bindFreeVariables(func, d)
+            def fn(r,t):
+                R,T,Z = g(r,t)
+                return(R*cos(T),R*sin(T),Z)
+            quad.function = fn
 
 if __name__ == "__main__":
     from util import  main
