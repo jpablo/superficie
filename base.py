@@ -223,6 +223,7 @@ class Plane(GraphicObject):
 #            nb.value = SoNormalBinding.PER_VERTEX_INDEXED
         mat = SoMaterial()
         mat.transparency = 0.5
+        self.setTransparencyType(8)
         ## ============================
         root = SoSeparator()
         root.addChild(sh)
