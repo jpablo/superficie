@@ -6,7 +6,7 @@ from superficie.util import intervalPartition, Vec3, segment
 from superficie.util import genIntervalPartition
 from superficie.util import nodeDict
 from superficie.base import Page
-from superficie.base import GraphicObject
+from superficie.base import GraphicObject, BasePlane
 from superficie.Animation import Animation
 from superficie.util import malla2, Range
 
@@ -610,39 +610,51 @@ class Bundle(GraphicObject):
             arrow.hide()
 
 
-class BasePlane(GraphicObject):
-    def __init__(self, visible = True, parent = None):
+class TangentPlane(GraphicObject):
+    def __init__(self, param,par1,par2, pt, color, visible = False, parent = None):
         GraphicObject.__init__(self,visible,parent)
-        ## ============================
-        self.setDiffuseColor((.5,.5,.5))
-        self.setAmbientColor((.5,.5,.5))
-        ## ============================
-        self.translation = SoTranslation()
-        ## ============================
-        self.coords = SoCoordinate3()        
-        self.mesh = SoQuadMesh()
-        self.sHints = SoShapeHints()
-        self.sHints.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
-        self.separator.addChild(self.translation)
-        self.separator.addChild(self.sHints)
-        self.separator.addChild(self.coords)
-        self.separator.addChild(self.mesh)
-        self.setRange((-2,2,7))
-        self.setTransparency(0.5)
-        self.setTransparencyType(8)
+        ve = par1(pt[0])
+        ve.normalize()
+        ue = par2(pt[1])
+        ue.normalize()
+        def planePar(h,t):
+            return tuple(Vec3(param(*pt)) + h*ve + t*ue)
+        baseplane = BasePlane()
+        baseplane.setRange((-.5,.5,30),plane=planePar)
+        baseplane.setTransparency(0)
+        baseplane.setDiffuseColor(color)
+        baseplane.setEmissiveColor(color)
+        self.addChild(baseplane)
 
-    def setZ(self,val):
-        oldVal = list(self.translation.translation.getValue())
-        oldVal[2] = val
-        self.translation.translation = oldVal
+class TangentPlane2(GraphicObject):
+    def __init__(self, param,par1,par2, origin, color, visible = False, parent = None):
+        GraphicObject.__init__(self,visible,parent)
+        self.par1 = par1
+        self.par2 = par2
+        self.param = param
+        self.origin = origin
 
-    def setRange(self,r0):
-        r = Range(*r0)
-        self.ptos = []
-        malla2(self.ptos,lambda x,y:(x,y,0), r.min, r.dt, len(r),r.min, r.dt, len(r))
-        self.coords.point.setValues(0,len(self.ptos),self.ptos)
-        self.mesh.verticesPerColumn = len(r)
-        self.mesh.verticesPerRow = len(r)
+        self.baseplane = BasePlane()
+        self.setOrigin(origin)
 
+        self.baseplane.setTransparency(0)
+        self.baseplane.setDiffuseColor(color)
+        self.baseplane.setEmissiveColor(color)
+        self.addChild(self.baseplane)
 
+    def setOrigin(self,pt):
+        self.origin = pt
+        ve = self.par1(*pt)
+        ve.normalize()
+        ue = self.par2(*pt)
+        ue.normalize()
+        def planePar(h,t):
+            return tuple(Vec3(self.param(*pt)) + h*ve + t*ue)
+        self.baseplane.setRange((-.5,.5,30),plane=planePar)
+
+    def setU(self,val):
+        self.setOrigin((val,self.origin[1]))
+
+    def setV(self,val):
+        self.setOrigin((self.origin[0],val))
 

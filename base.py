@@ -5,6 +5,7 @@ from PyQt4 import QtCore, QtGui
 from pivy.coin import SoCoordinate3
 from pivy.coin import *
 from superficie.util import nodeDict
+from superficie.util import malla2, Range
 from superficie.Animation import Animation
 from superficie.gui import Button
 
@@ -66,6 +67,8 @@ class Page(QtCore.QObject):
         self.widget.setLayout(layout)
         if self.name != "":
             layout.addWidget(QtGui.QLabel("<center><h1>%s</h1></center>" % self.name))
+        ## ============================
+        self.coordPlanes = {}
 
     def getGui(self):
         return self.widget
@@ -93,8 +96,15 @@ class Page(QtCore.QObject):
     def getChildren(self):
         return self.children.values()
 
-    def setupPlanes(self):
-        self.addChild(Planes(True))
+    def setupPlanes(self,r0 = (-1,1,5)):
+        self.coordPlanes["xy"] = BasePlane(plane="xy",parent=self)
+        self.coordPlanes["xz"] = BasePlane(plane="xz",parent=self)
+        self.coordPlanes["yz"] = BasePlane(plane="yz",parent=self)
+
+        for p in self.coordPlanes.values():
+            p.setRange(r0)
+            p.setHeight(r0[0])
+
 
     def setupAnimations(self,objects):
         self.objectsForAnimate = objects
@@ -177,6 +187,12 @@ class GraphicObject(SoSwitch):
     def resetObjectForAnimation(self):
         pass
 
+    def setColor(self, val):
+        self.setDiffuseColor(val)
+        self.setEmissiveColor(val)
+        self.setAmbientColor(val)
+        self.setSpecularColor(val)
+
     def setTransparency(self, val):
         self.material.transparency.setValue(val)
 
@@ -199,10 +215,63 @@ class GraphicObject(SoSwitch):
         self.transType.value = trans
 
 
+class BasePlane(GraphicObject):
+    def __init__(self, plane = "xy", visible = True, parent = None):
+        GraphicObject.__init__(self,visible,parent)
+        ## ============================
+        self.plane = plane
+        self.setDiffuseColor((.5,.5,.5))
+        self.setAmbientColor((.5,.5,.5))
+        ## ============================
+        self.translation = SoTranslation()
+        ## ============================
+        self.coords = SoCoordinate3()
+        self.mesh = SoQuadMesh()
+        self.sHints = SoShapeHints()
+        self.sHints.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
+        self.separator.addChild(self.translation)
+        self.separator.addChild(self.sHints)
+        self.separator.addChild(self.coords)
+        self.separator.addChild(self.mesh)
+        self.setRange((-2,2,7),plane)
+        self.setTransparency(0.5)
+        self.setTransparencyType(8)
+
+    def setHeight(self,val):
+        oldVal = list(self.translation.translation.getValue())
+        oldVal[self.constantIndex] = val
+        self.translation.translation = oldVal
+
+    def setRange(self,r0,plane=""):
+        if plane == "":
+            plane = self.plane
+        self.plane = plane
+        r = Range(*r0)
+        self.ptos = []
+        if plane=="xy":
+            func = lambda x,y:(x,y,0)
+            ## this will be used to determine which coordinate to modify
+            ## in setHeight
+            self.constantIndex = 2
+        elif plane=="yz":
+            func = lambda y,z:(0,y,z)
+            self.constantIndex = 0
+        elif plane=="xz":
+            func = lambda x,z:(x,0,z)
+            self.constantIndex = 1
+        elif type(plane) == type(lambda :0):
+            func = plane
+        malla2(self.ptos,func, r.min, r.dt, len(r),r.min, r.dt, len(r))
+        self.coords.point.setValues(0,len(self.ptos),self.ptos)
+        self.mesh.verticesPerColumn = len(r)
+        self.mesh.verticesPerRow = len(r)
+
+
+
+
 
 class Plane(GraphicObject):
     """
-    Documentation
     """
     def __init__(self, pos, visible=True, parent=None):
         GraphicObject.__init__(self,visible,parent)

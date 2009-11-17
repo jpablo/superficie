@@ -45,7 +45,7 @@ class Slider(QtGui.QWidget):
     def __init__(self, rangep=('w', 0, 1, 0, 10), func=identity, duration=1000, parent=None):
         ## rangep = (name, vmin, vmax, vini, npoints)
         QtGui.QWidget.__init__(self)
-        uic.loadUi(pegaNombres("Gui","paramTemplate.ui"), self)
+        uic.loadUi(pegaNombres("Gui","paramTemplate2.ui"), self)
         self.timeline = QtCore.QTimeLine(duration)
         self.name = rangep[0]
         self.npoints = rangep[-1]
@@ -71,7 +71,8 @@ class Slider(QtGui.QWidget):
         conecta(self.timeline, QtCore.SIGNAL("valueChanged(qreal)"), lambda t: self.updateLabel(self.funcTrans(t)))
         conecta(self.timeline, QtCore.SIGNAL("frameChanged(int)"), self.updateSlider)
         ## ============================
-        self.nombre.setTitle(self.name + ": %.3f" % self.vini)
+#        self.nombre.setTitle(self.name + ": %.3f" % self.vini)
+        self.nombre.setText(self.name + ": %.3f" % self.vini)
         self.slider.setValue(self.timeline.currentFrame())
         
     def setupUi(self,):
@@ -81,6 +82,17 @@ class Slider(QtGui.QWidget):
         for f, i in zip([self.atras, self.pausa, self.adelante], [-1, 0, 1]):
             self._d.append(partial(self.estadoAnimacion,i))
             conecta(f, QtCore.SIGNAL("clicked()"), self._d[-1])
+            
+        def changeText(btn,text):
+            btn.setText(text)
+#        conecta(self.adelante, QtCore.SIGNAL("clicked()"), partial(changeText,self.adelante,"||"))
+#        conecta(self.adelante, QtCore.SIGNAL("clicked()"), partial(changeText,self.atras,"<"))
+#        conecta(self.atras, QtCore.SIGNAL("clicked()"), partial(changeText,self.atras,"||"))
+#        conecta(self.atras, QtCore.SIGNAL("clicked()"), partial(changeText,self.adelante,"<"))
+
+        conecta(self.timeline, QtCore.SIGNAL("finished()"), partial(changeText,self.adelante,">"))
+        conecta(self.timeline, QtCore.SIGNAL("finished()"), partial(changeText,self.atras,"<"))
+
     
     def updateSlider(self, n):
         self.slider.blockSignals(True)
@@ -96,10 +108,17 @@ class Slider(QtGui.QWidget):
             tl.setDirection(tl.Forward)
             if tl.state()  != tl.Running:
                 tl.resume()
+                ## ======================
+                self.adelante.setText("||")
+                self.atras.setText("<")
+
         elif dir == -1 and tl.currentValue() > 0.0:
             tl.setDirection(tl.Backward)
             if tl.state()  != tl.Running:
                 tl.resume()
+                ## ======================
+                self.atras.setText("||")
+                self.adelante.setText(">")
     
     def updateFromSlider(self,n):
         prop = float(n) / (self.npoints-1)
@@ -112,7 +131,8 @@ class Slider(QtGui.QWidget):
         self.timeline.blockSignals(False)
     
     def updateLabel(self, t):
-        self.nombre.setTitle(self.name + ": %.3f" % t)
+#        self.nombre.setTitle(self.name + ": %.3f" % t)
+        self.nombre.setText(self.name + ": %.3f" % t)
         self.emit(QtCore.SIGNAL("labelChanged(float)"), t)
 
     def getValue(self):

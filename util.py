@@ -367,7 +367,11 @@ def wrap(node, show = True):
         switch.whichChild = -1
     return switch
         
-   
+def _1(r,g,b):
+    "Converts colors from 0-255 to 0-1"
+    vmax = 255.
+    return (r/vmax,g/vmax,b/vmax)
+
 def main(args=None):
     print "main"
     if args == None:
