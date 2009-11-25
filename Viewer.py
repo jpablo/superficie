@@ -441,7 +441,7 @@ class Viewer(QtGui.QWidget):
             self.getChapter().whichChild = n
             self.setWhichPageWidget(n)
 #        self.getCamera().viewAll(self.getPage(), self.viewer.getViewportRegion())
-#        self.viewer.viewAll()
+        self.viewAll()
 
     def getWhichPage(self):
         return self.getChapter().whichChild.getValue() if self.getChapter() else -1
