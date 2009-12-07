@@ -1,13 +1,223 @@
+# -*- coding: utf-8 -*-
 __author__="jpablo"
 __date__ ="$18/05/2009 12:47:43 AM$"
 
-from PyQt4 import QtCore, QtGui
+from PyQt4 import QtCore, QtGui, uic
 from pivy.coin import SoCoordinate3
 from pivy.coin import *
-from superficie.util import nodeDict
-from superficie.util import malla2, Range
+from superficie.util import nodeDict, connect, write
+from superficie.util import malla2, Range, pegaNombres
 from superficie.Animation import Animation
 from superficie.gui import Button
+
+cambia_figura_fclass, base_class = uic.loadUiType(pegaNombres("Viewer","change-page.ui"))
+
+class ChangeChapterUI(base_class, cambia_figura_fclass):
+    def __init__(self, *args):
+        QtGui.QWidget.__init__(self, *args)
+        self.setupUi(self)
+
+
+class Book(QtCore.QObject):
+    def __init__(self):
+        QtCore.QObject.__init__(self)
+        self.__previousChapter = None
+        self.root = SoSeparator()
+        self.root.setName("Book:root")
+        self.chapters = SoSwitch()
+        self.chapters.setName("Book:chapters")
+        self.root.addChild(self.chapters)
+        ## this dictionary contains the chapters python objects
+        ## not only the SoSeparator
+        self.chaptersObjects = nodeDict()
+        self.chaptersStack = QtGui.QStackedWidget()
+
+    def changePage(self,dir):
+        self.whichPage = (self.whichPage + dir) % self.numPages()
+        self.emit(QtCore.SIGNAL("cambiaFigura(int)"), self.whichPage)
+
+    def next(self):
+        self.changePage(1)
+
+    def prev(self):
+        self.changePage(-1)
+
+
+    def createChapter(self):
+        chapter = Chapter()
+        self.addChapter(chapter)
+        return chapter
+
+    def addChapter(self, chapter):
+        "A chapter contains several pages"
+        chapterRoot = SoSeparator()
+        chapterRoot.setName("Chapter:root")
+        chapter.root = chapterRoot
+        ## Every chapter has its own "prolog"
+        ## which permits set up common nodes for the chapter
+        ## ¿para que sirve este grupo??
+#        chapterRoot.addChild(SoGroup())
+        pages = SoSwitch()
+        pages.setName("Chapter:pages")
+        chapterRoot.addChild(pages)
+        self.chapters.addChild(chapterRoot)
+        self.chapters.whichChild = len(self.chapters) - 1
+        self.chaptersObjects[pages] = chapter
+        ## ============================
+        ## setup the UI
+        ui = ChangeChapterUI()
+        ui.setStyleSheet("QWidget { background:white }")
+        self.chaptersStack.addWidget(ui)
+        self.chaptersStack.setCurrentWidget(ui)
+        connect(ui.siguiente, "clicked(bool)", self.next)
+        connect(ui.previa, "clicked(bool)", self.prev)
+        ## ============================
+        ## the initial sate
+        ui.previa.hide()
+        ui.siguiente.hide()
+        ## ============================
+        if hasattr(chapter, "getProlog"):
+            self.addChapterProlog(chapter.getProlog())
+        for page in chapter.getPages():
+            self.addPage(page)
+
+
+    def addChapterProlog(self, node):
+        ## node tiene que ser derivado de SoNode
+        self.chapters[self.whichChapter][0].addChild(node)
+
+    @property
+    def chapter(self):
+        "chapter is the switch 0-child of the separator 'root'"
+        if self.whichChapter < 0:
+            return None
+        chapi = self.whichChapter
+        ##
+        return self.chapters[chapi][0]
+
+    @property
+    def chapterObject(self):
+        """returns: base.Chapter"""
+        if self.whichChapter < 0:
+            return None
+        return self.chaptersObjects[self.chapter]
+
+    @property
+    def whichChapter(self):
+        return self.chapters.whichChild.getValue()
+
+    @whichChapter.setter
+    def whichChapter(self,n):
+        ## only the == operator test for identity of the underlying
+        ## OpenInventor object (the python proxy object is changed every time)
+        chapterChanged = not(self.__previousChapter == self.chapter)
+        if self.__previousChapter != None and chapterChanged:
+            obAnterior = self.chaptersObjects[self.__previousChapter]
+            if hasattr(obAnterior, "chapterSpecificOut"):
+                obAnterior.chapterSpecificOut()
+        self.chapters.whichChild = n
+        self.chaptersStack.setCurrentIndex(n)
+        chapterob = self.chapterObject
+        if hasattr(chapterob, "chapterSpecificIn") and chapterChanged:
+            chapterob.chapterSpecificIn()
+        self.__previousChapter = self.chapter
+#        self.viewer.viewAll()
+
+    def numPages(self):
+        return len(self.chapter)
+
+    def getChapterWidget(self):
+        return self.chaptersStack.widget(self.whichChapter)
+
+    def createPage(self):
+        page = superficie.base.Page()
+        self.addPage(page)
+        return page
+
+    def addPage(self, page):
+        "Add a page to the current chapter"
+        print "Book.addPage:", page
+        ## ============================
+        if not self.chapter:
+            self.createChapter()
+        ## ============================
+        root = getattr(page, "root", page)
+        ## chapter es un SoSwitch!!
+        ## no un objeto "Chapter"
+        self.chapter.addChild(root)
+        print "self.whichPage = ", self.numPages() - 1
+        self.whichPage = self.numPages() - 1
+        ## ============================
+        layout  =  QtGui.QVBoxLayout()
+        layout.setMargin(0)
+        layout.setSpacing(0)
+        widget = QtGui.QWidget()
+        widget.setObjectName("PageGui")
+        widget.setLayout(layout)
+        ui = self.getChapterWidget()
+        ui.parametrosStack.addWidget(widget)
+        ui.parametrosStack.setCurrentWidget(widget)
+        ## ============================
+        if hasattr(page,  "getGui"):
+            self.addPageGui(page.getGui())
+        ## ============================
+        if self.numPages() == 2:
+            ui.previa.show()
+            ui.siguiente.show()
+
+#        self.viewAll()
+
+
+    def removePage(self,n):
+        ## TODO: hay que borrar todos los objetos (en self.objetos) asociados a la figura!
+        self.switch.removeChild(n)
+        stack = self.ui.parametrosStack
+        stack.removeWidget(stack.widget(n))
+
+    def removeAllPages(self):
+        self.switch.removeAllChildren()
+        stack = self.ui.parametrosStack
+        while stack.count() > 0:
+            stack.removeWidget(stack.widget(0))
+#        self.objetos = dictRepr()
+
+    @property
+    def whichPage(self):
+        return self.chapter.whichChild.getValue() if self.chapter else -1
+
+    @whichPage.setter
+    def whichPage(self,n):
+#        print "setWhichPage:", n
+        self.setWhichPageWidget(n)
+        if self.chapter and len(self.chapter) > 0:
+            self.chapter.whichChild = n
+            pages = self.chapterObject.getPages()
+            pOb = pages[n]
+            ## execute some function
+            if hasattr(pOb, "pre"):
+                pOb.pre()
+#        self.getCamera().viewAll(self.getPage(), self.viewer.getViewportRegion())
+#        self.viewAll()
+
+
+    def getPage(self):
+        "returns a Separator"
+        if self.chapter:
+            return self.chapter[self.whichPage]
+
+    def getPageWidget(self):
+        "get the page's wiget"
+#        print "getPageWidget:"
+        return self.getChapterWidget().parametrosStack.widget(self.whichPage)
+
+    def setWhichPageWidget(self, index):
+        "set which page widget to show"
+#        print "setWhichPageWidget:", index
+        self.getChapterWidget().parametrosStack.setCurrentIndex(index)
+
+    def addPageGui(self, widget):
+        self.getPageWidget().layout().addWidget(widget)
+
 
 class Chapter(QtCore.QObject):
     "A Chapter"
@@ -18,16 +228,19 @@ class Chapter(QtCore.QObject):
         self.name = name
         ## the relation between the chapter and the pages
         ## is left to the viewer
-        self.objects = []
+        ## In particular, it doesn't have a SoSeparator or a self.root
+        self.pages = []
 
     def getPages(self):
         "The list of pages"
-        return self.objects
+        return self.pages
 
     def addPage(self, ob):
         "add a page"
-        self.objects.append(ob)
+#        print "Chapter.addPage:", ob
+        self.pages.append(ob)
         ob.viewer = self.viewer
+        
 
     def chapterSpecificIn(self):
         "code to be executed whenever the chapter is displayed"
@@ -47,7 +260,7 @@ class Chapter(QtCore.QObject):
     
     def setViewer(self,parent):
         self.viewer = parent
-        for ob in self.objects:
+        for ob in self.pages:
             ob.viewer = self.viewer
 
 class Page(QtCore.QObject):
@@ -57,6 +270,7 @@ class Page(QtCore.QObject):
         self.viewer = None
         self.name = name
         self.root = SoSeparator()
+        self.root.setName("Page:root")
         self.children = nodeDict()
         ## =========================
         self.animations = []
@@ -117,6 +331,10 @@ class Page(QtCore.QObject):
         for ob in self.objectsForAnimate:
             ob.resetObjectForAnimation()
         self.animations[0].start()
+
+
+    def pre(self):
+        print "pre"
 
 
 class GraphicObject(SoSwitch):
