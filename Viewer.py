@@ -67,8 +67,13 @@ class Viewer(QtGui.QWidget):
         ## ============================
         self.inicializarVisor(luces)
         self.inicializarUi(uiLayout)
-        ## por el momento cada figura es unicamente un SoSeparator
-        self.objetos = nodeDict()
+        ## ============================
+        ## the data scructures
+        ## Creo que originalmente esto servía para tener
+        ## acceso a los objetos individuales, pero ahora
+        ## que la interfaz chapter/page está bien definida
+        ## me parece que no hace falta
+#        self.objetos = nodeDict()
         self.chaptersObjects = nodeDict()
         ## ============================
 
@@ -312,9 +317,11 @@ class Viewer(QtGui.QWidget):
 
     def addChapter(self, chapter):
         "A chapter contains several pages"
+#        print "addChapter:", chapter
         chapter.setViewer(self)
         sep = SoSeparator()
-        ## el "prologo"
+        ## Every chapter has its own "prolog"
+        ## which permits set up common nodes for the chapter
         sep.addChild(SoGroup())
         switch = SoSwitch()
         switch.setName("switch")
@@ -354,6 +361,7 @@ class Viewer(QtGui.QWidget):
         return self.chapters[self.whichChapter()][1]
     
     def getChapterObject(self):
+        """returns: base.Chapter"""
         if self.whichChapter() < 0:
             return None
         return self.chaptersObjects[self.getChapter()]
@@ -373,11 +381,6 @@ class Viewer(QtGui.QWidget):
             chapterob.chapterSpecificIn()
         self.__previousChapter = self.getChapter()
         self.viewer.viewAll()
-
-        
-    def setWhichPageWidget(self, index):
-        self.getChapterWidget().parametrosStack.setCurrentIndex(index)
-
         
     def numPages(self):
         return len(self.getChapter())
@@ -391,7 +394,8 @@ class Viewer(QtGui.QWidget):
         return page
     
     def addPage(self, page):
-        ""
+        "Add a page to the current chapter"
+#        print "addPage:", page
         ## ============================
         if not self.getChapter():
             self.createChapter()
@@ -401,7 +405,7 @@ class Viewer(QtGui.QWidget):
         ## chapter es un SoSwitch!!
         self.getChapter().addChild(root)
         self.whichPage = self.numPages() - 1
-        self.objetos[root] = page
+#        self.objetos[root] = page
         ## ============================
         layout  =  QtGui.QVBoxLayout()
         layout.setMargin(0)
@@ -434,12 +438,18 @@ class Viewer(QtGui.QWidget):
         stack = self.ui.parametrosStack
         while stack.count() > 0:
             stack.removeWidget(stack.widget(0))
-        self.objetos = dictRepr()
+#        self.objetos = dictRepr()
 
     def setWhichPage(self,n):
-        if self.getChapter():
+#        print "setWhichPage:", n
+        self.setWhichPageWidget(n)
+        if self.getChapter() and len(self.getChapter()) > 0:
             self.getChapter().whichChild = n
-            self.setWhichPageWidget(n)
+            pages = self.getChapterObject().getPages()
+            pOb = pages[n]
+            ## execute some function
+            if hasattr(pOb, "pre"):
+                pOb.pre()
 #        self.getCamera().viewAll(self.getPage(), self.viewer.getViewportRegion())
         self.viewAll()
 
@@ -454,7 +464,14 @@ class Viewer(QtGui.QWidget):
             return self.getChapter()[self.whichPage]
 
     def getPageWidget(self):
+        "get the page's wiget"
+#        print "getPageWidget:"
         return self.getChapterWidget().parametrosStack.widget(self.whichPage)
+
+    def setWhichPageWidget(self, index):
+        "set which page widget to show"
+#        print "setWhichPageWidget:", index
+        self.getChapterWidget().parametrosStack.setCurrentIndex(index)
 
     def addPageGui(self, widget):
         self.getPageWidget().layout().addWidget(widget)
@@ -468,7 +485,7 @@ class Viewer(QtGui.QWidget):
         if not self.getPage():
             self.createPage()
         separator = self.getPage()
-        pageOb = self.objetos[separator]
+#        pageOb = self.objetos[separator]
         pageOb.addChild(ob)
 
         if viewAll:
@@ -481,7 +498,7 @@ class Viewer(QtGui.QWidget):
         ## self.objetos[root] = ob
         ## entonces aquí tenemos que hacer algo parecido:
         root = getattr(ob, "root", ob)
-        del self.objetos[root]
+#        del self.objetos[root]
         self.switch.getChild(self.whichPage).removeChild(root)
 
     def setDrawStyle(self,type):
