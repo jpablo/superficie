@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
+from pivy.coin import SoWriteAction
 from math import sqrt, pow
-from pivy.coin import SoInput, SoDB,  SoSearchAction,  SbVec3f, SoSFVec3f, SoSFFloat, SoCalculator, SoSwitch, SoOneShot, SoFieldSensor
+from pivy.coin import SoInput, SoDB,  SoSearchAction,  SbVec3f, SoSFVec3f, SoSFFloat, SoCalculator, SoSwitch, SoOneShot, SoFieldSensor, SoWriteAction
 from PyQt4 import QtCore
 from random import random
 import os
@@ -286,6 +287,10 @@ def mirror(q, p1, p2):
 
 
 ########### Open Inventor ##################    
+
+def write(node):
+    wa = SoWriteAction()
+    wa.apply(node)
 
 def readBuffer(texto):
     input = SoInput()
