@@ -1,7 +1,7 @@
-import superficie.base
 import superficie
 from superficie.Viewer import Viewer
 from PyQt4 import QtGui
+from superficie.Book import Book
 import sys
 import unittest
 
@@ -9,7 +9,7 @@ import unittest
 class TestBook(unittest.TestCase):
     def setUp(self):
         self.app = QtGui.QApplication(sys.argv)
-        self.book = superficie.base.Book()
+        self.book = Book()
 
     def tearDown(self):
         del self.book
@@ -27,21 +27,11 @@ class TestBook(unittest.TestCase):
         chap2 = self.book.createChapter()
 
         ## self.book.chapter is the switch child of the separator "root"
-        self.assertEqual(chap2.root[0], self.book.chapter)
+        self.assertEqual(chap2.pages, self.book.chapter)
         self.assertEqual(chap2, self.book.chapterObject)
         self.assertEqual(1, self.book.whichChapter)
         self.book.whichChapter = 0
         self.assertEqual(0, self.book.whichChapter)
-
-        ## since there is no page yet
-        self.assertEqual(-1, self.book.whichPage)
-        ## this statement should do nothing
-        self.book.whichPage = 0
-
-    def testAddPage(self):
-        chap1 = self.book.createChapter()
-        chap1.addPage(superficie.base.Page())
-#        self.assertEqual(0, self.book.whichPage)
 
 
 if __name__ == '__main__':
