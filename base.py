@@ -46,6 +46,11 @@ class Chapter(QtCore.QObject):
         "The list of pages"
         return self.pagesObjects
 
+    def createPage(self):
+        page = Page()
+        self.addPage(page)
+        return page
+
     def addPage(self, page):
         "add a page"
 #        print "Chapter.addPage:", ob
@@ -98,6 +103,14 @@ class Chapter(QtCore.QObject):
         self.viewer = parent
         for ob in self.pagesObjects:
             ob.viewer = self.viewer
+
+    @property
+    def page(self):
+        """returns: base.Chapter"""
+        if self.whichPage < 0:
+            return None
+        return self.pagesObjects[self.pages[self.whichPage]]
+
 
     @property
     def whichPage(self):
