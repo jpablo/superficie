@@ -38,13 +38,27 @@ class TestChapter(unittest.TestCase):
         self.assertEqual(0,self.chapter.whichPage)
 
     def testChangePage(self):
-        self.chapter.addPage(Page())
-        self.chapter.addPage(Page())
+        self.chapter.createPage()
+        self.chapter.createPage()
 
         self.chapter.nextPage()
         self.assertEqual(0,self.chapter.whichPage)
         self.chapter.prevPage()
         self.assertEqual(1,self.chapter.whichPage)
+
+    def testCurrentPage(self):
+        self.assertEqual(None,self.chapter.page)
+
+        page1 = self.chapter.createPage()
+        page2 = self.chapter.createPage()
+        self.assertEqual(page2,self.chapter.page)
+
+        self.chapter.prevPage()
+        self.assertEqual(page1,self.chapter.page)
+
+        ## its circular
+        self.chapter.prevPage()
+        self.assertEqual(page2,self.chapter.page)
 
 if __name__ == '__main__':
     unittest.main()
