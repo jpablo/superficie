@@ -44,18 +44,23 @@ class Book(QtCore.QObject):
 
 
     @property
-    def chapter(self):
+    def chapterSwitch(self):
         "chapter is the only child (a switch) of the separator 'root'"
         if self.whichChapter < 0:
             return None
         return self.chapters[self.whichChapter][0]
 
     @property
-    def chapterObject(self):
-        """returns: base.Chapter"""
+    def chapter(self):
+        "returns: base.Chapter"
         if self.whichChapter < 0:
             return None
-        return self.chaptersObjects[self.chapter]
+        return self.chaptersObjects[self.chapterSwitch]
+
+    @property
+    def page(self):
+        "convenience function"
+        return self.chapter.page if self.whichChapter >= 0 else None
 
     @property
     def whichChapter(self):
@@ -65,21 +70,21 @@ class Book(QtCore.QObject):
     def whichChapter(self,n):
         ## only the == operator test for identity of the underlying
         ## OpenInventor object (the python proxy object is changed every time)
-        chapterChanged = not(self.__previousChapter == self.chapter)
+        chapterChanged = not(self.__previousChapter == self.chapterSwitch)
         if self.__previousChapter != None and chapterChanged:
             obAnterior = self.chaptersObjects[self.__previousChapter]
             if hasattr(obAnterior, "chapterSpecificOut"):
                 obAnterior.chapterSpecificOut()
         self.chapters.whichChild = n
         self.chaptersStack.setCurrentIndex(n)
-        chapterob = self.chapterObject
+        chapterob = self.chapter
         if hasattr(chapterob, "chapterSpecificIn") and chapterChanged:
             chapterob.chapterSpecificIn()
-        self.__previousChapter = self.chapter
+        self.__previousChapter = self.chapterSwitch
 #        self.viewer.viewAll()
 
     def numPages(self):
-        return len(self.chapter)
+        return len(self.chapterSwitch)
 
 
 if __name__ == "__main__":
