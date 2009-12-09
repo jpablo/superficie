@@ -22,13 +22,12 @@ class TestChapter(unittest.TestCase):
         self.chapter.addPage(Page())
         self.chapter.addPage(Page())
 
+        self.assertEqual(2, len(self.chapter.pagesSwitch))
         self.assertEqual(2, len(self.chapter.pages))
-        self.assertEqual(2, len(self.chapter.pagesObjects))
         self.assertEqual(2, self.chapter.widget.pageStack.count())
         self.assertEqual(1, self.chapter.widget.pageStack.currentIndex())
 
     def testWhichPage(self):
-        print "testWhichPage"
         self.chapter.addPage(Page())
         self.chapter.addPage(Page())
 

@@ -12,6 +12,9 @@ from superficie.Animation import Animation
 from superficie.gui import Button
 
 class Book(QtCore.QObject):
+
+    chapterChanged = QtCore.pyqtSignal(int)
+
     def __init__(self):
         QtCore.QObject.__init__(self)
         self.__previousChapter = None
@@ -34,7 +37,7 @@ class Book(QtCore.QObject):
         "A chapter contains several pages"
         ## we probably should check that chapter is derived
         ## from base.Chapter
-        self.chaptersObjects[chapter.pages] = chapter
+        self.chaptersObjects[chapter.pagesSwitch] = chapter
         self.chapters.addChild(chapter.root)
         ## ============================
         ## setup the UI
@@ -45,7 +48,7 @@ class Book(QtCore.QObject):
 
     @property
     def chapterSwitch(self):
-        "chapter is the only child (a switch) of the separator 'root'"
+        "the switch of the current chapter"
         if self.whichChapter < 0:
             return None
         return self.chapters[self.whichChapter][0]
@@ -81,6 +84,7 @@ class Book(QtCore.QObject):
         if hasattr(chapterob, "chapterSpecificIn") and chapterChanged:
             chapterob.chapterSpecificIn()
         self.__previousChapter = self.chapterSwitch
+        self.chapterChanged.emit(n)
 #        self.viewer.viewAll()
 
     def numPages(self):

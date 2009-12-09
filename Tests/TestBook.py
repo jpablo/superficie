@@ -29,7 +29,7 @@ class TestBook(unittest.TestCase):
         chap2 = self.book.createChapter()
 
         ## self.book.chapter is the switch child of the separator "root"
-        self.assertEqual(chap2.pages, self.book.chapterSwitch)
+        self.assertEqual(chap2.pagesSwitch, self.book.chapterSwitch)
         self.assertEqual(chap2, self.book.chapter)
         self.assertEqual(1, self.book.whichChapter)
         self.book.whichChapter = 0

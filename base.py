@@ -20,17 +20,21 @@ class ChangePageUI(base_class, changePage_fclass):
 
 class Chapter(QtCore.QObject):
     "A Chapter"
+
+
+    pageChanged = QtCore.pyqtSignal(int)
+
     def __init__(self, name = ""):
         QtCore.QObject.__init__(self)
         self.name = name
         self.viewer = None
         self.root = SoSeparator()
         self.root.setName("Chapter:root")
-        self.pages = SoSwitch()
-        self.pages.setName("Chapter:pages")
-        self.root.addChild(self.pages)
+        self.pagesSwitch = SoSwitch()
+        self.pagesSwitch.setName("Chapter:pages")
+        self.root.addChild(self.pagesSwitch)
 
-        self.pagesObjects = nodeDict()
+        self.__pages = nodeDict()
         ## ============================
         self.widget = ChangePageUI()
         self.widget.setStyleSheet("QWidget { background:white }")
@@ -42,9 +46,10 @@ class Chapter(QtCore.QObject):
         self.widget.siguiente.hide()
 
 
-    def getPages(self):
+    @property
+    def pages(self):
         "The list of pages"
-        return self.pagesObjects
+        return self.__pages
 
     def createPage(self):
         page = Page()
@@ -58,8 +63,8 @@ class Chapter(QtCore.QObject):
         ## ============================
         ## page can be a Page or SoNode
         root = getattr(page, "root", page)
-        self.pagesObjects[root] = page
-        self.pages.addChild(root)
+        self.pages[root] = page
+        self.pagesSwitch.addChild(root)
         ## ============================
         layout  =  QtGui.QVBoxLayout()
         layout.setMargin(0)
@@ -69,13 +74,13 @@ class Chapter(QtCore.QObject):
         widget.setLayout(layout)
         self.widget.pageStack.addWidget(widget)
         ## ============================
-        ## this sets both self.pages and self.widget.pageStack
-        self.whichPage = len(self.pages) - 1
+        ## this sets both self.pagesSwitch and self.widget.pageStack
+        self.whichPage = len(self.pagesSwitch) - 1
         ## ============================
         if hasattr(page,  "getGui"):
             layout.addWidget(page.getGui())
         ## ============================
-        if len(self.pages) == 2:
+        if len(self.pagesSwitch) == 2:
             self.widget.previa.show()
             self.widget.siguiente.show()
 
@@ -101,32 +106,32 @@ class Chapter(QtCore.QObject):
     
     def setViewer(self,parent):
         self.viewer = parent
-        for ob in self.pagesObjects:
+        for ob in self.pages:
             ob.viewer = self.viewer
 
     @property
     def page(self):
-        """returns: base.Chapter"""
+        "the current page"
         if self.whichPage < 0:
             return None
-        return self.pagesObjects[self.pages[self.whichPage]]
+        return self.pages[self.pagesSwitch[self.whichPage]]
 
 
     @property
     def whichPage(self):
-        return self.pages.whichChild.getValue()
+        return self.pagesSwitch.whichChild.getValue()
 
     @whichPage.setter
     def whichPage(self,n):
-        if len(self.pages) > 0:
-            self.pages.whichChild = n
+        if len(self.pagesSwitch) > 0:
+            self.pagesSwitch.whichChild = n
             self.widget.pageStack.setCurrentIndex(n)
+            self.pageChanged.emit(n)
 #        self.getCamera().viewAll(self.getPage(), self.viewer.getViewportRegion())
 #        self.viewAll()
 
     def changePage(self,dir):
-        self.whichPage = (self.whichPage + dir) % len(self.pages)
-        self.emit(QtCore.SIGNAL("changePage(int)"), self.whichPage)
+        self.whichPage = (self.whichPage + dir) % len(self.pagesSwitch)
 
     def nextPage(self):
         self.changePage(1)

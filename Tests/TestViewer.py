@@ -1,5 +1,5 @@
 import superficie
-from superficie.Viewer2 import Viewer
+from superficie.Viewer import Viewer
 from PyQt4 import QtGui
 import sys
 import unittest
@@ -16,6 +16,8 @@ class TestViewer(unittest.TestCase):
 
     def testInit(self):
         ## to force execution of setUp
+        print self.viewer.__class__.mro()
+        print self.viewer.chapterChanged
         pass
 
 
