@@ -35,6 +35,13 @@ class TestBook(unittest.TestCase):
         self.book.whichChapter = 0
         self.assertEqual(0, self.book.whichChapter)
 
+#    def testChapterChangedSignal(self):
+#        val = []
+#        testFunc = (lambda n: val.append(n))
+#        self.book.chapterChanged.connect(testFunc)
+#        self.book.chapterChanged.emit(0)
+#        self.assertEqual([0], val)
+
 
 if __name__ == '__main__':
     unittest.main()
