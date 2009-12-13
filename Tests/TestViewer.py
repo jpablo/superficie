@@ -7,6 +7,7 @@ import unittest
 
 class TestViewer(unittest.TestCase):
     def setUp(self):
+        print Viewer.mro()
         self.app = QtGui.QApplication(sys.argv)
         self.viewer = Viewer()
 
@@ -15,10 +16,19 @@ class TestViewer(unittest.TestCase):
         del self.app
 
     def testInit(self):
+        print "testInit"
+        return
         ## to force execution of setUp
-        print self.viewer.__class__.mro()
-        print self.viewer.chapterChanged
-        pass
+
+#    def testChapterChangedSignal(self):
+#        print "testChapterChangedSignal"
+#        return
+#        val = []
+#        testFunc = (lambda n: val.append(n))
+#        self.viewer.chapterChanged.connect(testFunc)
+#        self.viewer.chapterChanged.emit(0)
+#        self.assertEqual([0], val)
+
 
 
 
