@@ -7,7 +7,7 @@ import unittest
 
 class TestViewer(unittest.TestCase):
     def setUp(self):
-        print Viewer.mro()
+#        print Viewer.mro()
         self.app = QtGui.QApplication(sys.argv)
         self.viewer = Viewer()
 
