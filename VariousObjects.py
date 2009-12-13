@@ -296,11 +296,6 @@ class Arrow(GraphicObject):
         self.setDiffuseColor((.4,.4,.4))
         self.setSpecularColor((.8, .8, .8))
         self.setShininess(.1)
-#        self.matBase = SoMaterial()
-#        self.matBase.ambientColor.setValue(.0, .0, .0)
-#        self.matBase.diffuseColor.setValue(.4, .4, .4)
-#        self.matBase.specularColor.setValue(.8, .8, .8)
-#        self.matBase.shininess = .1
         self.cil = wrap(SoCylinder())
         self.cil.setName("segmento")
         ## ==========================
