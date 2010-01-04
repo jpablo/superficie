@@ -2,21 +2,14 @@
 __author__="jpablo"
 __date__ ="$18/05/2009 12:47:43 AM$"
 
-from PyQt4 import QtCore, QtGui, uic
-from pivy.coin import SoCoordinate3
-from pivy.coin import *
-from superficie.util import nodeDict, connect, write
-from superficie.util import malla2, Range, pegaNombres
-from superficie.base import Chapter, Page
-from superficie.Animation import Animation
-from superficie.gui import Button
+from PyQt4 import QtGui
+from pivy.coin import SoSeparator, SoSwitch
+from superficie.util import nodeDict
+from superficie.base import Chapter
 
-class Book(QtCore.QObject):
-
-#    chapterChanged = QtCore.pyqtSignal(int)
-
+class Book(object):
+    "Implemens a Book-like object"
     def __init__(self):
-        QtCore.QObject.__init__(self)
         self.__previousChapter = None
         self.root = SoSeparator()
         self.root.setName("Book:root")
@@ -28,12 +21,18 @@ class Book(QtCore.QObject):
         self.chaptersObjects = nodeDict()
         self.chaptersStack = QtGui.QStackedWidget()
 
+    def __len__(self):
+        """The number of chapters"""
+        return len(self.chapters)
+
     def createChapter(self):
+        "Creates a new empty Chapter"
         chapter = Chapter()
         self.addChapter(chapter)
         return chapter
 
     def addChapter(self, chapter):
+        "Appends a chapter"
         "A chapter contains several pages"
         ## we probably should check that chapter is derived
         ## from base.Chapter
@@ -67,10 +66,12 @@ class Book(QtCore.QObject):
 
     @property
     def whichChapter(self):
+        "returns the selected chapter"
         return self.chapters.whichChild.getValue()
 
     @whichChapter.setter
     def whichChapter(self,n):
+        "Sets the current chapter"
         ## only the == operator test for identity of the underlying
         ## OpenInventor object (the python proxy object is changed every time)
         chapterChanged = not(self.__previousChapter == self.chapterSwitch)
@@ -84,12 +85,4 @@ class Book(QtCore.QObject):
         if hasattr(chapterob, "chapterSpecificIn") and chapterChanged:
             chapterob.chapterSpecificIn()
         self.__previousChapter = self.chapterSwitch
-#        self.chapterChanged.emit(n)
 #        self.viewer.viewAll()
-
-    def numPages(self):
-        return len(self.chapterSwitch)
-
-
-if __name__ == "__main__":
-    print "Hello";

@@ -1,5 +1,3 @@
-import superficie
-from superficie.Viewer import Viewer
 from PyQt4 import QtGui
 from superficie.Book import Book
 import sys
@@ -34,13 +32,6 @@ class TestBook(unittest.TestCase):
         self.assertEqual(1, self.book.whichChapter)
         self.book.whichChapter = 0
         self.assertEqual(0, self.book.whichChapter)
-
-#    def testChapterChangedSignal(self):
-#        val = []
-#        testFunc = (lambda n: val.append(n))
-#        self.book.chapterChanged.connect(testFunc)
-#        self.book.chapterChanged.emit(0)
-#        self.assertEqual([0], val)
 
 
 if __name__ == '__main__':

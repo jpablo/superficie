@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from pivy.coin import SO_SWITCH_NONE
 from pivy.coin import *
 try:
     from pivy.quarter import QuarterWidget
@@ -10,11 +11,11 @@ except ImportError:
     Quarter = False
 
 
-from PyQt4 import QtGui, QtCore, uic
+from PyQt4 import QtGui, QtCore
 from types import FunctionType
 from random import random
 import operator
-from util import partial,  conecta, intervalPartition, Range, malla, wrap, Vec3
+from util import  conecta, intervalPartition, Range, malla, wrap, Vec3
 from base import GraphicObject
 from gui import Slider
 from Equation import createVars
@@ -61,13 +62,14 @@ def genVarsVals(vars, args):
     return ";".join([v+"="+str(a) for v, a in zip(vars, args)])
         
 class Quad(object):
+    """A Mesh"""
     def __init__(self, func=None, nx = 10, ny = 10):
-        self.function= func
+        self.function = func
         self.vectorFieldFunc = None
         self.coords = SoCoordinate3()
-        self.mesh = wrap(SoQuadMesh())
-        self.getMesh().verticesPerColumn = nx
-        self.getMesh().verticesPerRow = ny
+        self.__mesh = wrap(SoQuadMesh())
+        self.mesh.verticesPerColumn = nx
+        self.mesh.verticesPerRow = ny
         nb = SoNormalBinding()
         nb.value = SoNormalBinding.PER_VERTEX_INDEXED
         ## ============================
@@ -82,29 +84,55 @@ class Quad(object):
         self.root.addChild(nb)
         self.root.addChild(self.scale)
         self.root.addChild(self.coords)
-        self.root.addChild(self.mesh)
+        self.root.addChild(self.__mesh)
         self.root.addChild(self.lineColor)
         self.root.addChild(self.linesetX)
         self.root.addChild(self.linesetYcoor)
         self.root.addChild(self.linesetY)
 
-    def getMesh(self):
-        return self.mesh[0]
-    def getLineSetX(self):
+
+    @property
+    def meshVisible(self):
+        return self.__mesh.whichChild.getValue() != SO_SWITCH_NONE
+
+    @meshVisible.setter
+    def meshVisible(self,val):
+        self.__mesh.whichChild = SO_SWITCH_ALL if val else SO_SWITCH_NONE
+
+    @property
+    def linesVisible(self):
+        return self.linesetX.whichChild.getValue() != SO_SWITCH_NONE
+    
+    @linesVisible.setter
+    def linesVisible(self, visible):
+        self.linesetX.whichChild = SO_SWITCH_ALL if visible else SO_SWITCH_NONE
+        self.linesetY.whichChild = SO_SWITCH_ALL if visible else SO_SWITCH_NONE
+
+    @property
+    def mesh(self):
+        return self.__mesh[0]
+
+    @property
+    def lineSetX(self):
         return self.linesetX[0]
-    def getLineSetY(self):
+
+    @property
+    def lineSetY(self):
         return self.linesetY[0]
 
-    def getVerticesPerColumn(self):
-        return self.getMesh().verticesPerColumn.getValue()
+    @property
+    def verticesPerColumn(self):
+        return self.mesh.verticesPerColumn.getValue()
 
-    def getVerticesPerRow(self):
-        return self.getMesh().verticesPerRow.getValue()
+    @property
+    def verticesPerRow(self):
+        return self.mesh.verticesPerRow.getValue()
 
     def addVectorField(self,func):
         self.vectorFieldFunc = func
         
 class Mesh(GraphicObject):
+    """A Set of Quads which share the same generating function"""
     def __init__(self, rangeX=(0,1,40),  rangeY=(0,1,40), name="",visible = False, parent = None):
         GraphicObject.__init__(self,visible,parent)
         self.name = name
@@ -124,6 +152,9 @@ class Mesh(GraphicObject):
         self.widget.setLayout(layout)
         if self.name != "":
             layout.addWidget(QtGui.QLabel("<center><h1>%s</h1></center>" % self.name))
+
+    def __len__(self):
+        return len(self.rangeX) * len(self.rangeY)
             
     def getGui(self):
         return self.widget
@@ -131,29 +162,20 @@ class Mesh(GraphicObject):
     def addWidget(self,widget):
         self.widget.layout().addWidget(widget)
         
-    def __len__(self):
-        return len(self.rangeX) * len(self.rangeY)
 
     def addVectorField(self, func):
         for quad in self.quads.values():
             quad.addVectorField(func)
 
     def setMeshVisible(self, visible):
-        if visible:
-            val = SO_SWITCH_ALL
-        else:
-            val = SO_SWITCH_NONE
         for quad in self.quads.values():
-            quad.mesh.whichChild = val
+            quad.meshVisible = visible
+    meshVisible = property(fset=setMeshVisible)
 
     def setLinesVisible(self, visible):
-        if visible:
-            val = SO_SWITCH_ALL
-        else:
-            val = SO_SWITCH_NONE
         for quad in self.quads.values():
-            quad.linesetX.whichChild = val
-            quad.linesetY.whichChild = val
+            quad.linesVisible = visible
+    linesVisible = property(fset=setLinesVisible)
 
     def setMeshDiffuseColor(self,val):
         for quad in self.quads.values():
@@ -165,7 +187,7 @@ class Mesh(GraphicObject):
 
     def setVerticesPerColumn(self,n):
         for quad in self.quads.values():
-            quad.getMesh().verticesPerColumn = int(round(n))
+            quad.mesh.verticesPerColumn = int(round(n))
             
     def checkReturnValue(self, func, val):
         if not operator.isSequenceType(val) or len(val) != 3:
@@ -174,7 +196,7 @@ class Mesh(GraphicObject):
     def getParametersValues(self):
         return dict((par.name, par.getValue()) for par in self.parameters.values())
     
-    def addQuad(self,func,col=None):
+    def addQuad(self,func):
         nargs = func.func_code.co_argcount
         freevars = set(getFreeVariables(func))
         if nargs < 2:
@@ -193,8 +215,6 @@ class Mesh(GraphicObject):
         self.checkReturnValue(func, val)
         ## ============================
         self.quads[func] = quad
-#        self.root.addChild(quad.root)
-#        self.separator.addChild(quad.root)
         self.addChild(quad)
         
     def updateParameters(self):
@@ -216,18 +236,18 @@ class Mesh(GraphicObject):
             quad.coords.point.setValues(0,len(vertices),vertices)
             ## ============================
             ## the lines
-            vpc = quad.getVerticesPerColumn()
-            vpr = quad.getVerticesPerRow()
+            vpc = quad.verticesPerColumn
+            vpr = quad.verticesPerRow
             lstX = [vpr for i in range(vpc)]
             lstY = [vpc for i in range(vpr)]
-            quad.getLineSetX().numVertices.setValues(lstX)
+            quad.lineSetX.numVertices.setValues(lstX)
             ## we need the "transpose of the first list
             verticesY = []
             for i in range(vpr):
                 for j in range(vpc):
                     verticesY.append(vertices[j*vpr+i])
             quad.linesetYcoor.point.setValues(0,len(verticesY),verticesY)
-            quad.getLineSetY().numVertices.setValues(lstY)
+            quad.lineSetY.numVertices.setValues(lstY)
             ## ============================
             ## the vector field
             if quad.vectorFieldFunc:

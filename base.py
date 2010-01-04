@@ -22,7 +22,7 @@ class Chapter(QtCore.QObject):
     "A Chapter"
 
 
-#    pageChanged = QtCore.pyqtSignal(int)
+    pageChanged = QtCore.pyqtSignal(int)
 
     def __init__(self, name = ""):
         QtCore.QObject.__init__(self)
@@ -126,7 +126,7 @@ class Chapter(QtCore.QObject):
         if len(self.pagesSwitch) > 0:
             self.pagesSwitch.whichChild = n
             self.widget.pageStack.setCurrentIndex(n)
-#            self.pageChanged.emit(n)
+            self.pageChanged.emit(n)
 #        self.getCamera().viewAll(self.getPage(), self.viewer.getViewportRegion())
 #        self.viewAll()
 

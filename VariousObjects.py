@@ -1,14 +1,12 @@
 from pivy.coin import *
-from PyQt4 import QtCore,QtGui
+from PyQt4 import QtCore
+from PyQt4 import QtGui
 from superficie.util import wrap
 from math import acos
 from superficie.util import intervalPartition, Vec3, segment
-from superficie.util import genIntervalPartition
-from superficie.util import nodeDict
 from superficie.base import Page
 from superficie.base import GraphicObject, BasePlane
 from superficie.Animation import Animation
-from superficie.util import malla2, Range
 
 def generaPuntos(coords):
     c = coords

@@ -15,6 +15,7 @@ except ImportError:
     from pivy.gui.soqt import *
     Quarter = False
 from superficie.util import callback
+from superficie.util import conecta
 from superficie.util import pegaNombres
 from superficie.util import readFile
 from superficie.Book import Book
@@ -24,6 +25,12 @@ from superficie.Book import Book
 #log.setLevel(logging.DEBUG)
 
 
+def getPickedPoint(root, myPickAction, cursorPosition):
+    myPickAction.setPoint(cursorPosition)
+    myPickAction.setRadius(8.0)
+    myPickAction.setPickAll(True)
+    myPickAction.apply(root)
+    return myPickAction.getPickedPointList()
 
 TransparencyType= [
    'SCREEN_DOOR, ADD',
@@ -44,13 +51,19 @@ class Viewer(Book,QWidget):
     ## from it because PyQt only suppor one base clase derived
     ## from QObject
     chapterChanged = QtCore.pyqtSignal(int)
-    
+
     def __init__(self,parent=None,uiLayout=None,luces=True):
         QWidget.__init__(self,parent)
         Book.__init__(self)
+        # ============================
+        fmt = QtOpenGL.QGLFormat()
+        fmt.setAlpha(True)
+        QtOpenGL.QGLFormat.setDefaultFormat(fmt)
+        self.moviendo = False
+        self.moviendoOb = None
         ## ============================
-        self.initializeViewer(luces)
-        self.initializeUI(uiLayout)
+        self.inicializarVisor(luces)
+        self.inicializarUi(uiLayout)
 
     ## TODO: investigate why this function is never called
     @property
@@ -60,44 +73,48 @@ class Viewer(Book,QWidget):
 
     @Book.whichChapter.setter
     def whichChapter(self,n):
-        "Sets the current Chapter"
         self.chapterChanged.emit(n)
         Book.whichChapter.fset(self,n)
 
-    @property
-    def camera(self):
-        "Gets the camera"
+
+    def getCamera(self):
         if Quarter:
             return self.viewer.getSoRenderManager().getCamera()
         else:
             return self.viewer.getCamera()
 
 
-    def setInitialCameraPosition(self):
+    def setStereoAdjustment(self, val):
+        camera = self.getCamera()
+        camera.setStereoAdjustment(val)
+
+    def rotacionInicial(self):
         "Chose an adecuate initial pov"
-        self.camera.position = (7,7,7)
-        self.camera.pointAt(SbVec3f(0, 0, 0),  SbVec3f(0, 0, 1))
-        self.camera.farDistance = 25
-        self.camera.nearDistance = .01
+        camera = self.getCamera()
+        camera.position = (7,7,7)
+        camera.pointAt(SbVec3f(0, 0, 0),  SbVec3f(0, 0, 1))
+        camera.farDistance = 25
+        camera.nearDistance = .01
 
     def trackCameraPosition(self, val):
         if val:
+            camera = self.getCamera()
             if not hasattr(self, "cameraSensor"):
                 def fn(camera, sensor):
                     print camera.position.getValue().getValue()
-                self.cameraSensor = callback(self.camera.position, fn, self.camera)
+                self.cameraSensor = callback(camera.position, fn, camera)
             else:
-                self.cameraSensor.attach(self.camera.position)
+                self.cameraSensor.attach(camera.position)
         elif hasattr(self, "cameraSensor"):
             self.cameraSensor.detach()
 
-    def addLights(self):
+    def agregaLuces(self, root):
         self.lucesColor = readFile(pegaNombres("Viewer","lights.iv")).getChild(0)
-        self.insertLight(self.lucesColor)
+        self.insertaLuz(self.lucesColor)
         self.lucesColor.whichChild = SO_SWITCH_ALL
         ## ============================
         self.lucesBlanca = SoDirectionalLight()
-        self.insertLight(self.lucesBlanca)
+        self.insertaLuz(self.lucesBlanca)
         self.lucesBlanca.on = False
 
     def setColorLightOn(self, val):
@@ -109,15 +126,10 @@ class Viewer(Book,QWidget):
     def setWhiteLightOn(self, val):
         self.lucesBlanca.on = val
 
-    def insertLight(self, luz):
+    def insertaLuz(self, luz):
         self.getSRoot().insertChild(luz, 0)
 
-    def initializeViewer(self, luces):
-        # ============================
-        fmt = QtOpenGL.QGLFormat()
-        fmt.setAlpha(True)
-        QtOpenGL.QGLFormat.setDefaultFormat(fmt)
-        # ============================
+    def inicializarVisor(self, luces):
         if Quarter:
             self.viewer = QuarterWidget()
             layout = QtGui.QVBoxLayout()
@@ -125,6 +137,10 @@ class Viewer(Book,QWidget):
             layout.addWidget(self.viewer)
         else:
             self.viewer = SoQtExaminerViewer(self)
+        ## metodos disponibles:
+        # viewAll
+        # setTransparencyType
+        # setSceneGraph
         ## ============================
         ## copy some attributes
         if Quarter:
@@ -144,6 +160,13 @@ class Viewer(Book,QWidget):
             self.viewer.setHeadlight(False)
             self.viewer.setFeedbackVisibility(False)
             self.viewer.setDecoration(False)
+        ## en la sala ixtli
+#        self.viewer.setStereoType(SoQtViewer.STEREO_QUADBUFFER)
+        ## en el resto del mundo
+#        self.viewer.setStereoType(SoQtViewer.STEREO_ANAGLYPH)
+        ## esto es principalmente por los poliedros
+#        if not noestiloIni:
+#        self.setDrawStyle(SoQtViewer.VIEW_WIREFRAME_OVERLAY)
         ## ============================
         self.mouseEventCB = SoEventCallback()
         self.getSRoot().addChild(self.mouseEventCB)
@@ -157,21 +180,30 @@ class Viewer(Book,QWidget):
         self.root.addChild(rotor)
         self.rotor = rotor
         ## ============================
-        self.setInitialCameraPosition()
+        self.rotacionInicial()
+        self.setStereoAdjustment(.2)
         ## ===========================
         if luces:
-            self.addLights()
+            self.agregaLuces(self.root)
         hints = SoShapeHints()
         hints.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
         hints.shapeType = SoShapeHints.SOLID
         hints.faceType = SoShapeHints.CONVEX
         self.root.addChild(hints)
+        ## ============================
+#        self.capturaMouseClicked(self.mouse1Clicked, self.mouse2Clicked)
+#        self.capturaMouseMoved(self.mouseMoved)
 
 
-    def initializeUI(self,uilayout):
+    def inicializarUi(self,uilayout):
         self.chaptersStack = QtGui.QStackedWidget()
+#        self.chaptersStack.setStyleSheet("QWidget { background:green }")
         if uilayout:
             uilayout.addWidget(self.chaptersStack)
+        ## ========================================
+#        self.options = QWidget()
+#        uic.loadUi(modulosPath + "Visor/options-visor.ui",self)
+#        self.visorPropertiesFrame.setParent(self.options)
 
     @QtCore.pyqtSignature("bool")
     def on_axisButton_clicked(self,b):
@@ -183,6 +215,85 @@ class Viewer(Book,QWidget):
         else:
             return self.viewer.getSceneManager().getSceneGraph()
 
+    def mouseMoved(self, pickedList):
+        chapterob = self.getChapterObject()
+        if hasattr(chapterob, "mouseMoved"):
+            chapterob.mouseMoved(pickedList)
+
+    def mouse1Clicked(self, pickedList):
+        chapterob = self.getChapterObject()
+        if hasattr(chapterob, "mouse1Clicked"):
+            chapterob.mouse1Clicked(pickedList)
+
+    def mouse2Clicked(self, pickedList):
+        chapterob = self.getChapterObject()
+        if hasattr(chapterob, "mouse2Clicked"):
+            chapterob.mouse2Clicked(pickedList)
+
+
+    def capturaMouseClicked(self, slot1,  slot2 = None):
+        "target es el objeto en el que estamos interesados"
+        self.mouseEventCB.addEventCallback(SoMouseButtonEvent.getClassTypeId(),self.mousePressCB)
+        conecta(self, QtCore.SIGNAL("mouse1Clicked"), slot1)
+        if slot2 != None:
+            conecta(self, QtCore.SIGNAL("mouse2Clicked"), slot2)
+
+    def mousePressCB(self, userData,  eventCB):
+        sroot = self.getSRoot()
+        event = eventCB.getEvent()
+        viewport = eventCB.getAction().getViewportRegion()
+        cursorPosition = event.getPosition(viewport)
+        ## ============================
+        pickAction = SoRayPickAction(viewport)
+        myPickedPointList = getPickedPoint(sroot, pickAction, cursorPosition)
+        ## ============================
+        if myPickedPointList.getLength() == 0:
+            return FALSE
+        if SoMouseButtonEvent.isButtonPressEvent(event, SoMouseButtonEvent.BUTTON1):
+            self.emit(QtCore.SIGNAL("mouse1Clicked"), myPickedPointList)
+            self.toggleEventMouseMoved(True)
+            self.moviendo = True
+            eventCB.setHandled()
+        elif SoMouseButtonEvent.isButtonReleaseEvent(event, SoMouseButtonEvent.BUTTON1):
+            self.moviendo = False
+            self.moviendoOb = None
+            self.toggleEventMouseMoved(False)
+            eventCB.setHandled()
+        elif SoMouseButtonEvent.isButtonPressEvent(event, SoMouseButtonEvent.BUTTON2):
+            self.emit(QtCore.SIGNAL("mouse2Clicked"), myPickedPointList)
+            eventCB.setHandled()
+
+    def toggleEventMouseMoved(self, val):
+        "Activa/desactiva el rastreo del movimiento del mouse"
+        ## TODO: arreglar esto
+        if val:
+            self.mouseEventCB.addEventCallback(SoLocation2Event.getClassTypeId(),self.mouseMoveCB)
+        else:
+            ## esto marca un error, no tengo idea porqué
+            self.mouseEventCB.removeEventCallback(SoLocation2Event.getClassTypeId(),self.mouseMoveCB)
+
+    def mouseMoveCB(self, userData,  eventCB):
+        print "mouseMoveCB"
+        if self.moviendo:
+            event = eventCB.getEvent()
+            viewport = eventCB.getAction().getViewportRegion()
+            cursorPosition = event.getPosition()
+            sroot = self.getSRoot()
+            pickAction = SoRayPickAction(viewport)
+            myPickedPointList = getPickedPoint(sroot, pickAction, cursorPosition)
+            if myPickedPointList.getLength() == 0:
+                return FALSE
+            self.emit(QtCore.SIGNAL("mouseMoved"), myPickedPointList)
+            eventCB.setHandled()
+
+    def capturaMouseMoved(self, slot):
+        "Esta funcion es utilizada por el usuario"
+        conecta(self, QtCore.SIGNAL("mouseMoved"), slot)
+
+    def setDrawStyle(self,type):
+        print "not implemented"
+        return
+#        self.viewer.setDrawStyle(SoQtExaminerViewer.STILL, type)
 
 if __name__ == "__main__":
     import sys
