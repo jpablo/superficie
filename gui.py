@@ -1,6 +1,5 @@
-import sys
 from pivy.coin import *
-from pivy.gui.soqt import *
+#from pivy.gui.soqt import *
 from PyQt4 import QtCore, QtGui, uic
 from superficie.util import connectPartial, wrap, conecta, identity, partial, segment, pegaNombres,connect
 from superficie.Animation0 import AnimeType, Timer
