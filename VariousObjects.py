@@ -418,28 +418,63 @@ class Line(GraphicObject):
         return Line(ptosProj,color,width,nvertices,parent=self.parent)
 
 
-class Curve3D(Line):
+class Curve3D(GraphicObject):
     """
     """
     def __init__(self, func, iter, color = (1,1,1), width=1, nvertices = -1, parent = None, domTrans=None):
+        GraphicObject.__init__(self,True,parent)
+        self.lines = []
         c   = lambda t: Vec3(func(t))
         ## ============================
         if domTrans:
             ptsTr = intervalPartition(iter, domTrans)
             print max(ptsTr), min(ptsTr)
             points = map(c,ptsTr)
-        ##if isinstance(iter[0], Sequence):
-            
-        points = intervalPartition(iter, c)
-        Line.__init__(self, points, color, width, nvertices, parent=parent)
-        self.func = func
+
         self.iter = iter
+        self.func = func
+
+        if not isinstance(iter[0], Sequence):
+            self.iter = [iter]
+            
+        for it in self.iter:
+            points = intervalPartition(it, c)
+            self.lines.append(Line(points, color, width, nvertices, parent=self))
+
+        self.lengths = map(len,self.lines)
+        
+
+    def __len__(self):
+        return sum(self.lengths)
+
+    def __getitem__(self, i):
+        for line in self.lines:
+            nl = len(line)
+            if i < nl:
+                return line[i]
+            else:
+                i -= nl
 
     def updatePoints(self,func):
         self.func = func
         c = lambda t: Vec3(func(t))
-        points = intervalPartition(self.iter, c)
-        self.setCoordinates(points)
+        for it,line in zip(self.iter,self.lines):
+            points = intervalPartition(it, c)
+            line.setCoordinates(points)
+
+    @property
+    def domainPoints(self):
+        ret = []
+        for it in self.iter:
+            ret += intervalPartition(it)
+        return ret
+
+    @property
+    def Points(self):
+        ret = []
+        for line in self.lines:
+            ret += line.getCoordinates()
+        return ret
 
 
 class Bundle3(GraphicObject):

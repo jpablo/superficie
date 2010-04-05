@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" readonly="true" id="6a463d02-5998-480c-a5c5-c168df03bf37" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/encodings.xml" afterPath="$PROJECT_DIR$/.idea/encodings.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Animation.py" afterPath="$PROJECT_DIR$/Animation.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/VariousObjects.py" afterPath="$PROJECT_DIR$/VariousObjects.py" />
     </list>
@@ -48,7 +50,7 @@
       <file leaf-file-name="base.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/base.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="245" column="6" selection-start="7365" selection-end="7365" vertical-scroll-proportion="0.0">
+            <state line="237" column="6" selection-start="7063" selection-end="7063" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -63,10 +65,19 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="VariousObjects.py" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="VariousObjects.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/VariousObjects.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="428" column="48" selection-start="14117" selection-end="14117" vertical-scroll-proportion="0.58474576">
+            <state line="476" column="18" selection-start="15354" selection-end="15354" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Animation.py" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Animation.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="22" column="39" selection-start="770" selection-end="770" vertical-scroll-proportion="0.3234245">
               <folding />
             </state>
           </provider>
@@ -84,6 +95,7 @@
       <list>
         <option value="$PROJECT_DIR$/base.py" />
         <option value="$PROJECT_DIR$/VariousObjects.py" />
+        <option value="$PROJECT_DIR$/Animation.py" />
       </list>
     </option>
   </component>
@@ -218,7 +230,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1698" y="16" width="1239" height="1010" extended-state="0" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32949308" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -226,7 +238,7 @@
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.26799008" sideWeight="0.3559908" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.26799008" sideWeight="0.6359447" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.26799008" sideWeight="0.6359447" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -251,7 +263,7 @@
     <option name="ENABLE_BACKGROUND_PROCESSES" value="false" />
     <option name="CHANGED_ON_SERVER_INTERVAL" value="60" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" />
+    <option name="LAST_COMMIT_MESSAGE" value="" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_FILES_UP_TO_DATE_BEFORE_COMMIT" value="false" />
@@ -286,14 +298,21 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/base.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="245" column="6" selection-start="7365" selection-end="7365" vertical-scroll-proportion="0.0">
+        <state line="237" column="6" selection-start="7063" selection-end="7063" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/VariousObjects.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="428" column="48" selection-start="14117" selection-end="14117" vertical-scroll-proportion="0.58474576">
+        <state line="476" column="18" selection-start="15354" selection-end="15354" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Animation.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="22" column="39" selection-start="770" selection-end="770" vertical-scroll-proportion="0.3234245">
           <folding />
         </state>
       </provider>

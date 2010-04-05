@@ -27,6 +27,16 @@ class Animation(QtCore.QTimeLine):
             connect(animations[i].pauseTimer,"timeout()",animations[i+1].start)
 
 
+class AnimationCurve(Animation):
+    def __init__(self,func,curve,duration):
+        self.curve = curve
+        self.func = func
+        Animation.__init__(self,self.eachFrame,(duration,0,len(curve)-1))
+
+    def eachFrame(self,i):
+        self.func(i,self.curve[i])
+
+
 class Timer(QtCore.QTimer):
     "evalua automaticamente una funcion en los puntos del intervalo dado"
     def __init__(self,func,rango):
