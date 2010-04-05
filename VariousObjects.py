@@ -3,6 +3,8 @@ from PyQt4 import QtCore
 from PyQt4 import QtGui
 from superficie.util import wrap
 from math import acos
+from collections import Sequence
+
 from superficie.util import intervalPartition, Vec3, segment
 from superficie.base import Page
 from superficie.base import GraphicObject, BasePlane
@@ -419,13 +421,15 @@ class Line(GraphicObject):
 class Curve3D(Line):
     """
     """
-    def __init__(self,iter,func,  color = (1,1,1), width=1, nvertices = -1, parent = None, domTrans=None):
+    def __init__(self, func, iter, color = (1,1,1), width=1, nvertices = -1, parent = None, domTrans=None):
         c   = lambda t: Vec3(func(t))
         ## ============================
         if domTrans:
             ptsTr = intervalPartition(iter, domTrans)
             print max(ptsTr), min(ptsTr)
             points = map(c,ptsTr)
+        if isinstance(iter[0], Sequence):
+            
         points = intervalPartition(iter, c)
         Line.__init__(self, points, color, width, nvertices, parent=parent)
         self.func = func
