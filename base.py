@@ -5,7 +5,7 @@ __date__ ="$18/05/2009 12:47:43 AM$"
 from PyQt4 import QtCore, QtGui, uic
 from pivy.coin import SoCoordinate3
 from pivy.coin import *
-from superficie.util import nodeDict, connect, write
+from superficie.util import nodeDict, connect, write, Vec3
 from superficie.util import malla2, Range, pegaNombres
 from superficie.Animation import Animation
 from superficie.gui import Button
@@ -281,6 +281,30 @@ class GraphicObject(SoSwitch):
 
     def hide(self):
         self.setVisible(False)
+        
+    def setBoundingBox(self,xrange,yrange,zrange = (-1,1)):
+        
+        def createPlane(normalref, point):
+            sfplane = SoSFPlane()
+            sfplane.setValue(SbPlane( normalref, point )) 
+            return sfplane
+        
+        self.clipPlaneXZ1 = SoClipPlane()
+        self.clipPlaneXZ1.plane = createPlane(SbVec3f(0,1,0), SbVec3f(0,yrange[0],0))
+        self.separator.insertChild(self.clipPlaneXZ1,0)    
+        
+        self.clipPlaneXZ2 = SoClipPlane()
+        self.clipPlaneXZ2.plane = createPlane(SbVec3f(0,-1,0), SbVec3f(0,yrange[1],0))
+        self.separator.insertChild(self.clipPlaneXZ2,1)
+        
+        self.clipPlaneYZ1 = SoClipPlane()
+        self.clipPlaneYZ1.plane = createPlane(SbVec3f(1,0,0), SbVec3f(xrange[0],0,0))
+        self.separator.insertChild(self.clipPlaneYZ1,2)    
+        
+        self.clipPlaneYZ2 = SoClipPlane()
+        self.clipPlaneYZ2.plane = createPlane(SbVec3f(-1,0,0), SbVec3f(xrange[1],0,0))
+        self.separator.insertChild(self.clipPlaneYZ2,3)    
+            
 
     def setDrawStyle(self,style):
         self.drawStyle.style = style
