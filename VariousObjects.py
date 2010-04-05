@@ -428,7 +428,7 @@ class Curve3D(Line):
             ptsTr = intervalPartition(iter, domTrans)
             print max(ptsTr), min(ptsTr)
             points = map(c,ptsTr)
-        if isinstance(iter[0], Sequence):
+        ##if isinstance(iter[0], Sequence):
             
         points = intervalPartition(iter, c)
         Line.__init__(self, points, color, width, nvertices, parent=parent)
