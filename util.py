@@ -228,7 +228,7 @@ def intervalPartition(iter, func=None):
 #    return [l*(i/(n-1.)) + a for i in range(n)]
 
 class Range(object):
-    ""
+    "Similar to xrange() but for float values"
     def __init__(self, vmin, vmax, npoints = 30):
         self.min = vmin
         self.max = vmax
@@ -365,6 +365,11 @@ def malla3(puntos, func, rangex, rangey):
 
 
 def wrap(node, show = True):
+    '''
+    wrap node with a SoSwitch
+    @param node:
+    @param show:
+    '''
     if hasattr(node, "root"):
         node = node.root
     switch = SoSwitch()
@@ -439,6 +444,4 @@ def fn(strfunc):
     exec ("ret = lambda %s: %s" % (var, fbody))
     return ret
 
-def prueba():
-    return globals()
     

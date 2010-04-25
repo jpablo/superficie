@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from superficie.util import SupHideable
-from pivy.coin import SO_SWITCH_NONE
+from pivy.coin import SO_SWITCH_NONE, SoNormalBinding
 from pivy.coin import *
+
+
 try:
     from pivy.quarter import QuarterWidget
     Quarter = True
@@ -16,11 +18,15 @@ from PyQt4 import QtGui, QtCore
 from types import FunctionType
 from random import random
 import operator
+import itertools
+
 from util import  conecta, intervalPartition, Range, malla, wrap, Vec3
 from base import GraphicObject
 from gui import Slider
 from Equation import createVars
 from VariousObjects import Arrow
+from FreeVariableFunction import FreeVariableFunction
+
 import logging
 ## TODO: el código necesita averiguar qué símbolos están definidos
 ## en el bloque que llama a *Plot3D, para que este código
@@ -41,7 +47,7 @@ def bindFreeVariables(func, dvals={}):
 def getFreeVariables(func):
     nargs = func.func_code.co_argcount
     vars1 = []
-    while 1:
+    while True:
         try:
             d = dict(zip(vars1,[random() for j in vars1]))
             f = bindFreeVariables(func, d)
@@ -61,11 +67,14 @@ def getFreeVariables(func):
 
 def genVarsVals(vars, args):
     return ";".join([v+"="+str(a) for v, a in zip(vars, args)])
+    
         
 class Quad(object):
     """A Mesh"""
-    def __init__(self, func = None, nx = 10, ny = 10):
-        self.function = func
+    def __init__(self, func = None, nx = 10, ny = 10):        
+        self.function = FreeVariableFunction(func)
+        if self.function.argCount() < 2:
+            raise TypeError, "function %s needs at least 2 arguments" % func
         self.vectorFieldFunc = None
         self.coords = SoCoordinate3()
         self.__mesh = wrap(SoQuadMesh())
@@ -112,14 +121,23 @@ class Quad(object):
 
     @property
     def mesh(self):
+        '''
+        The QuadMeshObject
+        '''
         return self.__mesh[0]
 
     @property
     def lineSetX(self):
+        '''
+        The SoLineSet in the X direction
+        '''
         return self.linesetX[0]
 
     @property
     def lineSetY(self):
+        '''
+        The SoLineSet in the Y direction
+        '''
         return self.linesetY[0]
 
     @property
@@ -132,6 +150,34 @@ class Quad(object):
 
     def addVectorField(self,func):
         self.vectorFieldFunc = func
+
+    def update(self, rangeX, rangeY):
+        vertices = range(len(rangeX) * len(rangeY))
+        malla(vertices, self.function, rangeX.min, rangeX.dt, len(rangeX), rangeY.min, rangeY.dt, len(rangeY))
+        self.coords.point.setValues(0, len(vertices), vertices)
+        ## ============================
+        ## the lines
+        vpc = self.verticesPerColumn
+        vpr = self.verticesPerRow
+        #lstX = [vpr for i in range(vpc)]
+        #lstY = [vpc for i in range(vpr)]
+        lstX = tuple(itertools.repeat(vpr,vpc))
+        lstY = tuple(itertools.repeat(vpc,vpr)) 
+        self.lineSetX.numVertices.setValues(lstX) ## we need the "transpose of the first list
+        verticesY = []
+        for i in range(vpr):
+            for j in range(vpc):
+                verticesY.append(vertices[j * vpr + i])        
+        self.linesetYcoor.point.setValues(0, len(verticesY), verticesY)
+        self.lineSetY.numVertices.setValues(lstY)
+            ## ============================
+            ## the vector field
+#        if quad.vectorFieldFunc:
+#            for v in vertices:
+#                vf = quad.vectorFieldFunc(Vec3(v))
+#                self.addChild(Arrow(Vec3(v), vf, visible=True, escala=.005, extremos=True))
+
+
         
 class Mesh(GraphicObject):
     """A Set of Quads which share the same generating function"""
@@ -199,32 +245,27 @@ class Mesh(GraphicObject):
         return dict((par.name, par.getValue()) for par in self.parameters.values())
     
     def addQuad(self,func):
-        print "addQuad"
-        nargs = func.func_code.co_argcount
-        freevars = set(getFreeVariables(func))
-        print "freevars:", freevars
-        if nargs < 2:
-            raise TypeError, "function %s needs at least 2 arguments" % func
+        '''
+        Adds a Quad object
+        @param func:
+        '''        
         quad = Quad(func, len(self.rangeX), len(self.rangeY))
-        ## only add new names
-        oldnames = set(self.parameters.keys())
-        newvars = freevars - oldnames
-        for v in sorted(newvars):
+        for v in sorted(quad.function.freeVariables):
             self.addParameter((v, 0, 1, 0))
         ## ============================
-        ## test the return value
         d = self.getParametersValues()
-        fbind = bindFreeVariables(func, d)
-        val = fbind(1, 1)
-        self.checkReturnValue(func, val)
+        quad.function.updateGlobals(d)
+        ## test the return value
+        val = quad.function(1, 1)
+        self.checkReturnValue(quad.function, val)
         ## ============================
-        self.quads[func] = quad
+        self.quads[quad.function] = quad
         self.addChild(quad)
         
     def updateParameters(self):
         d = self.getParametersValues()
-        for func,quad in self.quads.items():
-            quad.function = bindFreeVariables(func, d)
+        for function in self.quads:
+            function.updateGlobals(d)
         
     def updateAll(self, val = 0):
         print "updateAll"
@@ -232,34 +273,10 @@ class Mesh(GraphicObject):
             self.updateParameters()
             self.updateMesh()
 
+
     def updateMesh(self):
         for quad in self.quads.values():
-            vertices = range(len(self))
-            malla(vertices, quad.function, 
-                self.rangeX.min, self.rangeX.dt, len(self.rangeX),
-                self.rangeY.min, self.rangeY.dt, len(self.rangeY))
-            quad.coords.point.setValues(0,len(vertices),vertices)
-            ## ============================
-            ## the lines
-            vpc = quad.verticesPerColumn
-            vpr = quad.verticesPerRow
-            lstX = [vpr for i in range(vpc)]
-            lstY = [vpc for i in range(vpr)]
-            quad.lineSetX.numVertices.setValues(lstX)
-            ## we need the "transpose of the first list
-            verticesY = []
-            for i in range(vpr):
-                for j in range(vpc):
-                    verticesY.append(vertices[j*vpr+i])
-            quad.linesetYcoor.point.setValues(0,len(verticesY),verticesY)
-            quad.lineSetY.numVertices.setValues(lstY)
-            ## ============================
-            ## the vector field
-            if quad.vectorFieldFunc:
-                for v in vertices:
-                    vf = quad.vectorFieldFunc(Vec3(v))
-                    self.addChild(Arrow(Vec3(v),vf,visible=True,escala=.005,extremos=True))
-
+            quad.update(self.rangeX, self.rangeY)
 
     def addParameter(self, rangep=('w', 0, 1, 0), qlabel = None):
         ## rangep = (name, vmin, vmax, vini)
@@ -413,6 +430,7 @@ class VectorField3D(GraphicObject):
         print "setNumVisibleArrows:", num
 
 
+
 if __name__ == "__main__":
     from util import  main
     from math import  cos,  sin,  pi
@@ -424,9 +442,9 @@ if __name__ == "__main__":
     visor.createChapter()
     ## ============================
     visor.chapter.createPage()
-    m = Mesh((-1, 1, 20), (-1, 1, 20))
-    m.addQuad(lambda x, y:(x,y,   v*x**2 - w*y**2))
-    m.addQuad(lambda x, y:(x,y, - x**2 - y**2))
+    m = Mesh((-1, 1, 20), (-1, 1, 20), visible=True)
+    m.addQuad(lambda x, y:(x,y,   u*x**2 - v*y**2))
+    m.addQuad(lambda x, y:(x,y, - sin(x)**2 - y**2))
     visor.page.addChild(m)
     ## ============================
 #    visor.chapter.createPage()
