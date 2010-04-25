@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from superficie.util import SupHideable
 from pivy.coin import SO_SWITCH_NONE
 from pivy.coin import *
 try:
@@ -63,19 +64,20 @@ def genVarsVals(vars, args):
         
 class Quad(object):
     """A Mesh"""
-    def __init__(self, func=None, nx = 10, ny = 10):
+    def __init__(self, func = None, nx = 10, ny = 10):
         self.function = func
         self.vectorFieldFunc = None
         self.coords = SoCoordinate3()
         self.__mesh = wrap(SoQuadMesh())
+#        self.mesh = SupHideable(SoQuadMesh())
         self.mesh.verticesPerColumn = nx
         self.mesh.verticesPerRow = ny
         nb = SoNormalBinding()
         nb.value = SoNormalBinding.PER_VERTEX_INDEXED
         ## ============================
         self.scale = SoScale()
-        self.linesetX = wrap(SoLineSet(),False)
-        self.linesetY = wrap(SoLineSet(),False)
+        self.linesetX = wrap(SoLineSet(),show=False)
+        self.linesetY = wrap(SoLineSet(),show=False)
         self.linesetYcoor = SoCoordinate3()
         self.lineColor = SoMaterial()
         self.lineColor.diffuseColor = (1,0,0)
@@ -91,22 +93,22 @@ class Quad(object):
         self.root.addChild(self.linesetY)
 
 
-    @property
-    def meshVisible(self):
-        return self.__mesh.whichChild.getValue() != SO_SWITCH_NONE
-
-    @meshVisible.setter
-    def meshVisible(self,val):
-        self.__mesh.whichChild = SO_SWITCH_ALL if val else SO_SWITCH_NONE
-
-    @property
-    def linesVisible(self):
-        return self.linesetX.whichChild.getValue() != SO_SWITCH_NONE
-    
-    @linesVisible.setter
-    def linesVisible(self, visible):
-        self.linesetX.whichChild = SO_SWITCH_ALL if visible else SO_SWITCH_NONE
-        self.linesetY.whichChild = SO_SWITCH_ALL if visible else SO_SWITCH_NONE
+#    @property
+#    def meshVisible(self):
+#        return self.__mesh.whichChild.getValue() != SO_SWITCH_NONE
+#
+#    @meshVisible.setter
+#    def meshVisible(self,val):
+#        self.__mesh.whichChild = SO_SWITCH_ALL if val else SO_SWITCH_NONE
+#
+#    @property
+#    def linesVisible(self):
+#        return self.linesetX.whichChild.getValue() != SO_SWITCH_NONE
+#
+#    @linesVisible.setter
+#    def linesVisible(self, visible):
+#        self.linesetX.whichChild = SO_SWITCH_ALL if visible else SO_SWITCH_NONE
+#        self.linesetY.whichChild = SO_SWITCH_ALL if visible else SO_SWITCH_NONE
 
     @property
     def mesh(self):
@@ -197,8 +199,10 @@ class Mesh(GraphicObject):
         return dict((par.name, par.getValue()) for par in self.parameters.values())
     
     def addQuad(self,func):
+        print "addQuad"
         nargs = func.func_code.co_argcount
         freevars = set(getFreeVariables(func))
+        print "freevars:", freevars
         if nargs < 2:
             raise TypeError, "function %s needs at least 2 arguments" % func
         quad = Quad(func, len(self.rangeX), len(self.rangeY))
@@ -223,6 +227,7 @@ class Mesh(GraphicObject):
             quad.function = bindFreeVariables(func, d)
         
     def updateAll(self, val = 0):
+        print "updateAll"
         if hasattr(self,"parameters"):
             self.updateParameters()
             self.updateMesh()
@@ -418,34 +423,34 @@ if __name__ == "__main__":
     visor = Viewer()
     visor.createChapter()
     ## ============================
-#    visor.createPage()
-#    m = Mesh((-1, 1, 20), (-1, 1, 20))
-#    m.addQuad(lambda x, y:(x,y,   v*x**2 - w*y**2))
-#    m.addQuad(lambda x, y:(x,y, - x**2 - y**2))
-#    visor.addChild(m)
+    visor.chapter.createPage()
+    m = Mesh((-1, 1, 20), (-1, 1, 20))
+    m.addQuad(lambda x, y:(x,y,   v*x**2 - w*y**2))
+    m.addQuad(lambda x, y:(x,y, - x**2 - y**2))
+    visor.page.addChild(m)
     ## ============================
-    visor.createPage()
-    pp = ParametricPlot3D(lambda x,y:(x,y, a*x**2 + b*y**2),(-1,1),(-1,1),visible=True)
-
-    for t in intervalPartition((0, 3, 6)):
-        pp.addQuad(lambda x,y,t=t:(x,y, x**2 + b*y**2 + t))
-
-    pp.setRange("a", (-1, 1, 0))
-    pp.setRange("b", (-1, 1, 0))
-    visor.addChild(pp)
-    ## ============================
-    visor.createPage()
-    p2 = Plot3D(lambda x,y:a*x**2 - y**2,(-1,1),(-1,1),visible=True)
-    ## si el parámetro no se define explícitamente, el resultado es equivalente
-    ## a esto:
-    ## p2.setRange("a", (0, 1, 0))
-    visor.addChild(p2)
-    ## ============================
-    visor.createPage()
-    p3 = RevolutionPlot3D(lambda r,t: r**2 ,(.1,1),(.1,2*pi), name="p3",visible=True)
-    r, t = createVars(["r", "t"])
-    p3.addEqn(t == r**2)
-    visor.addChild(p3)
+#    visor.chapter.createPage()
+#    pp = ParametricPlot3D(lambda x,y:(x,y, a*x**2 + b*y**2),(-1,1),(-1,1),visible=True)
+#
+#    for t in intervalPartition((0, 3, 6)):
+#        pp.addQuad(lambda x,y,t=t:(x,y, x**2 + b*y**2 + t))
+#
+#    pp.setRange("a", (-1, 1, 0))
+#    pp.setRange("b", (-1, 1, 0))
+#    visor.page.addChild(pp)
+#    ## ============================
+#    visor.chapter.createPage()
+#    p2 = Plot3D(lambda x,y:a*x**2 - y**2,(-1,1),(-1,1),visible=True)
+#    ## si el parámetro no se define explícitamente, el resultado es equivalente
+#    ## a esto:
+#    ## p2.setRange("a", (0, 1, 0))
+#    visor.page.addChild(p2)
+#    ## ============================
+#    visor.chapter.createPage()
+#    p3 = RevolutionPlot3D(lambda r,t: r**2 ,(.1,1),(.1,2*pi), name="p3",visible=True)
+#    r, t = createVars(["r", "t"])
+#    p3.addEqn(t == r**2)
+#    visor.page.addChild(p3)
     ## ============================
     visor.lucesBlanca.on = False
     visor.lucesColor.whichChild = SO_SWITCH_ALL

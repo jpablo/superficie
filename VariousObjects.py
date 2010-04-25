@@ -55,9 +55,9 @@ class Cube(QtCore.QObject):
 class Points(Page):
     def __init__(self,coords=[],colors = [(1,1,1)],name="",file=""):
         Page.__init__(self,name)
-        if file != "":
-            ## assume is an csv file
-            coords = lstToFloat(readCsv(file))
+#        if file != "":
+#            ## assume is an csv file
+#            coords = lstToFloat(readCsv(file))
         ## ===============================
         self.root = SoSeparator()
         self.material = SoMaterial()
@@ -79,11 +79,11 @@ class Points(Page):
     def setPointSize(self,n):
         self.root[3].pointSize = n
 
-    def setHSVColors(self,vec=[],pos=[],file=""):
-        if file != "":
-            dprom = column(lstToFloat(readCsv(file)),0)
-            vec = [(c,1,1) for c in dprom]
-        self.setColors(vec,pos,True)
+#    def setHSVColors(self,vec=[],pos=[],file=""):
+#        if file != "":
+#            dprom = column(lstToFloat(readCsv(file)),0)
+#            vec = [(c,1,1) for c in dprom]
+#        self.setColors(vec,pos,True)
 
 
     def setColors(self,vec,pos=[],hsv = False):
@@ -374,7 +374,7 @@ class Line(GraphicObject):
         self.addChild(sep)
         self.whichChild = 0
         ## ============================
-        self.animation = Animation(self.setNumVertices,(4000,1,len(ptos)))
+        self.animation = Animation(self.setNumVertices,(4000,1,len(self)))
 
     def resetObjectForAnimation(self):
         self.setNumVertices(1)
@@ -420,6 +420,7 @@ class Line(GraphicObject):
 
 class Curve3D(GraphicObject):
     """
+    A curve in 3D. It is composed of one or several Lines
     """
     def __init__(self, func, iter, color = (1,1,1), width=1, nvertices = -1, parent = None, domTrans=None):
         GraphicObject.__init__(self,True,parent)
@@ -443,10 +444,29 @@ class Curve3D(GraphicObject):
 
         self.lengths = map(len,self.lines)
         
+        self.animation = Animation(self.setNumVertices,(4000,1,len(self)))
+        
     def __len__(self):
         return sum(self.lengths)
+    
+    def setNumVertices(self, n):
+        "shows only the first n vertices"
+#        self.lineset.numVertices.setValue(n)
+        ## find out on which line n lies
+        for line in self.lines:
+            nl = len(line)
+            if n < nl:
+                line.setNumVertices(n)
+                break
+            else:
+                ## draw the whole line
+                line.setNumVertices(nl)
+                n -= nl
 
     def getCoordinates(self):
+        '''
+        returns the joined coordinates of all the lines
+        '''
         coord = []
         for line in self.lines:
             #------------"l += i" it's the same that "l = l + i"
@@ -461,6 +481,10 @@ class Curve3D(GraphicObject):
 
 
     def __getitem__(self, i):
+        '''
+        returns the i-th point 
+        @param i: the index
+        '''
         for line in self.lines:
             nl = len(line)
             if i < nl:
@@ -469,6 +493,10 @@ class Curve3D(GraphicObject):
                 i -= nl
 
     def updatePoints(self,func):
+        '''
+        recalculates points according to the function func
+        @param func: a function  R -> R^3
+        '''
         self.func = func
         c = lambda t: Vec3(func(t))
         for it,line in zip(self.iter,self.lines):
@@ -477,6 +505,9 @@ class Curve3D(GraphicObject):
 
     @property
     def domainPoints(self):
+        '''
+        returns the preimages of the points
+        '''
         ret = []
         for it in self.iter:
             ret += intervalPartition(it)
@@ -528,12 +559,20 @@ class Bundle3(GraphicObject):
         return len(self.curve)
 
     def setFactor(self,factor):
+        '''
+        Set multiplicative factor for arrow length
+        @param factor:
+        '''
         self.factor = factor
         self.generateArrows()
 
     def generateArrows(self):
+        '''
+        create the arrows
+        '''
         points = self.curve.getCoordinates()
-        pointsp = [self.curve[i]+self.cp(t)*self.factor for i,t in enumerate(intervalPartition(self.curve.iter))]
+        #pointsp = [self.curve[i]+self.cp(t)*self.factor for i,t in enumerate(intervalPartition(self.curve.iter))]
+        pointsp = [self.curve[i]+self.cp(t)*self.factor for i,t in enumerate(self.curve.domainPoints)]
         pointsRow = zip(map(tuple,points),map(tuple,pointsp))
 
         pointsRowFlatten = []

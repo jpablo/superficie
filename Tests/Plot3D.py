@@ -1,8 +1,11 @@
 import sys
 
+from pivy.coin import SoGroup
+from pivy.coin import SoNode
+from superficie.Plot3D import Mesh
+
 from PyQt4 import QtGui
 from pivy.coin import SO_SWITCH_NONE
-from superficie.Plot3D import Mesh
 from superficie.Plot3D import Quad
 import unittest
 
@@ -35,8 +38,6 @@ class  Plot3DTestCase(unittest.TestCase):
         
         self.assertEqual(False, quad.meshVisible)
         self.assertEqual(False, quad.linesVisible)
-
-
 
 
 if __name__ == '__main__':

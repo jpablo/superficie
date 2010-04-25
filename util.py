@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from pivy.coin import SoBase
+from pivy.coin import SO_SWITCH_ALL
+from pivy.coin import SO_SWITCH_NONE
 from pivy.coin import SoWriteAction
 from math import sqrt, pow
 from pivy.coin import SoInput, SoDB,  SoSearchAction,  SbVec3f, SoSFVec3f, SoSFFloat, SoCalculator, SoSwitch, SoOneShot, SoFieldSensor, SoWriteAction
@@ -371,6 +374,35 @@ def wrap(node, show = True):
     else:
         switch.whichChild = -1
     return switch
+
+
+class SupHideable(SoSwitch):
+    """
+    Documentation
+    """
+    def __init__(self, node, show=True):
+        """Documentation"""
+        if hasattr(node, "root"):
+            node = node.root
+        SoBase.__setattr__(self,"node",node)
+        SoSwitch.addChild(self,node)
+        self.visible = show
+        ## copy visible attribute to node
+        def getVisible(node):
+            return self.visible
+        def setVisible(node,val):
+            self.visible = val
+        node.__class__.visible = property(getVisible,setVisible)
+
+    @property
+    def visible(self):
+        return self.whichChild.getValue() != SO_SWITCH_NONE
+
+    @visible.setter
+    def visible(self,val):
+        self.whichChild = SO_SWITCH_ALL if val else SO_SWITCH_NONE
+
+
         
 def _1(r,g,b):
     "Converts colors from 0-255 to 0-1"
