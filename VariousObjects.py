@@ -407,7 +407,7 @@ class Line(GraphicObject):
         return self.coords.point.getValues()
 
     def project(self, x = None, y = None, z = None, color = (1,1,1), width=1, nvertices = -1):
-        """insert the projectio on the given plane"""
+        """insert the projection on the given plane"""
         pts = self.getCoordinates()
         if x != None:
             ptosProj = [Vec3(x,p[1],p[2]) for p in pts]
@@ -443,9 +443,22 @@ class Curve3D(GraphicObject):
 
         self.lengths = map(len,self.lines)
         
-
     def __len__(self):
         return sum(self.lengths)
+
+    def getCoordinates(self):
+        coord = []
+        for line in self.lines:
+            #------------"l += i" it's the same that "l = l + i"
+            #------------coord = coord + line.getCoordinates()
+            coord += line.getCoordinates()
+        return coord
+
+    def project(self, x = None, y = None, z = None, color = (1,1,1), width=1, nvertices = -1):    
+        for line in self.lines:
+            line.project(x, y, z, color, width, nvertices)
+        return line.project(x, y, z, color, width, nvertices)
+
 
     def __getitem__(self, i):
         for line in self.lines:
@@ -551,14 +564,14 @@ class Bundle3(GraphicObject):
 
 class Bundle2(GraphicObject):
     def __init__(self, curve, cp, col, factor=1, name="", visible = False, parent = None):
-        """curve is something derived from Line"""
+        """curve is something derived from Curve3D"""
         GraphicObject.__init__(self,visible,parent)
         comp = SoComplexity()
         comp.value.setValue(.1)
         self.separator.addChild(comp)
         ## ============================
         points = curve.getCoordinates()
-        pointsp = [curve[i]+cp(t)*factor for i,t in enumerate(intervalPartition(curve.iter))]
+        pointsp = [curve[i]+cp(t)*factor for i,t in enumerate(curve.domainPoints)]
         for p,pp in zip(points,pointsp):
             self.addChild(Arrow(p,pp,visible=True,escala=.005,extremos=True))
 
