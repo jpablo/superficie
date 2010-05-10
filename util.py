@@ -10,7 +10,6 @@ from random import random
 import os
 from os.path import join
 import util
-
 modulosPath = os.path.dirname(util.__file__)
 
 def pegaNombres(folder,archivo):
@@ -23,7 +22,7 @@ SoInput.addDirectoryFirst(mods)
 #def partial(f,a):
 #    return lambda *b:f(a,*b)
 
-Vec3 = SbVec3f
+v = Vec3 = SbVec3f
 
 
 ###### Functions ######################

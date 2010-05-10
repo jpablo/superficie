@@ -2,14 +2,22 @@
 __author__="jpablo"
 __date__ ="$18/05/2009 12:47:43 AM$"
 
-from PyQt4 import QtGui
+from PyQt4 import QtGui, QtCore
 from pivy.coin import SoSeparator, SoSwitch
 from superficie.util import nodeDict
 from superficie.base import Chapter
 
-class Book(object):
+class Book(QtCore.QObject):
     "Implemens a Book-like object"
+    
+    chapterChanged = QtCore.pyqtSignal(int)
+    #===========================================================================
+    # The chapter and the page
+    #===========================================================================
+    pageChanged = QtCore.pyqtSignal(int,int)
+    
     def __init__(self):
+        super(Book,self).__init__()
         self.__previousChapter = None
         self.root = SoSeparator()
         self.root.setName("Book:root")
@@ -30,6 +38,9 @@ class Book(object):
         chapter = Chapter()
         self.addChapter(chapter)
         return chapter
+    
+    def _pageChangedCB(self,n):
+        self.pageChanged.emit(self.whichChapter,n)
 
     def addChapter(self, chapter):
         "Appends a chapter"
@@ -43,7 +54,8 @@ class Book(object):
         ui = chapter.getGui()
         self.chaptersStack.addWidget(ui)
         self.whichChapter = len(self.chapters) - 1
-
+        #=======================================================================
+        chapter.pageChanged.connect(self._pageChangedCB)
 
     @property
     def chapterSwitch(self):
@@ -85,4 +97,5 @@ class Book(object):
         if hasattr(chapterob, "chapterSpecificIn") and chapterChanged:
             chapterob.chapterSpecificIn()
         self.__previousChapter = self.chapterSwitch
+        self.chapterChanged.emit(n)
 #        self.viewer.viewAll()

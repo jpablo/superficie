@@ -44,6 +44,13 @@ def func2param(func):
     @param func:
     '''
     return lambda x,y: (x,y,func(x,y))
+
+def func2revolution_param(func):
+    '''
+    Transforms a function f:R^2 -> R into f(r,t) => (r cos(t), r sin(t),f(r,t)
+    @param func:
+    '''
+    return lambda r,t: (r*cos(t),r*sin(t),func(r,t))
     
 def toList(obj_or_lst):
     '''
@@ -193,7 +200,6 @@ class Mesh(GraphicObject):
 
     def addWidget(self,widget):
         self.widget.layout().addWidget(widget)
-        
 
     def addVectorField(self, func):
         for quad in self.quads.values():
@@ -315,6 +321,8 @@ class ParametricPlot3D(Mesh):
         for fn in funcs:
             self.addQuad(fn)
 
+    def addFunction(self,func):
+        self.addQuad(func)            
 
 class Plot3D(Mesh):
     def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = True, parent = None):
@@ -324,24 +332,33 @@ class Plot3D(Mesh):
         for par in params:
             self.addQuad(par)
 
+    def addFunction(self,func):
+        self.addQuad(func2param(func))            
         
 #    def checkReturnValue(self, func, val):
 #        if not operator.isNumberType(val):
 #            raise TypeError, "function %s does not produces a number" % func
         
             
-class RevolutionPlot3D(ParametricPlot3D):
+class RevolutionPlot3D(Mesh):
     def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,2*pi,40), name = '', eq = None,visible = True, parent = None):
-        ParametricPlot3D.__init__(self,funcs,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
+        Mesh.__init__(self,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
+        funcs = toList(funcs)
+        params = map(func2revolution_param, funcs)
+        for par in params:
+            self.addQuad(par)
+
+    def addFunction(self,func):
+        self.addQuad(func2revolution_param(func))            
         
 #    def checkReturnValue(self, func, val):
 #        if not operator.isNumberType(val):
 #            raise TypeError, "function %s does not produces a number" % func
             
 
-class RevolutionParametricPlot3D(ParametricPlot3D):
-    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = True, parent = None):
-        ParametricPlot3D.__init__(self,funcs,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
+#class RevolutionParametricPlot3D(ParametricPlot3D):
+#    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = True, parent = None):
+#        ParametricPlot3D.__init__(self,funcs,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
 
 
 
@@ -396,21 +413,25 @@ class VectorField3D(GraphicObject):
 
 
 if __name__ == "__main__":
-    from util import  main
-    from math import  cos,  sin,  pi
     from Viewer import Viewer
     import sys
 
     app = QtGui.QApplication(sys.argv)
     visor = Viewer()
     visor.createChapter()
-    ## ============================
-#    visor.chapter.createPage()
-#    m = Mesh((-1, 1, 20), (-1, 1, 20), visible=True)
-#    m.addQuad(lambda x, y:(x,y,   u*x**2 - v*y**2))
-#    m.addQuad(lambda x, y:(x,y, - sin(x)**2 - y**2))
-#    visor.page.addChild(m)
-    ## ============================
+    #===========================================================================
+    # Mesh
+    #===========================================================================
+    # Mesh needs visible=True, unlike the rest of the clases
+    visor.chapter.createPage()
+    m = Mesh((-1, 1, 20), (-1, 1, 20), visible=True)
+    m.addQuad(lambda x, y:(x,y,   u*x**2 - v*y**2)) #@UndefinedVariable
+    m.addQuad(lambda x, y:(x,y, - sin(x)**2 - y**2))
+    visor.page.addChild(m)
+    print visor.page
+    #===========================================================================
+    # ParametricPlot3D
+    #===========================================================================
     visor.chapter.createPage()
     pp = ParametricPlot3D(lambda x,y:(x,y, a*x**2 + b*y**2),(-1,1),(-1,1)) #@UndefinedVariable
 
@@ -420,22 +441,23 @@ if __name__ == "__main__":
     pp.setRange("a", (-1, 1, 0))
     pp.setRange("b", (-1, 1, 0))
     visor.page.addChild(pp)
-#    ## ============================
+    #===========================================================================
+    # Plot3D
+    #===========================================================================
     visor.chapter.createPage()
     p2 = Plot3D(lambda x,y: h*(x**2+y**2+z),(-1,1),(-1,1)) #@UndefinedVariable
-    ## si el parámetro no se define explícitamente, el resultado es equivalente
-    ## a esto:
-    ## p2.setRange("a", (0, 1, 0))
     visor.page.addChild(p2)
-#    ## ============================
+    #===========================================================================
+    # RevolutionPlot3D
+    #===========================================================================
     visor.chapter.createPage()
-    p3 = RevolutionPlot3D(lambda r,t: r**2 ,(.1,1),(.1,2*pi), name="p3",visible=True)
+    p3 = RevolutionPlot3D(lambda r,t: 1/r ,(.2,1),(.1,2*pi), name="p3")
 #    r, t = createVars(["r", "t"])
 #    p3.addEqn(t == r**2)
     visor.page.addChild(p3)
     ## ============================
-    visor.lucesBlanca.on = False
-    visor.lucesColor.whichChild = SO_SWITCH_ALL
+#    visor.lucesBlanca.on = False
+#    visor.lucesColor.whichChild = SO_SWITCH_ALL
     ## ============================    
     visor.whichPage = 0
     visor.resize(400, 400)

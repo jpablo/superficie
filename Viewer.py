@@ -33,32 +33,55 @@ TransparencyType= [
    'SORTED_LAYERS_BLEND'
  ]
 
-class Viewer(Book,QWidget):
+class Viewer(QWidget):
     "Viewer"
 
-    ## this should be on Book, but then we couldn't derive
-    ## from it because PyQt only suppor one base clase derived
-    ## from QObject
-    chapterChanged = QtCore.pyqtSignal(int)
     
     def __init__(self,parent=None,uiLayout=None,luces=True):
         QWidget.__init__(self,parent)
-        Book.__init__(self)
+        #=======================================================================
+        # 
+        #=======================================================================
+        self.book = Book()
+        self.root = self.book.root
+        self.createChapter = self.book.createChapter
+        self.addChapter = self.book.addChapter
+        self.chaptersStack = self.book.chaptersStack
         ## ============================
         self.initializeViewer(luces)
         self.initializeUI(uiLayout)
+        #=======================================================================
+        # 
+        #=======================================================================
+        self.book.pageChanged.connect(self.onPageChanged)
+        self.book.chapterChanged.connect(self.onChapterChanged)
+        
+    def onPageChanged(self,c,n):
+        print "onPageChanged", c, n
+        self.viewAll()
+        
+    def onChapterChanged(self,c):
+        print "onChapterChanged", c
+        self.viewAll()
+
+    @property
+    def chapter(self):
+        return self.book.chapter
+    
+    @property
+    def page(self):
+        return self.book.page
 
     ## TODO: investigate why this function is never called
     @property
     def whichChapter(self):
         print "Viewer.whichChapter.getter"
-        return Book.whichChapter.fget(self)
+        return self.book.whichChapter
 
     @Book.whichChapter.setter
     def whichChapter(self,n):
         "Sets the current Chapter"
-        self.chapterChanged.emit(n)
-        Book.whichChapter.fset(self,n)
+        self.book.whichChapter = n
 
     @property
     def camera(self):
@@ -146,7 +169,7 @@ class Viewer(Book,QWidget):
 
 
     def initializeUI(self,uilayout):
-        self.chaptersStack = QtGui.QStackedWidget()
+#        self.chaptersStack = QtGui.QStackedWidget()
         if uilayout:
             uilayout.addWidget(self.chaptersStack)
 
@@ -181,7 +204,7 @@ if __name__ == "__main__":
     cubo = SoCube()
     cubo.getGui = lambda: QtGui.QLabel("<center><h1>Cubo</h1></center>")
     visor.page.addChild(cubo)
-   ## ============================
+    ## ============================
     visor.whichPage = 0
     visor.resize(400, 400)
     visor.show()

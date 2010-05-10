@@ -25,7 +25,7 @@ class Chapter(QtCore.QObject):
     pageChanged = QtCore.pyqtSignal(int)
 
     def __init__(self, name = ""):
-        QtCore.QObject.__init__(self)
+        super(Chapter,self).__init__()
         self.name = name
         self.viewer = None
         self.root = SoSeparator()
@@ -194,7 +194,7 @@ class Page(QtCore.QObject):
     def addChild(self, node):
         root = getattr(node, "root", node)
         self.root.addChild(root)
-        self.children[root] = node
+        self.children[root] = node        
         if hasattr(node,  "getGui"):
             self.addWidget(node.getGui())
         if hasattr(node, "updateAll"):
