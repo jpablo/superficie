@@ -6,12 +6,8 @@ from pivy.coin import SO_SWITCH_NONE, SoNormalBinding
 from pivy.coin import *
 
 
-try:
-    from pivy.quarter import QuarterWidget
-    Quarter = True
-except ImportError:
-    from pivy.gui.soqt import *
-    Quarter = False
+from pivy.quarter import QuarterWidget
+Quarter = True
 
 
 from PyQt4 import QtGui, QtCore
@@ -38,35 +34,25 @@ from math import *
 log = logging.getLogger("Mesh")
 log.setLevel(logging.DEBUG)
 
-def bindFreeVariables(func, dvals={}):
-    dvals.update(globals())
-    f = FunctionType(func.func_code, dvals, closure=func.func_closure)
-    f.func_defaults = func.func_defaults
-    return f
-
-def getFreeVariables(func):
-    nargs = func.func_code.co_argcount
-    vars1 = []
-    while True:
-        try:
-            d = dict(zip(vars1,[random() for j in vars1]))
-            f = bindFreeVariables(func, d)
-            args = [random() for j in range(nargs)]
-            val = f(*args)
-            break
-        except NameError, error:
-            freevar = error.args[0].split(" ")[2].replace("'","")
-            ## this occurs when func has an inner function with
-            ## free variables
-            if freevar in vars1:
-                raise NameError, error
-            vars1.append(freevar)
-    return vars1
-
-
 
 def genVarsVals(vars, args):
     return ";".join([v+"="+str(a) for v, a in zip(vars, args)])
+
+def func2param(func):
+    '''
+    Transforms a function f:R^2 -> R into f(x,y) => (x,y,f(x,y)
+    @param func:
+    '''
+    return lambda x,y: (x,y,func(x,y))
+    
+def toList(obj_or_lst):
+    '''
+    if obj_or_lst is not a list, converts it; return it otherwise
+    @param obj_or_lst:
+    '''
+    if not type(obj_or_lst) in (list, tuple):
+        obj_or_lst = [obj_or_lst]
+    return obj_or_lst
     
         
 class Quad(object):
@@ -159,8 +145,6 @@ class Quad(object):
         ## the lines
         vpc = self.verticesPerColumn
         vpr = self.verticesPerRow
-        #lstX = [vpr for i in range(vpc)]
-        #lstY = [vpc for i in range(vpr)]
         lstX = tuple(itertools.repeat(vpr,vpc))
         lstY = tuple(itertools.repeat(vpc,vpr)) 
         self.lineSetX.numVertices.setValues(lstX) ## we need the "transpose of the first list
@@ -268,7 +252,6 @@ class Mesh(GraphicObject):
             function.updateGlobals(d)
         
     def updateAll(self, val = 0):
-        print "updateAll"
         if hasattr(self,"parameters"):
             self.updateParameters()
             self.updateMesh()
@@ -328,57 +311,38 @@ class Mesh(GraphicObject):
 class ParametricPlot3D(Mesh):
     def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = True, parent = None):
         Mesh.__init__(self,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
-        if not type(funcs) in (list, tuple):
-            funcs = [funcs]
+        funcs = toList(funcs)
         for fn in funcs:
             self.addQuad(fn)
 
-        ## ============================
-#        if eq != None:
-#            self.addEqn(eq)
-        ## ============================
 
-class Plot3D(ParametricPlot3D):
+class Plot3D(Mesh):
     def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = True, parent = None):
-        ParametricPlot3D.__init__(self,funcs,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
-        
-    def checkReturnValue(self, func, val):
-        if not operator.isNumberType(val):
-            raise TypeError, "function %s does not produces a number" % func
-        
-    def updateParameters(self):
-        d = self.getParametersValues()
-        for func,quad in self.quads.items():
-            f2 = bindFreeVariables(func, d)
-            quad.function = lambda x, y: (x, y, f2(x, y))
+        Mesh.__init__(self,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
+        funcs = toList(funcs)
+        params = map(func2param, funcs)
+        for par in params:
+            self.addQuad(par)
 
+        
+#    def checkReturnValue(self, func, val):
+#        if not operator.isNumberType(val):
+#            raise TypeError, "function %s does not produces a number" % func
+        
             
 class RevolutionPlot3D(ParametricPlot3D):
     def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,2*pi,40), name = '', eq = None,visible = True, parent = None):
         ParametricPlot3D.__init__(self,funcs,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
         
-    def checkReturnValue(self, func, val):
-        if not operator.isNumberType(val):
-            raise TypeError, "function %s does not produces a number" % func
+#    def checkReturnValue(self, func, val):
+#        if not operator.isNumberType(val):
+#            raise TypeError, "function %s does not produces a number" % func
             
-    def updateParameters(self):
-        d = self.getParametersValues()
-        for func,quad in self.quads.items():
-            fz = bindFreeVariables(func, d)
-            quad.function = lambda r,t: (r*cos(t), r*sin(t),fz(r,t))
 
 class RevolutionParametricPlot3D(ParametricPlot3D):
     def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = True, parent = None):
         ParametricPlot3D.__init__(self,funcs,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
 
-    def updateParameters(self):
-        d = self.getParametersValues()
-        for func,quad in self.quads.items():
-            g = bindFreeVariables(func, d)
-            def fn(r,t):
-                R,T,Z = g(r,t)
-                return(R*cos(T),R*sin(T),Z)
-            quad.function = fn
 
 
 class VectorField3D(GraphicObject):
@@ -441,34 +405,34 @@ if __name__ == "__main__":
     visor = Viewer()
     visor.createChapter()
     ## ============================
-    visor.chapter.createPage()
-    m = Mesh((-1, 1, 20), (-1, 1, 20), visible=True)
-    m.addQuad(lambda x, y:(x,y,   u*x**2 - v*y**2))
-    m.addQuad(lambda x, y:(x,y, - sin(x)**2 - y**2))
-    visor.page.addChild(m)
+#    visor.chapter.createPage()
+#    m = Mesh((-1, 1, 20), (-1, 1, 20), visible=True)
+#    m.addQuad(lambda x, y:(x,y,   u*x**2 - v*y**2))
+#    m.addQuad(lambda x, y:(x,y, - sin(x)**2 - y**2))
+#    visor.page.addChild(m)
     ## ============================
-#    visor.chapter.createPage()
-#    pp = ParametricPlot3D(lambda x,y:(x,y, a*x**2 + b*y**2),(-1,1),(-1,1),visible=True)
-#
-#    for t in intervalPartition((0, 3, 6)):
-#        pp.addQuad(lambda x,y,t=t:(x,y, x**2 + b*y**2 + t))
-#
-#    pp.setRange("a", (-1, 1, 0))
-#    pp.setRange("b", (-1, 1, 0))
-#    visor.page.addChild(pp)
+    visor.chapter.createPage()
+    pp = ParametricPlot3D(lambda x,y:(x,y, a*x**2 + b*y**2),(-1,1),(-1,1)) #@UndefinedVariable
+
+    for t in intervalPartition((0, 3, 6)):
+        pp.addQuad(lambda x,y,t=t:(x,y, x**2 + b*y**2 + t)) #@UndefinedVariable
+
+    pp.setRange("a", (-1, 1, 0))
+    pp.setRange("b", (-1, 1, 0))
+    visor.page.addChild(pp)
 #    ## ============================
-#    visor.chapter.createPage()
-#    p2 = Plot3D(lambda x,y:a*x**2 - y**2,(-1,1),(-1,1),visible=True)
-#    ## si el parámetro no se define explícitamente, el resultado es equivalente
-#    ## a esto:
-#    ## p2.setRange("a", (0, 1, 0))
-#    visor.page.addChild(p2)
+    visor.chapter.createPage()
+    p2 = Plot3D(lambda x,y: h*(x**2+y**2+z),(-1,1),(-1,1)) #@UndefinedVariable
+    ## si el parámetro no se define explícitamente, el resultado es equivalente
+    ## a esto:
+    ## p2.setRange("a", (0, 1, 0))
+    visor.page.addChild(p2)
 #    ## ============================
-#    visor.chapter.createPage()
-#    p3 = RevolutionPlot3D(lambda r,t: r**2 ,(.1,1),(.1,2*pi), name="p3",visible=True)
+    visor.chapter.createPage()
+    p3 = RevolutionPlot3D(lambda r,t: r**2 ,(.1,1),(.1,2*pi), name="p3",visible=True)
 #    r, t = createVars(["r", "t"])
 #    p3.addEqn(t == r**2)
-#    visor.page.addChild(p3)
+    visor.page.addChild(p3)
     ## ============================
     visor.lucesBlanca.on = False
     visor.lucesColor.whichChild = SO_SWITCH_ALL
@@ -477,9 +441,7 @@ if __name__ == "__main__":
     visor.resize(400, 400)
     visor.show()
     visor.chaptersStack.show()
+    visor.viewAll()
 
-    if Quarter:
-        sys.exit(app.exec_())
-    else:
-        SoQt.mainLoop()
+    sys.exit(app.exec_())
     

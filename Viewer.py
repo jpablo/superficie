@@ -8,12 +8,8 @@ from PyQt4 import QtOpenGL
 #import logging
 
 from pivy.coin import *
-try:
-    from pivy.quarter import QuarterWidget
-    Quarter = True
-except ImportError:
-    from pivy.gui.soqt import *
-    Quarter = False
+from pivy.quarter import QuarterWidget
+Quarter = True
 from superficie.util import callback
 from superficie.util import pegaNombres
 from superficie.util import readFile
@@ -67,10 +63,7 @@ class Viewer(Book,QWidget):
     @property
     def camera(self):
         "Gets the camera"
-        if Quarter:
-            return self.viewer.getSoRenderManager().getCamera()
-        else:
-            return self.viewer.getCamera()
+        return self.viewer.getSoRenderManager().getCamera()
 
 
     def setInitialCameraPosition(self):
@@ -118,32 +111,16 @@ class Viewer(Book,QWidget):
         fmt.setAlpha(True)
         QtOpenGL.QGLFormat.setDefaultFormat(fmt)
         # ============================
-        if Quarter:
-            self.viewer = QuarterWidget()
-            layout = QtGui.QVBoxLayout()
-            self.setLayout(layout)
-            layout.addWidget(self.viewer)
-        else:
-            self.viewer = SoQtExaminerViewer(self)
+        self.viewer = QuarterWidget()
+        layout = QtGui.QVBoxLayout()
+        self.setLayout(layout)
+        layout.addWidget(self.viewer)
         ## ============================
         ## copy some attributes
-        if Quarter:
-            for attr in ["viewAll", "setTransparencyType"]:
-                setattr(self, attr, getattr(self.viewer, attr))
-        else:
-            for attr in ["viewAll", "setDecoration", "setHeadlight", "setTransparencyType"]:
-                setattr(self, attr, getattr(self.viewer, attr))
+        for attr in ["viewAll", "setTransparencyType"]:
+            setattr(self, attr, getattr(self.viewer, attr))
         ## ============================
         self.viewer.setSceneGraph(self.root)
-        if not Quarter:
-            self.viewer.setAlphaChannel(True)
-            self.viewer.setTransparencyType(SoGLRenderAction.SORTED_LAYERS_BLEND)
-            self.viewer.setTransparencyType(SoGLRenderAction.SORTED_OBJECT_BLEND)
-            self.viewer.setAntialiasing(True, 0)
-            self.viewer.setWireframeOverlayColor(SbColor(0.5, 0, 0))
-            self.viewer.setHeadlight(False)
-            self.viewer.setFeedbackVisibility(False)
-            self.viewer.setDecoration(False)
         ## ============================
         self.mouseEventCB = SoEventCallback()
         self.getSRoot().addChild(self.mouseEventCB)
@@ -209,8 +186,5 @@ if __name__ == "__main__":
     visor.resize(400, 400)
     visor.show()
     visor.chaptersStack.show()
-
-    if Quarter:
-        sys.exit(app.exec_())
-    else:
-        SoQt.mainLoop()
+    
+    sys.exit(app.exec_())
