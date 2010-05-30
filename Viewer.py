@@ -35,33 +35,33 @@ TransparencyType= [
 
 class Viewer(QWidget):
     "Viewer"
-
+    
+    Instances = []
     
     def __init__(self,parent=None,uiLayout=None,luces=True):
         QWidget.__init__(self,parent)
         #=======================================================================
-        # 
-        #=======================================================================
+        Viewer.Instances.append(self)
         self.book = Book()
         self.root = self.book.root
         self.createChapter = self.book.createChapter
         self.addChapter = self.book.addChapter
         self.chaptersStack = self.book.chaptersStack
-        ## ============================
         self.initializeViewer(luces)
         self.initializeUI(uiLayout)
-        #=======================================================================
-        # 
         #=======================================================================
         self.book.pageChanged.connect(self.onPageChanged)
         self.book.chapterChanged.connect(self.onChapterChanged)
         
+    
+    @staticmethod
+    def Instance():
+        return Viewer.Instances[-1]
+        
     def onPageChanged(self,c,n):
-        print "onPageChanged", c, n
         self.viewAll()
         
     def onChapterChanged(self,c):
-        print "onChapterChanged", c
         self.viewAll()
 
     @property
@@ -75,11 +75,10 @@ class Viewer(QWidget):
     ## TODO: investigate why this function is never called
     @property
     def whichChapter(self):
-        print "Viewer.whichChapter.getter"
         return self.book.whichChapter
 
     @Book.whichChapter.setter
-    def whichChapter(self,n):
+    def whichChapter(self,n): #@DuplicatedSignature
         "Sets the current Chapter"
         self.book.whichChapter = n
 
@@ -188,6 +187,7 @@ if __name__ == "__main__":
     import sys
     app = QtGui.QApplication(sys.argv)
     visor = Viewer()
+    print Viewer.Instance()
     ## ============================
     visor.createChapter()
     ## ============================

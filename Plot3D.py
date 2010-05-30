@@ -7,6 +7,7 @@ from pivy.coin import *
 
 
 from pivy.quarter import QuarterWidget
+from superficie.Viewer import Viewer
 Quarter = True
 
 
@@ -172,8 +173,15 @@ class Quad(object):
         
 class Mesh(GraphicObject):
     """A Set of Quads which share the same generating function"""
-    def __init__(self, rangeX=(0,1,40),  rangeY=(0,1,40), name="",visible = False, parent = None):
-        GraphicObject.__init__(self,visible,parent)
+            ## ============================
+    autoAdd = False
+
+    def __init__(self, rangeX=(0,1,40),  rangeY=(0,1,40), name="",visible = False, viewer = None):
+        if Mesh.autoAdd:
+            if not viewer:
+                viewer = Viewer.Instance()
+            viewer.chapter.createPage()
+        GraphicObject.__init__(self,visible,viewer=viewer)
         self.name = name
         ## ============================
         self.sHints = SoShapeHints()
@@ -191,6 +199,9 @@ class Mesh(GraphicObject):
         self.widget.setLayout(layout)
         if self.name != "":
             layout.addWidget(QtGui.QLabel("<center><h1>%s</h1></center>" % self.name))
+        if viewer:
+            viewer.page.addChild(self)
+            
 
     def __len__(self):
         return len(self.rangeX) * len(self.rangeY)
@@ -251,6 +262,9 @@ class Mesh(GraphicObject):
         ## ============================
         self.quads[quad.function] = quad
         self.addChild(quad)
+        ## ============================
+        self.updateAll()        
+        
         
     def updateParameters(self):
         d = self.getParametersValues()
@@ -315,8 +329,8 @@ class Mesh(GraphicObject):
 
 
 class ParametricPlot3D(Mesh):
-    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = True, parent = None):
-        Mesh.__init__(self,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
+    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = True, viewer = None):
+        Mesh.__init__(self,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,viewer=viewer)
         funcs = toList(funcs)
         for fn in funcs:
             self.addQuad(fn)
@@ -325,8 +339,8 @@ class ParametricPlot3D(Mesh):
         self.addQuad(func)            
 
 class Plot3D(Mesh):
-    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = True, parent = None):
-        Mesh.__init__(self,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
+    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = True, viewer = None):
+        Mesh.__init__(self,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,viewer=viewer)
         funcs = toList(funcs)
         params = map(func2param, funcs)
         for par in params:
@@ -341,8 +355,8 @@ class Plot3D(Mesh):
         
             
 class RevolutionPlot3D(Mesh):
-    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,2*pi,40), name = '', eq = None,visible = True, parent = None):
-        Mesh.__init__(self,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
+    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,2*pi,40), name = '', eq = None,visible = True, viewer = None):
+        Mesh.__init__(self,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,viewer=viewer)
         funcs = toList(funcs)
         params = map(func2revolution_param, funcs)
         for par in params:
@@ -413,57 +427,57 @@ class VectorField3D(GraphicObject):
 
 
 if __name__ == "__main__":
-    from Viewer import Viewer
     import sys
 
     app = QtGui.QApplication(sys.argv)
-    visor = Viewer()
-    visor.createChapter()
+    Mesh.autoAdd = True
+    viewer = Viewer()
+    viewer.createChapter()
     #===========================================================================
     # Mesh
     #===========================================================================
     # Mesh needs visible=True, unlike the rest of the clases
-    visor.chapter.createPage()
-    m = Mesh((-1, 1, 20), (-1, 1, 20), visible=True)
+#    viewer.chapter.createPage()
+    
+    m = Mesh((-1, 1, 20), (-1, 1, 20), name="mesh", visible=True)
     m.addQuad(lambda x, y:(x,y,   u*x**2 - v*y**2)) #@UndefinedVariable
     m.addQuad(lambda x, y:(x,y, - sin(x)**2 - y**2))
-    visor.page.addChild(m)
-    print visor.page
+#    viewer.page.addChild(m)
     #===========================================================================
     # ParametricPlot3D
     #===========================================================================
-    visor.chapter.createPage()
-    pp = ParametricPlot3D(lambda x,y:(x,y, a*x**2 + b*y**2),(-1,1),(-1,1)) #@UndefinedVariable
-
-    for t in intervalPartition((0, 3, 6)):
+#    viewer.chapter.createPage()
+    pp = ParametricPlot3D(lambda x,y:(x,y, a*x**2 + b*y**2),(-1,1),(-1,1),name="pp") #@UndefinedVariable
+#
+    for t in intervalPartition((0, 3, 4)):
         pp.addQuad(lambda x,y,t=t:(x,y, x**2 + b*y**2 + t)) #@UndefinedVariable
 
     pp.setRange("a", (-1, 1, 0))
     pp.setRange("b", (-1, 1, 0))
-    visor.page.addChild(pp)
+#    viewer.page.addChild(pp)
     #===========================================================================
     # Plot3D
     #===========================================================================
-    visor.chapter.createPage()
-    p2 = Plot3D(lambda x,y: h*(x**2+y**2+z),(-1,1),(-1,1)) #@UndefinedVariable
-    visor.page.addChild(p2)
+#    viewer.chapter.createPage()
+    Plot3D(lambda x,y: h*(x**2+y**2+z),(-1,1),(-1,1), name="p2") #@UndefinedVariable
+#    viewer.page.addChild(p2)
     #===========================================================================
     # RevolutionPlot3D
     #===========================================================================
-    visor.chapter.createPage()
-    p3 = RevolutionPlot3D(lambda r,t: 1/r ,(.2,1),(.1,2*pi), name="p3")
+#    viewer.chapter.createPage()
+    RevolutionPlot3D(lambda r,t: 1/r ,(.2,1),(.1,2*pi), name="p3")
 #    r, t = createVars(["r", "t"])
 #    p3.addEqn(t == r**2)
-    visor.page.addChild(p3)
+#    viewer.page.addChild(p3)
     ## ============================
-#    visor.lucesBlanca.on = False
-#    visor.lucesColor.whichChild = SO_SWITCH_ALL
+#    viewer.lucesBlanca.on = False
+#    viewer.lucesColor.whichChild = SO_SWITCH_ALL
     ## ============================    
-    visor.whichPage = 0
-    visor.resize(400, 400)
-    visor.show()
-    visor.chaptersStack.show()
-    visor.viewAll()
+    viewer.whichPage = 0
+    viewer.resize(400, 400)
+    viewer.show()
+    viewer.chaptersStack.show()
+    viewer.viewAll()
 
     sys.exit(app.exec_())
     

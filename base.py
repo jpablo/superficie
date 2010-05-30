@@ -236,7 +236,7 @@ class Page(QtCore.QObject):
 
 
 class GraphicObject(SoSwitch):
-    def __init__(self, visible=False, parent=None):
+    def __init__(self, visible=False, parent=None, viewer=None):
         SoSwitch.__init__(self)
         self.qobject = QtCore.QObject()
         self.parent = parent
