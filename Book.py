@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-__author__="jpablo"
-__date__ ="$18/05/2009 12:47:43 AM$"
+__author__ = "jpablo"
+__date__ = "$18/05/2009 12:47:43 AM$"
 
 from PyQt4 import QtGui, QtCore
 from pivy.coin import SoSeparator, SoSwitch
@@ -14,10 +14,10 @@ class Book(QtCore.QObject):
     #===========================================================================
     # The chapter and the page
     #===========================================================================
-    pageChanged = QtCore.pyqtSignal(int,int)
+    pageChanged = QtCore.pyqtSignal(int, int)
     
     def __init__(self):
-        super(Book,self).__init__()
+        super(Book, self).__init__()
         self.__previousChapter = None
         self.root = SoSeparator()
         self.root.setName("Book:root")
@@ -39,12 +39,14 @@ class Book(QtCore.QObject):
         self.addChapter(chapter)
         return chapter
     
-    def _pageChangedCB(self,n):
-        self.pageChanged.emit(self.whichChapter,n)
+    def _pageChangedCB(self, n):
+        self.pageChanged.emit(self.whichChapter, n)
 
     def addChapter(self, chapter):
-        "Appends a chapter"
-        "A chapter contains several pages"
+        '''
+        Appends chapter to this book
+        @param chapter: Chapter
+        '''
         ## we probably should check that chapter is derived
         ## from base.Chapter
         self.chaptersObjects[chapter.pagesSwitch] = chapter
@@ -76,14 +78,15 @@ class Book(QtCore.QObject):
         "convenience function"
         return self.chapter.page if self.whichChapter >= 0 else None
 
-    @property
-    def whichChapter(self):
+    def getWhichChapter(self):
         "returns the selected chapter"
         return self.chapters.whichChild.getValue()
 
-    @whichChapter.setter
-    def whichChapter(self,n):
-        "Sets the current chapter"
+    def setWhichChapter(self, n):
+        '''
+        Sets the current chapter
+        @param n:
+        '''
         ## only the == operator test for identity of the underlying
         ## OpenInventor object (the python proxy object is changed every time)
         chapterChanged = not(self.__previousChapter == self.chapterSwitch)
@@ -98,4 +101,5 @@ class Book(QtCore.QObject):
             chapterob.chapterSpecificIn()
         self.__previousChapter = self.chapterSwitch
         self.chapterChanged.emit(n)
-#        self.viewer.viewAll()
+        
+    whichChapter = property(getWhichChapter, setWhichChapter)

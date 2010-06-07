@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-__author__="jpablo"
-__date__ ="$18/05/2009 12:47:43 AM$"
+__author__ = "jpablo"
+__date__ = "$18/05/2009 12:47:43 AM$"
 
 from PyQt4 import QtCore, QtGui, uic
 from pivy.coin import SoCoordinate3
@@ -10,7 +10,7 @@ from superficie.util import malla2, Range, pegaNombres
 from superficie.Animation import Animation
 from superficie.gui import Button
 
-changePage_fclass, base_class = uic.loadUiType(pegaNombres("Viewer","change-page.ui"))
+changePage_fclass, base_class = uic.loadUiType(pegaNombres("Viewer", "change-page.ui"))
 
 class ChangePageUI(base_class, changePage_fclass):
     def __init__(self, *args):
@@ -21,11 +21,10 @@ class ChangePageUI(base_class, changePage_fclass):
 class Chapter(QtCore.QObject):
     "A Chapter"
 
-
     pageChanged = QtCore.pyqtSignal(int)
 
-    def __init__(self, name = ""):
-        super(Chapter,self).__init__()
+    def __init__(self, name=""):
+        super(Chapter, self).__init__()
         self.name = name
         self.viewer = None
         self.root = SoSeparator()
@@ -52,13 +51,19 @@ class Chapter(QtCore.QObject):
         return self.__pages
 
     def createPage(self):
+        '''
+        Creates a new page and appends it to this chapter
+        '''
         page = Page()
         self.addPage(page)
         return page
 
     def addPage(self, page):
-        "add a page"
-#        print "Chapter.addPage:", ob
+        '''
+        Adds 'page' to this chapter. page can be a Page or a SoNode. Searches
+        page for a 'getGui' function, which should return a widget.
+        @param page: Page | SoNode
+        '''
         page.viewer = self.viewer
         ## ============================
         ## page can be a Page or SoNode
@@ -66,7 +71,7 @@ class Chapter(QtCore.QObject):
         self.pages[root] = page
         self.pagesSwitch.addChild(root)
         ## ============================
-        layout  =  QtGui.QVBoxLayout()
+        layout = QtGui.QVBoxLayout()
         layout.setMargin(0)
         layout.setSpacing(0)
         widget = QtGui.QWidget()
@@ -77,7 +82,7 @@ class Chapter(QtCore.QObject):
         ## this sets both self.pagesSwitch and self.widget.pageStack
         self.whichPage = len(self.pagesSwitch) - 1
         ## ============================
-        if hasattr(page,  "getGui"):
+        if hasattr(page, "getGui"):
             layout.addWidget(page.getGui())
         ## ============================
         if len(self.pagesSwitch) == 2:
@@ -104,7 +109,7 @@ class Chapter(QtCore.QObject):
     def getViewer(self):
         return self.viewer
     
-    def setViewer(self,parent):
+    def setViewer(self, parent):
         self.viewer = parent
         for ob in self.pages:
             ob.viewer = self.viewer
@@ -117,20 +122,28 @@ class Chapter(QtCore.QObject):
         return self.pages[self.pagesSwitch[self.whichPage]]
 
 
-    @property
-    def whichPage(self):
+    def getWhichPage(self):
+        '''
+        Returns the index of the current page
+        '''
         return self.pagesSwitch.whichChild.getValue()
 
-    @whichPage.setter
-    def whichPage(self,n):
+    def setWhichPage(self, n):
+        '''
+        Activates the n-th page
+        @param n:
+        '''
         if len(self.pagesSwitch) > 0:
+            self.page and self.page.post()
+            node = self.pagesSwitch.getChild(n)
+            self.pages[node].pre()
             self.pagesSwitch.whichChild = n
             self.widget.pageStack.setCurrentIndex(n)
             self.pageChanged.emit(n)
-#        self.getCamera().viewAll(self.getPage(), self.viewer.getViewportRegion())
-#        self.viewAll()
-
-    def changePage(self,dir):
+            
+    whichPage = property(getWhichPage, setWhichPage)
+    
+    def changePage(self, dir):
         self.whichPage = (self.whichPage + dir) % len(self.pagesSwitch)
 
     def nextPage(self):
@@ -163,7 +176,7 @@ class Chapter(QtCore.QObject):
 
 class Page(QtCore.QObject):
     "The base class of a container node"
-    def __init__(self,name = ""):
+    def __init__(self, name=""):
         QtCore.QObject.__init__(self)
         self.viewer = None
         self.name = name
@@ -174,7 +187,7 @@ class Page(QtCore.QObject):
         self.animations = []
         self.objectsForAnimate = []
         ## =========================
-        layout  =  QtGui.QVBoxLayout()
+        layout = QtGui.QVBoxLayout()
         self.widget = QtGui.QWidget()
         self.widget.setLayout(layout)
         if self.name != "":
@@ -185,17 +198,17 @@ class Page(QtCore.QObject):
     def getGui(self):
         return self.widget
 
-    def addWidget(self,widget):
+    def addWidget(self, widget):
         self.widget.layout().addWidget(widget)
 
-    def addLayout(self,layout):
+    def addLayout(self, layout):
         self.widget.layout().addLayout(layout)
 
     def addChild(self, node):
         root = getattr(node, "root", node)
         self.root.addChild(root)
         self.children[root] = node        
-        if hasattr(node,  "getGui"):
+        if hasattr(node, "getGui"):
             self.addWidget(node.getGui())
         if hasattr(node, "updateAll"):
             node.updateAll()
@@ -208,17 +221,17 @@ class Page(QtCore.QObject):
     def getChildren(self):
         return self.children.values()
 
-    def setupPlanes(self,r0 = (-1,1,5)):
-        self.coordPlanes["xy"] = BasePlane(plane="xy",parent=self)
-        self.coordPlanes["xz"] = BasePlane(plane="xz",parent=self)
-        self.coordPlanes["yz"] = BasePlane(plane="yz",parent=self)
+    def setupPlanes(self, r0=(-1, 1, 5)):
+        self.coordPlanes["xy"] = BasePlane(plane="xy", parent=self)
+        self.coordPlanes["xz"] = BasePlane(plane="xz", parent=self)
+        self.coordPlanes["yz"] = BasePlane(plane="yz", parent=self)
 
         for p in self.coordPlanes.values():
             p.setRange(r0)
             p.setHeight(r0[0])
 
 
-    def setupAnimations(self,objects):
+    def setupAnimations(self, objects):
         self.objectsForAnimate = objects
         self.animations = [ ob.getAnimation() for ob in objects ]
         Animation.chain(self.animations, pause=1000)
@@ -232,10 +245,21 @@ class Page(QtCore.QObject):
 
 
     def pre(self):
-        print "pre"
-
+        '''
+        Called before settis this page as current for the chapter
+        '''
+        pass
+        
+    def post(self):
+        '''
+        Called upon whichPage changed, but before next page's 'pre'
+        '''
+        pass
 
 class GraphicObject(SoSwitch):
+    '''
+    The base clase of all container graphics classes
+    '''
     def __init__(self, visible=False, parent=None, viewer=None):
         SoSwitch.__init__(self)
         self.qobject = QtCore.QObject()
@@ -246,10 +270,11 @@ class GraphicObject(SoSwitch):
         self.setVisible(visible)
         ## ============================
         self.separator = SoSeparator()
-        SoSwitch.addChild(self,self.separator)
+#        SoSwitch.addChild(self,self.separator)
+        super(SoSwitch, self).addChild(self.separator)
         ## ============================
         self.translation = SoTranslation()
-        self.translation.translation = (0,0,0)
+        self.translation.translation = (0, 0, 0)
         self.separator.addChild(self.translation)
         self.animation = None
         ## ============================
@@ -264,7 +289,7 @@ class GraphicObject(SoSwitch):
         if parent:
             parent.addChild(self)
 
-    def __getitem__(self,key):
+    def __getitem__(self, key):
         return self.childrenList[key]
 
     def addChild(self, node):
@@ -282,31 +307,31 @@ class GraphicObject(SoSwitch):
     def hide(self):
         self.setVisible(False)
         
-    def setBoundingBox(self,xrange,yrange,zrange = (-1,1)):
+    def setBoundingBox(self, xrange, yrange, zrange=(-1, 1)):
         
         def createPlane(normalref, point):
             sfplane = SoSFPlane()
-            sfplane.setValue(SbPlane( normalref, point )) 
+            sfplane.setValue(SbPlane(normalref, point)) 
             return sfplane
         
         self.clipPlaneXZ1 = SoClipPlane()
-        self.clipPlaneXZ1.plane = createPlane(SbVec3f(0,1,0), SbVec3f(0,yrange[0],0))
-        self.separator.insertChild(self.clipPlaneXZ1,0)    
+        self.clipPlaneXZ1.plane = createPlane(SbVec3f(0, 1, 0), SbVec3f(0, yrange[0], 0))
+        self.separator.insertChild(self.clipPlaneXZ1, 0)    
         
         self.clipPlaneXZ2 = SoClipPlane()
-        self.clipPlaneXZ2.plane = createPlane(SbVec3f(0,-1,0), SbVec3f(0,yrange[1],0))
-        self.separator.insertChild(self.clipPlaneXZ2,1)
+        self.clipPlaneXZ2.plane = createPlane(SbVec3f(0, -1, 0), SbVec3f(0, yrange[1], 0))
+        self.separator.insertChild(self.clipPlaneXZ2, 1)
         
         self.clipPlaneYZ1 = SoClipPlane()
-        self.clipPlaneYZ1.plane = createPlane(SbVec3f(1,0,0), SbVec3f(xrange[0],0,0))
-        self.separator.insertChild(self.clipPlaneYZ1,2)    
+        self.clipPlaneYZ1.plane = createPlane(SbVec3f(1, 0, 0), SbVec3f(xrange[0], 0, 0))
+        self.separator.insertChild(self.clipPlaneYZ1, 2)    
         
         self.clipPlaneYZ2 = SoClipPlane()
-        self.clipPlaneYZ2.plane = createPlane(SbVec3f(-1,0,0), SbVec3f(xrange[1],0,0))
-        self.separator.insertChild(self.clipPlaneYZ2,3)    
+        self.clipPlaneYZ2.plane = createPlane(SbVec3f(-1, 0, 0), SbVec3f(xrange[1], 0, 0))
+        self.separator.insertChild(self.clipPlaneYZ2, 3)    
             
 
-    def setDrawStyle(self,style):
+    def setDrawStyle(self, style):
         self.drawStyle.style = style
 
     def setVisible(self, visible):
@@ -315,7 +340,7 @@ class GraphicObject(SoSwitch):
         else:
             self.whichChild = SO_SWITCH_NONE
 
-    def setOrigin(self,pos):
+    def setOrigin(self, pos):
         """Documentation"""
         self.translation.translation = pos
     def getOrigin(self):
@@ -348,7 +373,7 @@ class GraphicObject(SoSwitch):
     def setSpecularColor(self, val):
         self.material.specularColor.setValue(val)
 
-    def setShininess(self,val):
+    def setShininess(self, val):
         self.material.shininess = val
 
     def setTransparencyType(self, trans):
@@ -356,12 +381,12 @@ class GraphicObject(SoSwitch):
 
 
 class BasePlane(GraphicObject):
-    def __init__(self, plane = "xy", visible = True, parent = None):
-        GraphicObject.__init__(self,visible,parent)
+    def __init__(self, plane="xy", visible=True, parent=None):
+        GraphicObject.__init__(self, visible, parent)
         ## ============================
         self.plane = plane
-        self.setDiffuseColor((.5,.5,.5))
-        self.setAmbientColor((.5,.5,.5))
+        self.setDiffuseColor((.5, .5, .5))
+        self.setAmbientColor((.5, .5, .5))
         ## ============================
         self.translation = SoTranslation()
         ## ============================
@@ -373,36 +398,36 @@ class BasePlane(GraphicObject):
         self.separator.addChild(self.sHints)
         self.separator.addChild(self.coords)
         self.separator.addChild(self.mesh)
-        self.setRange((-2,2,7),plane)
+        self.setRange((-2, 2, 7), plane)
         self.setTransparency(0.5)
         self.setTransparencyType(8)
 
-    def setHeight(self,val):
+    def setHeight(self, val):
         oldVal = list(self.translation.translation.getValue())
         oldVal[self.constantIndex] = val
         self.translation.translation = oldVal
 
-    def setRange(self,r0,plane=""):
+    def setRange(self, r0, plane=""):
         if plane == "":
             plane = self.plane
         self.plane = plane
         r = Range(*r0)
         self.ptos = []
-        if plane=="xy":
-            func = lambda x,y:(x,y,0)
+        if plane == "xy":
+            func = lambda x, y:(x, y, 0)
             ## this will be used to determine which coordinate to modify
             ## in setHeight
             self.constantIndex = 2
-        elif plane=="yz":
-            func = lambda y,z:(0,y,z)
+        elif plane == "yz":
+            func = lambda y, z:(0, y, z)
             self.constantIndex = 0
-        elif plane=="xz":
-            func = lambda x,z:(x,0,z)
+        elif plane == "xz":
+            func = lambda x, z:(x, 0, z)
             self.constantIndex = 1
         elif type(plane) == type(lambda :0):
             func = plane
-        malla2(self.ptos,func, r.min, r.dt, len(r),r.min, r.dt, len(r))
-        self.coords.point.setValues(0,len(self.ptos),self.ptos)
+        malla2(self.ptos, func, r.min, r.dt, len(r), r.min, r.dt, len(r))
+        self.coords.point.setValues(0, len(self.ptos), self.ptos)
         self.mesh.verticesPerColumn = len(r)
         self.mesh.verticesPerRow = len(r)
 
@@ -414,17 +439,17 @@ class Plane(GraphicObject):
     """
     """
     def __init__(self, pos, visible=True, parent=None):
-        GraphicObject.__init__(self,visible,parent)
+        GraphicObject.__init__(self, visible, parent)
         self.altura = -1
-        vertices = [[-1,1],[1,1],[-1,-1],[1,-1]]
+        vertices = [[-1, 1], [1, 1], [-1, -1], [1, -1]]
         for p in vertices:
-            p.insert(pos,self.altura)
+            p.insert(pos, self.altura)
         sh = SoShapeHints()
         sh.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
         sh.faceType = SoShapeHints.UNKNOWN_FACE_TYPE
         sh.shapeType = SoShapeHints.UNKNOWN_SHAPE_TYPE
         coords = SoCoordinate3()
-        coords.point.setValues(0,len(vertices),vertices)
+        coords.point.setValues(0, len(vertices), vertices)
         mesh = SoQuadMesh()
         mesh.verticesPerColumn = 2
         mesh.verticesPerRow = 2
@@ -442,13 +467,13 @@ class Plane(GraphicObject):
         root.addChild(mesh)
         self.addChild(root)
 
-    def setAltura(val):
+    def setAltura(self, val):
         pass
 
 
 class Planes(GraphicObject):
     def __init__(self, visible=False, parent=None):
-        GraphicObject.__init__(self,visible,parent)
+        GraphicObject.__init__(self, visible, parent)
         self.addChild(Plane(0))
         self.addChild(Plane(1))
         self.addChild(Plane(2))

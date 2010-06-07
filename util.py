@@ -64,7 +64,10 @@ def identity(x): return x
 class nodeDict(dict):
     "a dictionary which searches keys using comparison operator =="
     def __init__(self, **args):
-        dict.__init__(self, args)
+        dict.__init__(self, **args)
+        
+#    def __setitem__(self,key,value):
+#        super(nodeDict,self).__setitem__(key,value)
         
     def __getitem__(self, key):
         "this is what diferentiates nodeDic from a regular dict"

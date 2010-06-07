@@ -21,7 +21,7 @@ from superficie.Book import Book
 
 
 
-TransparencyType= [
+TransparencyType = [
    'SCREEN_DOOR, ADD',
    'DELAYED_ADD',
    'SORTED_OBJECT_ADD',
@@ -38,8 +38,8 @@ class Viewer(QWidget):
     
     Instances = []
     
-    def __init__(self,parent=None,uiLayout=None,luces=True):
-        QWidget.__init__(self,parent)
+    def __init__(self, parent=None, uiLayout=None, luces=True):
+        QWidget.__init__(self, parent)
         #=======================================================================
         Viewer.Instances.append(self)
         self.book = Book()
@@ -58,10 +58,10 @@ class Viewer(QWidget):
     def Instance():
         return Viewer.Instances[-1]
         
-    def onPageChanged(self,c,n):
+    def onPageChanged(self, c, n):
         self.viewAll()
         
-    def onChapterChanged(self,c):
+    def onChapterChanged(self, c):
         self.viewAll()
 
     @property
@@ -78,7 +78,7 @@ class Viewer(QWidget):
         return self.book.whichChapter
 
     @Book.whichChapter.setter
-    def whichChapter(self,n): #@DuplicatedSignature
+    def whichChapter(self, n): #@DuplicatedSignature
         "Sets the current Chapter"
         self.book.whichChapter = n
 
@@ -90,8 +90,8 @@ class Viewer(QWidget):
 
     def setInitialCameraPosition(self):
         "Chose an adecuate initial pov"
-        self.camera.position = (7,7,7)
-        self.camera.pointAt(SbVec3f(0, 0, 0),  SbVec3f(0, 0, 1))
+        self.camera.position = (7, 7, 7)
+        self.camera.pointAt(SbVec3f(0, 0, 0), SbVec3f(0, 0, 1))
         self.camera.farDistance = 25
         self.camera.nearDistance = .01
 
@@ -107,7 +107,7 @@ class Viewer(QWidget):
             self.cameraSensor.detach()
 
     def addLights(self):
-        self.lucesColor = readFile(pegaNombres("Viewer","lights.iv")).getChild(0)
+        self.lucesColor = readFile(pegaNombres("Viewer", "lights.iv")).getChild(0)
         self.insertLight(self.lucesColor)
         self.lucesColor.whichChild = SO_SWITCH_ALL
         ## ============================
@@ -152,7 +152,7 @@ class Viewer(QWidget):
         rotor.on = False
         rotor.setName("rotor")
         rotor.speed = 0.005
-        rotor.rotation = (0,0,1,0)
+        rotor.rotation = (0, 0, 1, 0)
         self.root.addChild(rotor)
         self.rotor = rotor
         ## ============================
@@ -167,13 +167,13 @@ class Viewer(QWidget):
         self.root.addChild(hints)
 
 
-    def initializeUI(self,uilayout):
+    def initializeUI(self, uilayout):
 #        self.chaptersStack = QtGui.QStackedWidget()
         if uilayout:
             uilayout.addWidget(self.chaptersStack)
 
     @QtCore.pyqtSignature("bool")
-    def on_axisButton_clicked(self,b):
+    def on_axisButton_clicked(self, b):
         self.ejes.show(b)
 
     def getSRoot(self):
