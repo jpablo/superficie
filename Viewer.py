@@ -14,7 +14,7 @@ from superficie.util import callback
 from superficie.util import pegaNombres
 from superficie.util import readFile
 from superficie.Book import Book
-
+from superficie import globals
 #modulosPath = "superficie"
 #log = logging.getLogger("Viewer")
 #log.setLevel(logging.DEBUG)
@@ -33,15 +33,17 @@ TransparencyType = [
    'SORTED_LAYERS_BLEND'
  ]
 
+
+
 class Viewer(QWidget):
     "Viewer"
     
-    Instances = []
     
     def __init__(self, parent=None, uiLayout=None, luces=True):
+        print "Viewer.__init__"
         QWidget.__init__(self, parent)
+        globals.ViewerInstances.append(self)
         #=======================================================================
-        Viewer.Instances.append(self)
         self.book = Book()
         self.root = self.book.root
         self.createChapter = self.book.createChapter
@@ -55,8 +57,15 @@ class Viewer(QWidget):
         
     
     @staticmethod
+    def xxx():
+        return globals.ViewerInstances
+    
+    @staticmethod
     def Instance():
-        return Viewer.Instances[-1]
+        print "Instance", globals.ViewerInstances
+        import time
+        print "time:", time.time()
+        return globals.ViewerInstances[-1]
         
     def onPageChanged(self, c, n):
         self.viewAll()

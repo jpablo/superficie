@@ -1,13 +1,13 @@
 from pivy.coin import *
 from PyQt4 import QtCore
 from PyQt4 import QtGui
-from superficie.util import wrap
+from superficie.util import wrap, malla2
 from math import acos
 from collections import Sequence
 
 from superficie.util import intervalPartition, Vec3, segment
-from superficie.base import Page
-from superficie.base import GraphicObject, BasePlane
+from superficie.util import Range
+from superficie.base import GraphicObject
 from superficie.Animation import Animation
 
 def generaPuntos(coords):
@@ -52,9 +52,9 @@ class Cube(QtCore.QObject):
         root.addChild(indices)
         return root
 
-class Points(Page):
+class Points(GraphicObject):
     def __init__(self,coords=[],colors = [(1,1,1)],name="",file=""):
-        Page.__init__(self,name)
+        super(Points,self).__init__(name)
 #        if file != "":
 #            ## assume is an csv file
 #            coords = lstToFloat(readCsv(file))
@@ -280,6 +280,7 @@ class Arrow(GraphicObject):
     def __init__(self, p1, p2, escala = 0.01, escalaVertice = 2.0, extremos = False,visible = False,parent=None):
         "p1,p2: Vec3"
         GraphicObject.__init__(self,visible,parent)
+        self.base = None
         self.p1 = p1
         self.p2inicial = self.p2 = p2
         self.escala = escala
@@ -288,7 +289,7 @@ class Arrow(GraphicObject):
         sep = SoSeparator()
         sep.setName("Tube")
         if extremos:
-            self.addChild(Sphere(p1, escala*escalaVertice))
+            self.base = self.addChild(Sphere(p1, escala*escalaVertice, visible=True))
         self.tr1 = SoTransform()
         self.tr2 = SoTransform()
 
@@ -330,6 +331,8 @@ class Arrow(GraphicObject):
         self.cil[0].radius = self.escala
         self.cil[0].height = t
         self.tr2.translation = self.p1
+        if self.base:
+            self.base.setOrigin(self.p1)
         zt = Vec3(0,t,0)
         ejeRot = zt.cross(vec)
         ang = acos(zt.dot(vec)/t**2)
@@ -424,6 +427,7 @@ class Curve3D(GraphicObject):
     """
     def __init__(self, func, iter, color = (1,1,1), width=1, nvertices = -1, parent = None, domTrans=None):
         GraphicObject.__init__(self,True,parent)
+        self.__derivative = None
         self.lines = []
         c   = lambda t: Vec3(func(t))
         ## ============================
@@ -445,6 +449,26 @@ class Curve3D(GraphicObject):
         self.lengths = map(len,self.lines)
         
         self.animation = Animation(self.setNumVertices,(4000,1,len(self)))
+        
+    
+    def getDerivative(self):
+        return self.__derivative
+    
+    def setDerivative(self, func):
+        self.__derivative = func
+        end_points = map(self.__derivative, self.domainPoints)
+        self.tangent_vector = Arrow(self.Points[0], self.Points[0]+end_points[0], visible=False, escala=0.1, escalaVertice=2, extremos=True, parent=self)
+        self.tangent_vector.setDiffuseColor((1, 0, 0))
+        self.tangent_vector.cono.height = .5
+        self.tangent_vector.base.setDiffuseColor((1, 1, 0))
+        
+        def animate_tangent(i):
+            self.tangent_vector.setPoints(self.Points[i], self.Points[i]+end_points[i])
+            
+        self.tangent_vector.animation = Animation(animate_tangent, (8000, 0, len(self) - 1))
+            
+    derivative = property(getDerivative, setDerivative)
+        
         
     def __len__(self):
         return sum(self.lengths)
@@ -741,4 +765,102 @@ class TangentPlane2(GraphicObject):
 
     def setV(self,val):
         self.setOrigin((self.origin[0],val))
+
+class BasePlane(GraphicObject):
+    def __init__(self, plane="xy", visible=True, parent=None):
+        GraphicObject.__init__(self, visible, parent)
+        ## ============================
+        self.plane = plane
+        self.setDiffuseColor((.5, .5, .5))
+        self.setAmbientColor((.5, .5, .5))
+        ## ============================
+        self.translation = SoTranslation()
+        ## ============================
+        self.coords = SoCoordinate3()
+        self.mesh = SoQuadMesh()
+        self.sHints = SoShapeHints()
+        self.sHints.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
+        self.separator.addChild(self.translation)
+        self.separator.addChild(self.sHints)
+        self.separator.addChild(self.coords)
+        self.separator.addChild(self.mesh)
+        self.setRange((-2, 2, 7), plane)
+        self.setTransparency(0.5)
+        self.setTransparencyType(8)
+
+    def setHeight(self, val):
+        oldVal = list(self.translation.translation.getValue())
+        oldVal[self.constantIndex] = val
+        self.translation.translation = oldVal
+
+    def setRange(self, r0, plane=""):
+        if plane == "":
+            plane = self.plane
+        self.plane = plane
+        r = Range(*r0)
+        self.ptos = []
+        if plane == "xy":
+            func = lambda x, y:(x, y, 0)
+            ## this will be used to determine which coordinate to modify
+            ## in setHeight
+            self.constantIndex = 2
+        elif plane == "yz":
+            func = lambda y, z:(0, y, z)
+            self.constantIndex = 0
+        elif plane == "xz":
+            func = lambda x, z:(x, 0, z)
+            self.constantIndex = 1
+        elif type(plane) == type(lambda :0):
+            func = plane
+        malla2(self.ptos, func, r.min, r.dt, len(r), r.min, r.dt, len(r))
+        self.coords.point.setValues(0, len(self.ptos), self.ptos)
+        self.mesh.verticesPerColumn = len(r)
+        self.mesh.verticesPerRow = len(r)
+
+
+
+
+
+class Plane(GraphicObject):
+    """
+    """
+    def __init__(self, pos, visible=True, parent=None):
+        GraphicObject.__init__(self, visible, parent)
+        self.altura = -1
+        vertices = [[-1, 1], [1, 1], [-1, -1], [1, -1]]
+        for p in vertices:
+            p.insert(pos, self.altura)
+        sh = SoShapeHints()
+        sh.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
+        sh.faceType = SoShapeHints.UNKNOWN_FACE_TYPE
+        sh.shapeType = SoShapeHints.UNKNOWN_SHAPE_TYPE
+        coords = SoCoordinate3()
+        coords.point.setValues(0, len(vertices), vertices)
+        mesh = SoQuadMesh()
+        mesh.verticesPerColumn = 2
+        mesh.verticesPerRow = 2
+        nb = SoNormalBinding()
+#            nb.value = SoNormalBinding.PER_VERTEX_INDEXED
+        mat = SoMaterial()
+        mat.transparency = 0.5
+        self.setTransparencyType(8)
+        ## ============================
+        root = SoSeparator()
+        root.addChild(sh)
+        root.addChild(mat)
+        root.addChild(nb)
+        root.addChild(coords)
+        root.addChild(mesh)
+        self.addChild(root)
+
+    def setAltura(self, val):
+        pass
+
+
+class Planes(GraphicObject):
+    def __init__(self, visible=False, parent=None):
+        GraphicObject.__init__(self, visible, parent)
+        self.addChild(Plane(0))
+        self.addChild(Plane(1))
+        self.addChild(Plane(2))
 
