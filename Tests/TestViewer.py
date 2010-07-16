@@ -14,19 +14,19 @@ class TestViewer(unittest.TestCase):
         del self.app
 
 
-    def testChapterChangedSignal(self):
-        val = []
-        testFunc = (lambda n: val.append(n))
-        self.viewer.chapterChanged.connect(testFunc)
-        self.viewer.chapterChanged.emit(0)
-        self.assertEqual([0], val)
+#    def testChapterChangedSignal(self):
+#        val = []
+#        testFunc = (lambda n: val.append(n))
+#        self.viewer.chapterChanged.connect(testFunc)
+#        self.viewer.chapterChanged.emit(0)
+#        self.assertEqual([0], val)
 
     def testWhichChapter(self):
         self.viewer.createChapter()
         self.viewer.createChapter()
         self.viewer.whichChapter = 0
         self.assertEqual(0, self.viewer.whichChapter)
-        self.assertEqual(2,len(self.viewer))
+        self.assertEqual(2,len(self.viewer.book))
 
 
 if __name__ == '__main__':

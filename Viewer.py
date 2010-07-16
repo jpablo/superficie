@@ -42,13 +42,16 @@ class Viewer(QWidget):
     def __init__(self, parent=None, uiLayout=None, luces=True):
         print "Viewer.__init__"
         QWidget.__init__(self, parent)
-        globals.ViewerInstances.append(self)
-        #=======================================================================
+        globals.ViewerInstances.append(self) #@UndefinedVariable
         self.book = Book()
+        #=======================================================================
+        # Copiamos algunos atributos de book
+        #=======================================================================
         self.root = self.book.root
         self.createChapter = self.book.createChapter
         self.addChapter = self.book.addChapter
         self.chaptersStack = self.book.chaptersStack
+        #=======================================================================
         self.initializeViewer(luces)
         self.initializeUI(uiLayout)
         #=======================================================================
@@ -56,40 +59,33 @@ class Viewer(QWidget):
         self.book.chapterChanged.connect(self.onChapterChanged)
         
     
-    @staticmethod
-    def xxx():
-        return globals.ViewerInstances
+    @property
+    def chapter(self):
+        return self.book.chapter
+    
+    def getWhichChapter(self):
+        "returns the selected chapter"
+        return self.book.whichChapter
+
+    def setWhichChapter(self, n):
+        self.book.whichChapter = n
+
+    whichChapter = property(getWhichChapter, setWhichChapter)
+
+    
+    @property
+    def page(self):
+        return self.book.page
     
     @staticmethod
     def Instance():
-        print "Instance", globals.ViewerInstances
-        import time
-        print "time:", time.time()
-        return globals.ViewerInstances[-1]
+        return globals.ViewerInstances[-1] #@UndefinedVariable
         
     def onPageChanged(self, c, n):
         self.viewAll()
         
     def onChapterChanged(self, c):
         self.viewAll()
-
-    @property
-    def chapter(self):
-        return self.book.chapter
-    
-    @property
-    def page(self):
-        return self.book.page
-
-    ## TODO: investigate why this function is never called
-    @property
-    def whichChapter(self):
-        return self.book.whichChapter
-
-    @Book.whichChapter.setter
-    def whichChapter(self, n): #@DuplicatedSignature
-        "Sets the current Chapter"
-        self.book.whichChapter = n
 
     @property
     def camera(self):
@@ -196,7 +192,6 @@ if __name__ == "__main__":
     import sys
     app = QtGui.QApplication(sys.argv)
     visor = Viewer()
-    print Viewer.Instance()
     ## ============================
     visor.createChapter()
     ## ============================
@@ -214,7 +209,8 @@ if __name__ == "__main__":
     cubo.getGui = lambda: QtGui.QLabel("<center><h1>Cubo</h1></center>")
     visor.page.addChild(cubo)
     ## ============================
-    visor.whichPage = 0
+#    visor.whichPage = 0
+    visor.chapter.whichPage = 0
     visor.resize(400, 400)
     visor.show()
     visor.chaptersStack.show()

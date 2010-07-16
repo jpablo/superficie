@@ -2,9 +2,8 @@
 __author__="jpablo"
 __date__ ="$8/12/2009 01:10:52 AM$"
 
-import superficie
 from PyQt4 import QtGui
-from superficie.base import Chapter, Page
+from superficie.Book import Chapter, Page
 import sys
 import unittest
 
@@ -55,7 +54,7 @@ class TestChapter(unittest.TestCase):
         self.chapter.prevPage()
         self.assertEqual(page1,self.chapter.page)
 
-        ## its circular
+        ## it's circular
         self.chapter.prevPage()
         self.assertEqual(page2,self.chapter.page)
 

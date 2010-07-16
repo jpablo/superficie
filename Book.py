@@ -80,14 +80,14 @@ class Book(QtCore.QObject):
 
     @property
     def chapter(self):
-        "returns: base.Chapter"
+        "returns the current chapter"
         if self.whichChapter < 0:
             return None
         return self.chaptersObjects[self.chapterSwitch]
 
     @property
     def page(self):
-        "convenience function"
+        "returns the current page in the chapter"
         return self.chapter.page if self.whichChapter >= 0 else None
 
     def getWhichChapter(self):
@@ -97,7 +97,7 @@ class Book(QtCore.QObject):
     def setWhichChapter(self, n):
         '''
         Sets the current chapter
-        @param n:
+        @param n: int
         '''
         ## only the == operator test for identity of the underlying
         ## OpenInventor object (the python proxy object is changed every time)
