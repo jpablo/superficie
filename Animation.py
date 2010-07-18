@@ -8,11 +8,12 @@ from superficie.util import connect
 class Animation(QtCore.QTimeLine):
     def __init__(self,func,rango):
         duration, nmin, nmax = rango
+        self.function = func
         ## TODO: buscar un sinonimo en ingles de "range"
         QtCore.QTimeLine.__init__(self,duration)
         self.setCurveShape(self.LinearCurve)
         self.setFrameRange(nmin, nmax)
-        connect(self, "frameChanged(int)", func)
+        connect(self, "frameChanged(int)", self.function)
         ## ======================================
         ## This is used for the static method "chain"
         ## it is the pause between animations
@@ -27,6 +28,27 @@ class Animation(QtCore.QTimeLine):
             connect(animations[i].pauseTimer,"timeout()",animations[i+1].start)
 
 
+class AnimationGroup(object):
+    '''
+    Runs several animations in parallel
+    '''
+    # TODO: this could be the basis for an "animatable" interface like object
+    def __init__(self,objects,rango):
+        self.objects = objects
+        self.animation = Animation(self.eachFrame, rango)
+
+    def getAnimation(self):
+        return self.animation
+    
+    def eachFrame(self,n):
+        for ob in self.objects:
+            ob.animation.function(n)
+
+    def resetObjectForAnimation(self):
+        for ob in self.objects:
+            ob.resetObjectForAnimation()
+
+        
 class AnimationCurve(Animation):
     def __init__(self,func,curve,duration):
         self.curve = curve
@@ -36,6 +58,7 @@ class AnimationCurve(Animation):
     def eachFrame(self,i):
         self.func(i,self.curve[i])
 
+    
 
 class Timer(QtCore.QTimer):
     "evalua automaticamente una funcion en los puntos del intervalo dado"
