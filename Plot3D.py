@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from superficie.util import SupHideable
 from pivy.coin import SO_SWITCH_NONE, SoNormalBinding
 from pivy.coin import *
 
@@ -17,7 +16,8 @@ from random import random
 import operator
 import itertools
 
-from util import  conecta, intervalPartition, Range, malla, wrap, Vec3
+from util import  conecta, intervalPartition, Range, malla, wrap, Vec3,\
+    make_hideable
 from base import GraphicObject
 from gui import Slider
 from Equation import createVars
@@ -58,6 +58,7 @@ def toList(obj_or_lst):
     if obj_or_lst is not a list, converts it; return it otherwise
     @param obj_or_lst:
     '''
+    
     if not type(obj_or_lst) in (list, tuple):
         obj_or_lst = [obj_or_lst]
     return obj_or_lst
@@ -71,16 +72,15 @@ class Quad(object):
             raise TypeError, "function %s needs at least 2 arguments" % func
         self.vectorFieldFunc = None
         self.coords = SoCoordinate3()
-        self.__mesh = wrap(SoQuadMesh())
-#        self.mesh = SupHideable(SoQuadMesh())
+        self.mesh = make_hideable(SoQuadMesh())
         self.mesh.verticesPerColumn = nx
         self.mesh.verticesPerRow = ny
         nb = SoNormalBinding()
         nb.value = SoNormalBinding.PER_VERTEX_INDEXED
         ## ============================
         self.scale = SoScale()
-        self.linesetX = wrap(SoLineSet(),show=False)
-        self.linesetY = wrap(SoLineSet(),show=False)
+        self.linesetX = make_hideable(SoLineSet(),show=False)
+        self.linesetY = make_hideable(SoLineSet(),show=False)
         self.linesetYcoor = SoCoordinate3()
         self.lineColor = SoMaterial()
         self.lineColor.diffuseColor = (1,0,0)
@@ -89,50 +89,34 @@ class Quad(object):
         self.root.addChild(nb)
         self.root.addChild(self.scale)
         self.root.addChild(self.coords)
-        self.root.addChild(self.__mesh)
+        self.root.addChild(self.mesh.parent_switch)
         self.root.addChild(self.lineColor)
-        self.root.addChild(self.linesetX)
+        self.root.addChild(self.linesetX.parent_switch)
         self.root.addChild(self.linesetYcoor)
-        self.root.addChild(self.linesetY)
+        self.root.addChild(self.linesetY.parent_switch)
 
+    def getLinesVisible(self):
+        return self.linesetX.visible
 
-#    @property
-#    def meshVisible(self):
-#        return self.__mesh.whichChild.getValue() != SO_SWITCH_NONE
-#
-#    @meshVisible.setter
-#    def meshVisible(self,val):
-#        self.__mesh.whichChild = SO_SWITCH_ALL if val else SO_SWITCH_NONE
-#
-#    @property
-#    def linesVisible(self):
-#        return self.linesetX.whichChild.getValue() != SO_SWITCH_NONE
-#
-#    @linesVisible.setter
-#    def linesVisible(self, visible):
-#        self.linesetX.whichChild = SO_SWITCH_ALL if visible else SO_SWITCH_NONE
-#        self.linesetY.whichChild = SO_SWITCH_ALL if visible else SO_SWITCH_NONE
-
-    @property
-    def mesh(self):
-        '''
-        The QuadMeshObject
-        '''
-        return self.__mesh[0]
+    def setLinesVisible(self, visible):
+        self.linesetX.visible = visible
+        self.linesetY.visible = visible
+    
+    linesVisible = property(getLinesVisible, setLinesVisible)
 
     @property
     def lineSetX(self):
         '''
         The SoLineSet in the X direction
         '''
-        return self.linesetX[0]
+        return self.linesetX
 
     @property
     def lineSetY(self):
         '''
         The SoLineSet in the Y direction
         '''
-        return self.linesetY[0]
+        return self.linesetY
 
     @property
     def verticesPerColumn(self):
@@ -218,17 +202,21 @@ class Mesh(GraphicObject):
 
     def setMeshVisible(self, visible):
         for quad in self.quads.values():
-            quad.meshVisible = visible
+            quad.mesh.visible = visible
+            
     meshVisible = property(fset=setMeshVisible)
 
     def setLinesVisible(self, visible):
         for quad in self.quads.values():
             quad.linesVisible = visible
+            
     linesVisible = property(fset=setLinesVisible)
 
     def setMeshDiffuseColor(self,val):
         for quad in self.quads.values():
             quad.lineColor.diffuseColor = val
+            
+    meshDiffuseColor = property(fset=setMeshDiffuseColor)
 
     def setScaleFactor(self,vec3):
         for quad in self.quads.values():

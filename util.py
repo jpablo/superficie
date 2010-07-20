@@ -10,6 +10,7 @@ from random import random
 import os
 from os.path import join
 import util
+from _xmlplus.dom import Node
 modulosPath = os.path.dirname(util.__file__)
 
 def pegaNombres(folder,archivo):
@@ -28,7 +29,7 @@ v = Vec3 = SbVec3f
 ###### Functions ######################
 
 class partial(object):
-    def __init__(*args, **kw):
+    def __init__(*args, **kw): #@NoSelf
         self = args[0]
         self.fn, self.args, self.kw = (args[1], args[2:], kw)
     def __call__(self, *args, **kw):
@@ -281,14 +282,14 @@ def projection(q, p1, p2):
     y = y2 + (y2-y1) * c
     return (x,y)
 
-def projectionVecs(a, u):  
-    ## segun mathworld la formula es:
-    ## proj_v (a) = (a.u)/|u|^2 * u
-    return mult( dot(a, u)/pow(norma(u) , 2),  u )
-    
-def mirror(q, p1, p2):
-    m = proyeccion(q, p1, p2)
-    return param(q,m,2)
+#def projectionVecs(a, u):  
+#    ## segun mathworld la formula es:
+#    ## proj_v (a) = (a.u)/|u|^2 * u
+#    return mult( dot(a, u)/pow(norma(u) , 2),  u )
+#    
+#def mirror(q, p1, p2):
+#    m = proyeccion(q, p1, p2)
+#    return param(q,m,2)
 
 
 ########### Open Inventor ##################    
@@ -307,19 +308,19 @@ def readFile(file):
     myInput.openFile(file)
     return SoDB.readAll(myInput)
 
-def searchAll(nodo,label):
-    if nodo.getName().getString() == label:
-        return nodo
-    childList = nodo.getChildren()
-    if type(childList) == type(None):
-        return None
-    if childList.getLength() > 0:
-        for n in nodo.getChildren():
-            ret = buscaTodo(n, label)
-            if ret != None:
-                return n
-    ## in any other case
-    return None
+#def searchAll(nodo,label):
+#    if nodo.getName().getString() == label:
+#        return nodo
+#    childList = nodo.getChildren()
+#    if type(childList) == type(None):
+#        return None
+#    if childList.getLength() > 0:
+#        for n in nodo.getChildren():
+#            ret = buscaTodo(n, label)
+#            if ret != None:
+#                return n
+#    ## in any other case
+#    return None
 
 def search(nodo,label):
     for c in nodo.getChildren():
@@ -383,32 +384,23 @@ def wrap(node, show = True):
     return switch
 
 
-class SupHideable(SoSwitch):
-    """
-    Documentation
-    """
-    def __init__(self, node, show=True):
-        """Documentation"""
-        if hasattr(node, "root"):
-            node = node.root
-        SoBase.__setattr__(self,"node",node)
-        SoSwitch.addChild(self,node)
-        self.visible = show
-        ## copy visible attribute to node
-        def getVisible(node):
-            return self.visible
-        def setVisible(node,val):
-            self.visible = val
-        node.__class__.visible = property(getVisible,setVisible)
-
-    @property
-    def visible(self):
-        return self.whichChild.getValue() != SO_SWITCH_NONE
-
-    @visible.setter
-    def visible(self,val):
-        self.whichChild = SO_SWITCH_ALL if val else SO_SWITCH_NONE
-
+def make_hideable(node, show = True):
+    '''
+    wrap node with a SoSwitch
+    @param node:
+    @param show: bool
+    '''
+    root = getattr(node,"root",node)
+    switch = SoSwitch()
+    switch.addChild(root)
+    node.parent_switch = switch
+    def getVisible(self):
+        return self.parent_switch.whichChild.getValue() != SO_SWITCH_NONE
+    def setVisible(self,val):
+        self.parent_switch.whichChild = SO_SWITCH_ALL if val else SO_SWITCH_NONE
+    node.__class__.visible = property(getVisible, setVisible)
+    node.visible = show
+    return node
 
         
 def _1(r,g,b):
@@ -444,6 +436,6 @@ def fn(strfunc):
     var = "var"+str(random()).split(".")[-1]
     fbody = strfunc.replace('#',var)
     exec ("ret = lambda %s: %s" % (var, fbody))
-    return ret
+    return ret #@UndefinedVariable
 
     

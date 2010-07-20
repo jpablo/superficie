@@ -59,6 +59,14 @@ class Viewer(QWidget):
         self.book.chapterChanged.connect(self.onChapterChanged)
         
     
+    def getWhichPage(self):
+        return self.chapter.whichPage
+    
+    def setWhichPage(self, n):
+        self.chapter.whichPage = n
+    
+    whichPage = property(getWhichPage, setWhichPage)
+    
     @property
     def chapter(self):
         return self.book.chapter
@@ -71,7 +79,6 @@ class Viewer(QWidget):
         self.book.whichChapter = n
 
     whichChapter = property(getWhichChapter, setWhichChapter)
-
     
     @property
     def page(self):
@@ -209,8 +216,7 @@ if __name__ == "__main__":
     cubo.getGui = lambda: QtGui.QLabel("<center><h1>Cubo</h1></center>")
     visor.page.addChild(cubo)
     ## ============================
-#    visor.whichPage = 0
-    visor.chapter.whichPage = 0
+    visor.whichPage = 0
     visor.resize(400, 400)
     visor.show()
     visor.chaptersStack.show()

@@ -773,6 +773,7 @@ class TangentPlane2(GraphicObject):
         self.par2 = par2
         self.param = param
         self.origin = origin
+        self.r0 = (-.5, .5, 30)
 
         self.baseplane = BasePlane()
         self.setOrigin(origin)
@@ -788,15 +789,20 @@ class TangentPlane2(GraphicObject):
         ve.normalize()
         ue = self.par2(*pt)
         ue.normalize()
+        orig = Vec3(self.param(*pt))
         def planePar(h, t):
-            return tuple(Vec3(self.param(*pt)) + h * ve + t * ue)
-        self.baseplane.setRange((-.5, .5, 30), plane=planePar)
+            return tuple(orig + h * ve + t * ue)
+        self.baseplane.setRange(self.r0, plane=planePar)
 
     def setU(self, val):
         self.setOrigin((val, self.origin[1]))
 
     def setV(self, val):
         self.setOrigin((self.origin[0], val))
+        
+    def setRange(self, r0):
+        self.r0 = r0
+        self.baseplane.setRange(self.r0)
 
 class BasePlane(GraphicObject):
     def __init__(self, plane="xy", visible=True, parent=None):
