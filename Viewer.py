@@ -38,9 +38,7 @@ TransparencyType = [
 class Viewer(QWidget):
     "Viewer"
     
-    
     def __init__(self, parent=None, uiLayout=None, luces=True):
-        print "Viewer.__init__"
         QWidget.__init__(self, parent)
         globals.ViewerInstances.append(self) #@UndefinedVariable
         self.book = Book()

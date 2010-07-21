@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-from pivy.coin import SoBase
 from pivy.coin import SO_SWITCH_ALL
 from pivy.coin import SO_SWITCH_NONE
-from pivy.coin import SoWriteAction
 from math import sqrt, pow
 from pivy.coin import SoInput, SoDB,  SoSearchAction,  SbVec3f, SoSFVec3f, SoSFFloat, SoCalculator, SoSwitch, SoOneShot, SoFieldSensor, SoWriteAction
 from PyQt4 import QtCore
@@ -10,7 +8,6 @@ from random import random
 import os
 from os.path import join
 import util
-from _xmlplus.dom import Node
 modulosPath = os.path.dirname(util.__file__)
 
 def pegaNombres(folder,archivo):
@@ -438,4 +435,66 @@ def fn(strfunc):
     exec ("ret = lambda %s: %s" % (var, fbody))
     return ret #@UndefinedVariable
 
+#===========================================================================
+# varios 
+#===========================================================================
+
+def manipulate(*args,**kwargs):
+    print args
+    print kwargs
+
+if __name__ == "__main__":
+    from PyQt4 import QtGui, QtCore
+    import sys
+    from superficie.Plot3D import Plot3D, RevolutionPlot3D, ParametricPlot3D, Mesh
+    from superficie.Viewer import Viewer
+    from math import sin
     
+    app = QtGui.QApplication(sys.argv)
+    Mesh.autoAdd = True
+    viewer = Viewer()
+    viewer.createChapter()
+    
+    class MiPlot3D(Plot3D):
+        def __init__(self,*args, **kwargs):
+            super(MiPlot3D,self).__init__(*args,**kwargs)
+        
+        def With(self, param_lst):
+            print param_lst
+
+    def setupParameter(self,param):
+        self.addParameter(('v', 0, 1, 0))
+        ## ============================
+        d = self.getParametersValues()
+        for quad in self.quads.values():
+            quad.function.updateGlobals(d)
+            ## test the return value
+            val = quad.function(1, 1)
+            self.checkReturnValue(quad.function, val)
+            ## ============================
+            self.quads[quad.function] = quad
+            self.addChild(quad)
+        ## ============================
+        self.updateAll()        
+
+    class F(object):
+        def __init__(self, func):
+            self.func = func
+            func2 = lambda x, y: x+y
+            self.wrapper = lambda: func2
+            print self.wrapper.func_code.co_freevars
+            eval(self.wrapper.func_code)
+        def __call__(self,*args):
+            return eval(self.wrapper.func_code)
+        
+    
+    func = F(lambda x, y: x+y)
+#    print func(1,1)
+    
+    MiPlot3D(lambda x, y:(-x - sin(y))*f, (-1, 1), (-1, 1))
+
+    viewer.resize(400, 400)
+    viewer.show()
+    viewer.chaptersStack.show()
+    viewer.viewAll()
+    sys.exit(app.exec_())

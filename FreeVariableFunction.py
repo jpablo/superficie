@@ -4,27 +4,38 @@ Created on 25/04/2010
 @author: jpablo
 '''
 
-from random import random
 from types import FunctionType
 
 class FreeVariableFunction(object):
     '''
     A function-like object which can handle free variables
     '''
+    usedFreeVariables = set()
+    
     def __init__(self, func):
+#        print "FreeVariableFunction.__init__"
         self.func = func 
+#        for var in FreeVariableFunction.usedFreeVariables:
+#            print var
+#            print var in globals()
+#            del globals()[var]
         self.freeVariables = {}
         self.findInnerFreeVariables()
+        FreeVariableFunction.usedFreeVariables.update(self.freeVariables.keys())
 
     def __call__(self,*args):
         return self.func(*args)
-    
+        
     @staticmethod
     def getFreeVariables(func):
         '''
         extract the variable names that aren't in the global namespace
         @param func:
         '''
+#        print "getFreeVariables:====================="
+#        print 'len(func.func_globals):',len(func.func_globals)
+#        print 'func.func_code.co_names:', func.func_code.co_names
+#        print 'h' in func.func_globals
         return filter(lambda n: n not in func.func_globals, func.func_code.co_names) 
         
     def updateGlobals(self, dvals={}):

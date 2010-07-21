@@ -66,8 +66,9 @@ def toList(obj_or_lst):
         
 class Quad(object):
     """A Mesh"""
-    def __init__(self, func = None, nx = 10, ny = 10):        
+    def __init__(self, func = None, nx = 10, ny = 10):
         self.function = FreeVariableFunction(func)
+#        print self.function.usedFreeVariables
         if self.function.argCount() < 2:
             raise TypeError, "function %s needs at least 2 arguments" % func
         self.vectorFieldFunc = None
@@ -236,7 +237,7 @@ class Mesh(GraphicObject):
     def addQuad(self,func):
         '''
         Adds a Quad object
-        @param func:
+        @param func: a callable
         '''        
         quad = Quad(func, len(self.rangeX), len(self.rangeY))
         for v in sorted(quad.function.freeVariables):
