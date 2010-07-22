@@ -7,6 +7,12 @@ from pivy.coin import *
 from superficie.util import nodeDict
 
 
+def fluid(method):
+    def func(self, *args, **kwargs):
+        method(self,*args, **kwargs)
+        return self
+    return func
+
 class GraphicObject(SoSwitch):
     '''
     The base clase of all container graphics classes
@@ -53,12 +59,14 @@ class GraphicObject(SoSwitch):
     def getChildren(self):
         return self.children.values()
 
+    @fluid
     def show(self):
         self.setVisible(True)
-
+    
+    @fluid    
     def hide(self):
         self.setVisible(False)
-        
+    @fluid    
     def setBoundingBox(self, xrange=None, yrange=None, zrange=None):
         '''
         @param xrange: 2-tuple
@@ -94,16 +102,18 @@ class GraphicObject(SoSwitch):
         
         
 
-
+    @fluid
     def setDrawStyle(self, style):
         self.drawStyle.style = style
 
+    @fluid
     def setVisible(self, visible):
         if visible:
             self.whichChild = SO_SWITCH_ALL
         else:
             self.whichChild = SO_SWITCH_NONE
 
+    @fluid
     def setOrigin(self, pos):
         """"""
         self.translation.translation = pos
@@ -116,7 +126,8 @@ class GraphicObject(SoSwitch):
 
     def resetObjectForAnimation(self):
         pass
-
+    
+    @fluid
     def setColor(self, val):
         self.setDiffuseColor(val)
         self.setEmissiveColor(val)
@@ -125,11 +136,13 @@ class GraphicObject(SoSwitch):
     
     color = property(fset=setColor)
 
+    @fluid
     def setTransparency(self, val):
         self.material.transparency.setValue(val)
     
     transparency = property(fset=setTransparency)
 
+    @fluid
     def setEmissiveColor(self, val):
         self.material.emissiveColor.setValue(val)
         
@@ -140,15 +153,19 @@ class GraphicObject(SoSwitch):
         
     diffuseColor = property(fset=setDiffuseColor)
 
+    @fluid
     def setAmbientColor(self, val):
         self.material.ambientColor.setValue(val)
 
+    @fluid
     def setSpecularColor(self, val):
         self.material.specularColor.setValue(val)
 
+    @fluid
     def setShininess(self, val):
         self.material.shininess = val
 
+    @fluid
     def setTransparencyType(self, trans):
         self.transType.value = trans
         

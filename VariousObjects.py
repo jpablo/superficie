@@ -7,8 +7,9 @@ from collections import Sequence
 
 from superficie.util import intervalPartition, Vec3, segment
 from superficie.util import Range
-from superficie.base import GraphicObject
+from superficie.base import GraphicObject, fluid
 from superficie.Animation import Animation
+from util import make_hideable
 
 def generaPuntos(coords):
     c = coords
@@ -190,11 +191,19 @@ def Sphere2(p, radius=.05, mat=None):
 class Sphere(GraphicObject):
     def __init__(self, center, radius=.05, color=(1, 1, 1), visible=False, parent=None):
         GraphicObject.__init__(self, visible, parent)
-        sp = SoSphere()
-        sp.radius = radius
+        self.sp = SoSphere()
+        self.sp.radius = radius
 #        ## ===================
-        self.addChild(sp)
+        self.addChild(self.sp)
         self.setOrigin(center)
+    
+    def radius(): #@NoSelf
+        def fget(self):
+            return self.sp.radius.getValue()
+        def fset(self, radius):
+            self.sp.radius = radius
+        return locals()
+    radius = property(**radius())
 
 
 class Tube(object):
@@ -285,11 +294,14 @@ class Arrow(GraphicObject):
         self.p2inicial = self.p2 = p2
         self.escala = escala
         self.escalaVertice = escalaVertice
+        self.lengthFactor = 1
+        self.widthFactor = 1
         ## ============================
         sep = SoSeparator()
         sep.setName("Tube")
         if extremos:
-            self.base = self.addChild(Sphere(p1, escala * escalaVertice, visible=True))
+            self.esfera = Sphere(p1, escala * escalaVertice, visible=True)
+            self.base = self.addChild(self.esfera)
         self.tr1 = SoTransform()
         self.tr2 = SoTransform()
 
@@ -297,14 +309,13 @@ class Arrow(GraphicObject):
         self.setDiffuseColor((.4, .4, .4))
         self.setSpecularColor((.8, .8, .8))
         self.setShininess(.1)
-        self.cil = wrap(SoCylinder())
+        self.cil = make_hideable(SoCylinder())
         self.cil.setName("segmento")
         ## ==========================
         conoSep = SoSeparator()
         self.conoTr = SoTransform()
         self.cono = SoCone()
         self.cono.bottomRadius = self.escala * 2
-        self.cono.height = .1
         self.matHead = SoMaterial()
         self.matHead.ambientColor = (.33, .22, .27)
         self.matHead.diffuseColor = (.78, .57, .11)
@@ -317,19 +328,21 @@ class Arrow(GraphicObject):
         sep.addChild(self.tr2)
         sep.addChild(self.tr1)
 #        sep.addChild(self.matBase)
-        sep.addChild(self.cil)
+        sep.addChild(self.cil.parent_switch)
         sep.addChild(conoSep)
         ## ============================
         self.calcTransformation()
         self.addChild(sep)
 
     def calcTransformation(self):
-        vec = self.p2 - self.p1
+        scaledP2 = segment(self.p1, self.p2inicial, self.lengthFactor)
+        vec = scaledP2 - self.p1
         t = vec.length() if vec.length() != 0 else .00001
         self.tr1.translation = (0, t / 2.0, 0)
         self.conoTr.translation = (0, t / 2.0, 0)
-        self.cil[0].radius = self.escala
-        self.cil[0].height = t
+        self.cil.radius = self.escala * self.widthFactor
+        self.cil.height = t
+        self.cono.height = self.cil.height.getValue() * .2
         self.tr2.translation = self.p1
         if self.base:
             self.base.setOrigin(self.p1)
@@ -341,7 +354,7 @@ class Arrow(GraphicObject):
         self.tr2.rotation.setValue(ejeRot, ang)
 
     def setRadius(self, r):
-        self.cil[0].radius = r
+        self.cil.radius = r
 
     def setPoints(self, p1, p2):
         "p1, p2: Vec3d"
@@ -355,7 +368,13 @@ class Arrow(GraphicObject):
 
     def setLengthFactor(self, factor):
         self.lengthFactor = factor
-        self.setP2(segment(self.p1, self.p2inicial, factor))
+        self.calcTransformation()
+    
+    def setWidthFactor(self, factor):
+        self.widthFactor = factor
+        self.setRadius(self.cil.radius.getValue() * factor)
+        self.cono.bottomRadius = self.cono.bottomRadius.getValue() * factor
+        self.esfera.radius *= factor 
 
 
 class Line(GraphicObject):
@@ -445,6 +464,13 @@ class CurveVectorField(GraphicObject):
             
         self.animation = Animation(animate_field, (8000, 0, len(self.base_arrow_points) - 1))
 
+    @fluid
+    def setLengthFactor(self, factor):
+        self.arrow.setLengthFactor(factor)
+    
+    @fluid    
+    def setWidthFactor(self, factor):
+        self.arrow.setWidthFactor(factor)
 
 class Curve3D(GraphicObject):
     """
@@ -481,7 +507,8 @@ class Curve3D(GraphicObject):
         @param function: callable
         @param name: string
         '''
-        self.fields[name] = CurveVectorField(function, self.domainPoints, self.Points,parent=self)
+        field = self.fields[name] = CurveVectorField(function, self.domainPoints, self.Points,parent=self)
+        return field
     
     def getDerivative(self):
         return self.__derivative
