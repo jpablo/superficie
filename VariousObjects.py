@@ -2,7 +2,7 @@ from pivy.coin import *
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 from superficie.util import wrap, malla2
-from math import acos
+from math import acos, pi
 from collections import Sequence
 
 from superficie.util import intervalPartition, Vec3, segment
@@ -169,6 +169,43 @@ class Polygon(QtCore.QObject):
         coor = SoCoordinate3()
         coor.point.setValues(0, len(self.coords), self.coords)
 
+    ## ---------------------------------- CILINDRO ----------------------------------- ##
+
+def Cylinder(col, length, radius = 0.98):
+    sep = SoSeparator()
+
+    cyl = SoCylinder()
+    cyl.radius.setValue(radius)
+    cyl.height.setValue(length)
+    cyl.parts = SoCylinder.SIDES
+
+    light = SoShapeHints()
+#    light.VertexOrdering = SoShapeHints.COUNTERCLOCKWISE
+#    light.ShapeType = SoShapeHints.UNKNOWN_SHAPE_TYPE
+#    light.FaceType  = SoShapeHints.UNKNOWN_FACE_TYPE
+
+    mat = SoMaterial()
+    mat.emissiveColor = col
+    mat.diffuseColor = col
+    mat.transparency.setValue(0.5)
+
+    rot = SoRotationXYZ()
+    rot.axis = SoRotationXYZ.X
+    rot.angle = pi / 2
+
+    trans = SoTransparencyType()
+#    trans.value = SoTransparencyType.DELAYED_BLEND
+    trans.value = SoTransparencyType.SORTED_OBJECT_BLEND
+#    trans.value = SoTransparencyType.SORTED_OBJECT_SORTED_TRIANGLE_BLEND
+
+    sep.addChild(light)
+    sep.addChild(rot)
+    sep.addChild(trans)
+    sep.addChild(mat)
+    sep.addChild(cyl)
+
+    return sep
+
         
 def Sphere2(p, radius=.05, mat=None):
     sep = SoSeparator()
@@ -187,6 +224,9 @@ def Sphere2(p, radius=.05, mat=None):
     sep.addChild(mat)
     sep.addChild(sp)
     return sep
+
+
+
 
 class Sphere(GraphicObject):
     def __init__(self, center, radius=.05, color=(1, 1, 1), visible=False, parent=None):
@@ -447,22 +487,25 @@ class CurveVectorField(GraphicObject):
     def __init__(self, function, domain_points, base_arrow_points, visible=True, parent=None):
         GraphicObject.__init__(self, visible, parent)
         self.function = function
-        self.domain_points = domain_points
-        self.base_arrow_points = base_arrow_points
-        self.end_points = map(self.function, self.domain_points)
+        self.domain_points = None
+        self.base_arrow_points = None
+        self.end_points = None
         self.arrow = None
         self.animation = None
-        
-        self.arrow = Arrow(self.base_arrow_points[0], self.base_arrow_points[0] + self.end_points[0], escala=0.1, escalaVertice=2, extremos=True, visible=True)
+        self.last_i = 0
+        self.arrow = Arrow(Vec3(0,0,0), Vec3(0,0,0), escala=0.1, escalaVertice=2, extremos=True, visible=True)
+        self.updatePoints(domain_points, base_arrow_points)
         self.arrow.setDiffuseColor((1, 0, 0))
         self.arrow.cono.height = .5
         self.arrow.base.setDiffuseColor((1, 1, 0))
         self.addChild(self.arrow)
+        self.animation = Animation(self.animate_field, (8000, 0, len(self.base_arrow_points) - 1))
 
-        def animate_field(i):
-            self.arrow.setPoints(self.base_arrow_points[i], self.base_arrow_points[i] + self.end_points[i])
-            
-        self.animation = Animation(animate_field, (8000, 0, len(self.base_arrow_points) - 1))
+
+    def animate_field(self, i):
+        self.arrow.setPoints(self.base_arrow_points[i], self.base_arrow_points[i] + self.end_points[i])
+        self.last_i = i
+
 
     @fluid
     def setLengthFactor(self, factor):
@@ -471,6 +514,12 @@ class CurveVectorField(GraphicObject):
     @fluid    
     def setWidthFactor(self, factor):
         self.arrow.setWidthFactor(factor)
+        
+    def updatePoints(self, domain_points, base_arrow_points):
+        self.domain_points = domain_points
+        self.base_arrow_points = base_arrow_points
+        self.end_points = map(self.function, self.domain_points)
+        self.animate_field(self.last_i)
 
 class Curve3D(GraphicObject):
     """
@@ -575,16 +624,20 @@ class Curve3D(GraphicObject):
             else:
                 i -= nl
 
-    def updatePoints(self, func):
+    def updatePoints(self, func = None):
         '''
         recalculates points according to the function func
         @param func: a function  R -> R^3
         '''
-        self.func = func
-        c = lambda t: Vec3(func(t))
+        if func is not None:
+            self.func = func
+        #c = lambda t: Vec3(self.func(t))
         for it, line in zip(self.iter, self.lines):
-            points = intervalPartition(it, c)
-            line.setCoordinates(points)
+            line.setCoordinates(intervalPartition(it, self.func))
+        #-----------------------------------------------------------------------
+        for f in self.fields.values():
+            f.updatePoints(self.domainPoints, self.Points)        
+
 
     @property
     def domainPoints(self):
