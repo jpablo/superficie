@@ -148,8 +148,11 @@ class GraphicObject(SoSwitch):
     @fluid
     def setTransparency(self, val):
         self.material.transparency.setValue(val)
-    
-    transparency = property(fset=setTransparency)
+
+    def getTransparency(self):
+        return self.material.transparency.getValues()
+
+    transparency = property(fset=setTransparency, fget=getTransparency)
 
     @fluid
     def setEmissiveColor(self, val):

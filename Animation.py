@@ -6,8 +6,7 @@ from superficie.util import connect
 #Animation(setNumVertices,(2000,0,npuntos))
 
 class Animation(QtCore.QTimeLine):
-    def __init__(self,func,rango):
-        duration, nmin, nmax = rango
+    def __init__(self,func,(duration, nmin, nmax)):
         self.functions = [func]
         ## TODO: buscar un sinonimo en ingles de "range"
         QtCore.QTimeLine.__init__(self,duration)

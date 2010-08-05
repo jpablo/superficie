@@ -895,7 +895,7 @@ class TangentPlane2(GraphicObject):
         self.r0 = (-1, 1, 30)
 
         self.baseplane = BasePlane()
-        self.baseplane.setTransparency(0).setDiffuseColor(color).setEmissiveColor(color)
+        self.baseplane.setTransparency(.4).setDiffuseColor(color).setEmissiveColor(color)
         self.addChild(self.baseplane)
         self.localOriginSphere = Sphere(param(*self.localOrigin), radius=.03, color=(1,0,0), visible=True)
         self.addChild(self.localOriginSphere)
