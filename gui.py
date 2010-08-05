@@ -3,6 +3,7 @@ from pivy.coin import *
 from PyQt4 import QtCore, QtGui, uic
 from superficie.util import connectPartial, wrap, conecta, identity, partial, segment, pegaNombres,connect
 from superficie.Animation0 import AnimeType, Timer
+from Animation import Animation
 
 modulosPath = "superficie"
 
@@ -42,6 +43,7 @@ class VisibleCheckBox(CheckBox):
 
 class Slider(QtGui.QWidget):
     def __init__(self, rangep=('w', 0, 1, 0, 10), func=identity, duration=1000, parent=None):
+        # TODO: cambiar el orden: func, rangep... 
         ## rangep = (name, vmin, vmax, vini, npoints)
         QtGui.QWidget.__init__(self)
         uic.loadUi(pegaNombres("Gui","paramTemplate2.ui"), self)
@@ -55,7 +57,7 @@ class Slider(QtGui.QWidget):
         if parent:
             parent.addWidget(self)
 
-    
+
     def updateRange(self, rangep):
         ## rangep = (vmin, vmax, vini)
         self.timeline = QtCore.QTimeLine(self.timeline.duration())
@@ -73,7 +75,7 @@ class Slider(QtGui.QWidget):
 #        self.nombre.setTitle(self.name + ": %.3f" % self.vini)
         self.nombre.setText(self.name + ": %.3f" % self.vini)
         self.slider.setValue(self.timeline.currentFrame())
-        
+
     def setupUi(self,):
         self.slider.setMaximum(self.npoints-1)
         conecta(self.slider, QtCore.SIGNAL("valueChanged(int)"), self.updateFromSlider)
@@ -136,6 +138,9 @@ class Slider(QtGui.QWidget):
 
     def getValue(self):
         return self.funcTrans(self.timeline.currentValue())
+
+    def asAnimation(self):
+        return Animation(self.slider.setValue,(2000,0,self.timeline.endFrame()))
 
 
         

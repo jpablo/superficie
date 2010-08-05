@@ -62,6 +62,11 @@ class Animation(QtCore.QTimeLine):
     def execute(self, func):
         return self.afterThis(Animation(lambda x:func(),(1,0,1)))
 
+    def resetObjectForAnimation(self):
+        self.stop()
+        for fn in self.functions:
+            fn(self.startFrame())
+        
 
 class Animatable(object):
     '''
@@ -93,7 +98,8 @@ class AnimationGroup(object):
     
     def eachFrame(self,n):
         for ob in self.objects:
-            ob.animation.function(n)
+            for fn in ob.animation.functions:
+                fn(n)
 
     def resetObjectForAnimation(self):
         for ob in self.objects:

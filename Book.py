@@ -313,6 +313,10 @@ class Page(QtCore.QObject):
         if hasattr(node, "updateAll"):
             node.updateAll()
 
+    def addChildren(self, lst):
+        for c in lst:
+            self.addChild(c)
+
     def addWidgetChild(self, arg):
         widget, node = arg
         self.addWidget(widget)
@@ -350,7 +354,7 @@ class Page(QtCore.QObject):
 
     def setupAnimations(self, objects):
         self.objectsForAnimate = objects
-        self.animations = [ ob.getAnimation() for ob in objects ]
+        self.animations = [ getattr(ob, 'animation', ob) for ob in objects ]
         Animation.chain(self.animations, pause=1000)
 
         Button("inicio", self.animate, parent=self)

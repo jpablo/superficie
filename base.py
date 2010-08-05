@@ -66,6 +66,7 @@ class GraphicObject(SoSwitch):
     @fluid    
     def hide(self):
         self.setVisible(False)
+        
     @fluid    
     def setBoundingBox(self, xrange=None, yrange=None, zrange=None):
         '''
@@ -75,32 +76,30 @@ class GraphicObject(SoSwitch):
         '''
         def createPlane(normalref, point):
             sfplane = SoSFPlane()
-            sfplane.setValue(SbPlane(normalref, point)) 
+            sfplane.setValue(SbPlane(normalref, point))
             return sfplane
 
-        if yrange != None:
+        if yrange is not None:
             self.clipPlaneXZ1 = SoClipPlane()
             self.clipPlaneXZ2 = SoClipPlane()
             self.clipPlaneXZ1.plane = createPlane(SbVec3f(0, 1, 0), SbVec3f(0, yrange[0], 0))
             self.clipPlaneXZ2.plane = createPlane(SbVec3f(0, -1, 0), SbVec3f(0, yrange[1], 0))
-            self.separator.insertChild(self.clipPlaneXZ1, 0)    
+            self.separator.insertChild(self.clipPlaneXZ1, 0)
             self.separator.insertChild(self.clipPlaneXZ2, 1)
-        if xrange != None:
+        if xrange is not None:
             self.clipPlaneYZ1 = SoClipPlane()
             self.clipPlaneYZ2 = SoClipPlane()
             self.clipPlaneYZ1.plane = createPlane(SbVec3f(1, 0, 0), SbVec3f(xrange[0], 0, 0))
             self.clipPlaneYZ2.plane = createPlane(SbVec3f(-1, 0, 0), SbVec3f(xrange[1], 0, 0))
             self.separator.insertChild(self.clipPlaneYZ1, 2)    
             self.separator.insertChild(self.clipPlaneYZ2, 3)    
-        if zrange != None:
+        if zrange is not None:
             self.clipPlaneXY1 = SoClipPlane()
             self.clipPlaneXY2 = SoClipPlane()
             self.clipPlaneXY1.plane = createPlane(SbVec3f(0, 0, 1), SbVec3f(0, 0, zrange[0]))
             self.clipPlaneXY2.plane = createPlane(SbVec3f(0, 0, -1), SbVec3f(0, 0, zrange[1]))
             self.separator.insertChild(self.clipPlaneXY1, 4)    
             self.separator.insertChild(self.clipPlaneXY2, 5)
-        
-        
 
     @fluid
     def setDrawStyle(self, style):
@@ -113,6 +112,14 @@ class GraphicObject(SoSwitch):
         else:
             self.whichChild = SO_SWITCH_NONE
 
+    def getVisible(self):
+        if self.whichChild.getValue() == SO_SWITCH_ALL:
+            return True
+        elif self.whichChild.getValue() == SO_SWITCH_NONE:
+            return False
+
+    visible = property(fget=getVisible, fset=setVisible)
+
     @fluid
     def setOrigin(self, pos):
         """"""
@@ -120,6 +127,8 @@ class GraphicObject(SoSwitch):
         
     def getOrigin(self):
         return self.translation.translation.getValue()
+
+    origin = property(fget=getOrigin, fset=setOrigin)
 
     def getAnimation(self):
         return self.animation
@@ -148,6 +157,7 @@ class GraphicObject(SoSwitch):
         
     emissiveColor = property(fset=setEmissiveColor)
 
+    @fluid
     def setDiffuseColor(self, val):
         self.material.diffuseColor.setValue(val)
         

@@ -7,6 +7,8 @@ from pivy.coin import *
 
 from pivy.quarter import QuarterWidget
 from superficie.Viewer import Viewer
+from Animation import Animation
+
 Quarter = True
 
 
@@ -158,7 +160,7 @@ class Quad(object):
         
 class Mesh(GraphicObject):
     """A Set of Quads which share the same generating function"""
-            ## ============================
+    ## ============================
     autoAdd = False
 
     def __init__(self, rangeX=(0,1,40),  rangeY=(0,1,40), name="",visible = False, viewer = None):
@@ -186,6 +188,8 @@ class Mesh(GraphicObject):
             layout.addWidget(QtGui.QLabel("<center><h1>%s</h1></center>" % self.name))
         if viewer:
             viewer.page.addChild(self)
+        ## ===============================
+        self.animation = Animation(lambda x:x, (1000, 1, 2))
             
 
     def __len__(self):
