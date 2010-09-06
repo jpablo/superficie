@@ -327,7 +327,7 @@ class Tube(object):
 
 
 class Arrow(GraphicObject):
-    def __init__(self, p1, p2, escala=0.01, escalaVertice=2.0, extremos=False, visible=False, parent=None):
+    def __init__(self, p1, p2, escala=0.01, escalaVertice=2.0, extremos=True, visible=False, parent=None):
         "p1,p2: Vec3"
         super(Arrow,self).__init__(visible,parent)
         self.base = None
@@ -380,7 +380,7 @@ class Arrow(GraphicObject):
         t = vec.length() if vec.length() != 0 else .00001
         self.tr1.translation = (0, t / 2.0, 0)
         self.conoTr.translation = (0, t / 2.0, 0)
-        self.cil.radius = self.escala * self.widthFactor
+        self.setRadius(self.escala * self.widthFactor)
         self.cil.height = t
         self.cono.height = self.cil.height.getValue() * .2
         self.tr2.translation = self.p1
@@ -396,6 +396,7 @@ class Arrow(GraphicObject):
     @fluid
     def setRadius(self, r):
         self.cil.radius = r
+        self.esfera.radius = r * 1.5
 
     @fluid
     def setPoints(self, p1, p2):
