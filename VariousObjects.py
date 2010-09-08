@@ -372,6 +372,7 @@ class Arrow(GraphicObject):
         sep.addChild(conoSep)
         ## ============================
         self.calcTransformation()
+        #self.cono.height = self.cil.height.getValue() * .2
         self.addChild(sep)
 
     def calcTransformation(self):
