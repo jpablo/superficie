@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from pivy.coin import SoOneShot, SoSFFloat
+from pivy.coin import SoOneShot, SoSFFloat, SoFieldSensor
 from PyQt4 import QtCore
 from superficie.util import conecta, GenIntervalo
 
@@ -56,11 +56,22 @@ class OneShot(QtCore.QObject):
 
     def callback(self, ffloat, sensor):
         t = ffloat.getValue()
-        QtCore.QObject.emit(self, QtCore.SIGNAL("ramp(float)"), t)
-        if t == 1.0:
-            self.emit(QtCore.SIGNAL("finished(bool)"), True)
+#        QtCore.QObject.emit(self, QtCore.SIGNAL("ramp(float)"), t)
+        ## 0 <= t <= 1
+        ## nmin <= nmin + (nmax-nmin) * t <= nmax
+        i = int(self.startFrame + self.spanFrame * t)
+        QtCore.QObject.emit(self, QtCore.SIGNAL("frameChanged(int)"), i)
+        if t == 0.0:
+            self.emit(QtCore.SIGNAL("started()"))
+        elif t == 1.0:
+            self.emit(QtCore.SIGNAL("finished()"))
             
     def start(self):
         self.oneshot.trigger.touch()
+
+    def setFrameRange(self, nmin, nmax):
+        self.startFrame = nmin
+        self.endFrame = nmax
+        self.spanFrame = nmax - nmin
 
 
