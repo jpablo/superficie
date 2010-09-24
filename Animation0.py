@@ -2,7 +2,7 @@
 
 from pivy.coin import SoOneShot, SoSFFloat, SoFieldSensor
 from PyQt4 import QtCore
-from superficie.util import conecta, GenIntervalo
+from superficie.util import conecta, GenIntervalo, connect
 
 ## This is probably obsoleted by QTimeLine
 
@@ -41,8 +41,9 @@ class Timer(QtCore.QTimer):
 
 
 class OneShot(QtCore.QObject):
-    def __init__(self, duration):
+    def __init__(self, duration, times):
         QtCore.QObject.__init__(self)
+        self.times = self.timesleft = times
         self.oneshot = SoOneShot()
         self.oneshot.duration = duration
         self.oneshot.flags = SoOneShot.HOLD_FINAL
@@ -53,6 +54,7 @@ class OneShot(QtCore.QObject):
         self.value.connectFrom(self.oneshot.ramp)
         self.sensor = SoFieldSensor(self.callback, self.value)
         self.sensor.attach(self.value)
+        connect(self, "finished()", self.cycle)
 
     def callback(self, ffloat, sensor):
         t = ffloat.getValue()
@@ -69,9 +71,17 @@ class OneShot(QtCore.QObject):
     def start(self):
         self.oneshot.trigger.touch()
 
+    def stop(self):
+        #self.oneshot.disable = True
+        self.timesleft = self.times
+
     def setFrameRange(self, nmin, nmax):
         self.startFrame = nmin
         self.endFrame = nmax
         self.spanFrame = nmax - nmin
 
+    def cycle(self):
+        self.timesleft -= 1
+        if self.timesleft > 0:
+            self.start()
 

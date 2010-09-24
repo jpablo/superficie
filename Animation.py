@@ -7,9 +7,9 @@ from superficie.Animation0 import OneShot
 #Animation(setNumVertices,(2000,0,npuntos))
 
 class Animation(OneShot):
-    def __init__(self,func,(duration, nmin, nmax)):
+    def __init__(self,func,(duration, nmin, nmax), times = 1):
         self.functions = [func]
-        super(Animation,self).__init__(duration / 1000.0)
+        super(Animation,self).__init__(duration / 1000.0, times)
 #        self.setCurveShape(self.LinearCurve)
         self.setFrameRange(nmin, nmax)
         connect(self, "frameChanged(int)", self.functions[-1])
@@ -66,7 +66,7 @@ class Animation(OneShot):
     def resetObjectForAnimation(self):
         self.stop()
         for fn in self.functions:
-            fn(self.startFrame())
+            fn(self.startFrame)
 
     def setDuration(self,msecs):
         self.oneshot.duration = msecs / 1000.0
