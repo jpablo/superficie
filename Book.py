@@ -39,7 +39,9 @@ class Book(QtCore.QObject):
         ## this dictionary contains the chapters python objects
         ## not only the SoSeparator
         self.chaptersObjects = nodeDict()
+        ## chapterStack has one widget (of controls) per chapter
         self.chaptersStack = QtGui.QStackedWidget()
+        self.notasStack = QtGui.QStackedWidget()
 
     def __len__(self):
         """The number of chapters"""
@@ -65,8 +67,8 @@ class Book(QtCore.QObject):
         self.chapters.addChild(chapter.root)
         ## ============================
         ## setup the UI
-        ui = chapter.getGui()
-        self.chaptersStack.addWidget(ui)
+        self.chaptersStack.addWidget(chapter.getGui())
+        self.notasStack.addWidget(chapter.getNotas())
         self.whichChapter = len(self.chapters) - 1
         #=======================================================================
         chapter.pageChanged.connect(self._pageChangedCB)
@@ -108,6 +110,7 @@ class Book(QtCore.QObject):
                 obAnterior.chapterSpecificOut()
         self.chapters.whichChild = n
         self.chaptersStack.setCurrentIndex(n)
+        self.notasStack.setCurrentIndex(n)
         chapterob = self.chapter
         if hasattr(chapterob, "chapterSpecificIn") and chapterChanged:
             chapterob.chapterSpecificIn()
@@ -134,10 +137,13 @@ class Chapter(QtCore.QObject):
 
         self.__pages = nodeDict()
         ## ============================
+        ## self.wiget has next, prev buttons, plus a QStackedWidget for holding per page controls
         self.widget = ChangePageUI()
         self.widget.setStyleSheet("QWidget { background:white }")
         connect(self.widget.siguiente, "clicked(bool)", self.nextPage)
         connect(self.widget.previa, "clicked(bool)", self.prevPage)
+        ## ============================
+        self.notasStack = QtGui.QStackedWidget()
         ## ============================
         ## the initial sate
         self.widget.previa.hide()
@@ -170,19 +176,30 @@ class Chapter(QtCore.QObject):
         self.pages[root] = page
         self.pagesSwitch.addChild(root)
         ## ============================
-        layout = QtGui.QVBoxLayout()
-        layout.setMargin(0)
-        layout.setSpacing(0)
+        guiLayout = QtGui.QVBoxLayout()
+        guiLayout.setMargin(0)
+        guiLayout.setSpacing(0)
         widget = QtGui.QWidget()
         widget.setObjectName("PageGui")
-        widget.setLayout(layout)
+        widget.setLayout(guiLayout)
         self.widget.pageStack.addWidget(widget)
         ## ============================
-        ## this sets both self.pagesSwitch and self.widget.pageStack
+        notasLayout = QtGui.QVBoxLayout()
+        notasLayout.setMargin(0)
+        notasLayout.setSpacing(0)
+        widget = QtGui.QWidget()
+        widget.setObjectName("PageNotas")
+        widget.setLayout(notasLayout)
+        self.notasStack.addWidget(widget)
+        ## ============================
+        ## this sets self.pagesSwitch, self.widget.pageStack, self.notasStack
         self.whichPage = len(self.pagesSwitch) - 1
         ## ============================
         if hasattr(page, "getGui"):
-            layout.addWidget(page.getGui())
+            guiLayout.addWidget(page.getGui())
+        ## ============================
+        if hasattr(page, "getNotas"):
+            notasLayout.addWidget(page.getNotas())
         ## ============================
         if len(self.pagesSwitch) == 2:
             self.widget.previa.show()
@@ -191,6 +208,9 @@ class Chapter(QtCore.QObject):
 
     def getGui(self):
         return self.widget
+
+    def getNotas(self):
+        return self.notasStack
 
     def chapterSpecificIn(self):
         "code to be executed whenever the chapter is displayed"
@@ -238,6 +258,7 @@ class Chapter(QtCore.QObject):
             self.pages[node].pre()
             self.pagesSwitch.whichChild = n
             self.widget.pageStack.setCurrentIndex(n)
+            self.notasStack.setCurrentIndex(n)
             self.pageChanged.emit(n)
             
     whichPage = property(getWhichPage, setWhichPage)
@@ -290,13 +311,28 @@ class Page(QtCore.QObject):
         self.widget = QtGui.QWidget()
         self.widget.setLayout(layout)
         if self.name != "":
-            layout.addWidget(QtGui.QLabel("<center><h1>%s</h1></center>" % self.name))
+            titulo = QtGui.QLabel("<center><h1>%s</h1></center>" % self.name)
+            titulo.setWordWrap(True)
+            layout.addWidget(titulo)
+            layout.addStretch()
+        ## ============================
+        layout = QtGui.QVBoxLayout()
+        self.notasWidget = QtGui.QWidget()
+        self.notasWidget.setLayout(layout)
+        notas = QtGui.QLabel(self.__doc__)
+        notas.setWordWrap(True)
+        notas.setTextFormat(QtCore.Qt.RichText)
+        layout.addWidget(notas)
+        layout.addStretch()
         ## ============================
         self.coordPlanes = {}
         self.setupAxis()
 
     def getGui(self):
         return self.widget
+
+    def getNotas(self):
+        return self.notasWidget
 
     def addWidget(self, widget):
         self.widget.layout().addWidget(widget)

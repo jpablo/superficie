@@ -568,12 +568,12 @@ class Curve3D(GraphicObject):
     """
     A curve in 3D. It is composed of one or several Lines
     """
-    def __init__(self, func, (tmin,tmax,npts), color=(1, 1, 1), width=1, nvertices= -1, visible=True, parent=None, domTrans=None):
+    def __init__(self, func, iter, color=(1, 1, 1), width=1, nvertices= -1, visible=True, parent=None, domTrans=None):
         GraphicObject.__init__(self, visible, parent)
         self.__derivative = None
         self.fields = {}
         self.lines = []
-        self.iter = (tmin,tmax,npts)
+        self.iter = iter
         c = lambda t: Vec3(func(t))
         ## ============================
         if domTrans:

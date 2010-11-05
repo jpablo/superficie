@@ -36,11 +36,10 @@ TransparencyType = [
 
 
 class Viewer(QWidget):
-    "Viewer"
     
-    def __init__(self, parent=None, uiLayout=None, luces=True):
-        QWidget.__init__(self, parent)
-        globals.ViewerInstances.append(self) #@UndefinedVariable
+    def __init__(self, parent=None, uiLayout=None, notasLayout=None, luces=True):
+        super(Viewer, self).__init__(parent)
+        globals.ViewerInstances.append(self)
         self.book = Book()
         #=======================================================================
         # Copiamos algunos atributos de book
@@ -49,9 +48,10 @@ class Viewer(QWidget):
         self.createChapter = self.book.createChapter
         self.addChapter = self.book.addChapter
         self.chaptersStack = self.book.chaptersStack
+        self.notasStack = self.book.notasStack
         #=======================================================================
         self.initializeViewer(luces)
-        self.initializeUI(uiLayout)
+        self.initializeUI(uiLayout,notasLayout)
         #=======================================================================
         self.book.pageChanged.connect(self.onPageChanged)
         self.book.chapterChanged.connect(self.onChapterChanged)
@@ -177,10 +177,11 @@ class Viewer(QWidget):
         self.root.addChild(hints)
 
 
-    def initializeUI(self, uilayout):
-#        self.chaptersStack = QtGui.QStackedWidget()
+    def initializeUI(self, uilayout,notasLayout):
         if uilayout:
             uilayout.addWidget(self.chaptersStack)
+        if notasLayout:
+            notasLayout.addWidget(self.notasStack)
 
     @QtCore.pyqtSignature("bool")
     def on_axisButton_clicked(self, b):
