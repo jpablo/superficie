@@ -390,6 +390,12 @@ class Arrow(GraphicObject):
         zt = Vec3(0, t, 0)
         ejeRot = zt.cross(vec)
         ang = acos(zt.dot(vec) / t ** 2)
+        arg = zt.dot(vec) / t ** 2
+        if arg > 1.0:
+            arg = 1.0
+        elif arg < -1.0:
+            arg = -1.0
+        ang = acos(arg)
         if ejeRot.length() < .0001:
             ejeRot = Vec3(1, 0, 0)
         self.tr2.rotation.setValue(ejeRot, ang)
