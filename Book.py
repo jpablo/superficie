@@ -366,6 +366,10 @@ class Page(QtCore.QObject):
         self.coordPlanes["xz"] = BasePlane(plane="xz", parent=self)
         self.coordPlanes["yz"] = BasePlane(plane="yz", parent=self)
 
+        self.coordPlanes["xy"].setDiffuseColor((1,1,0))
+        self.coordPlanes["xz"].setDiffuseColor((1,0,1))
+        self.coordPlanes["yz"].setDiffuseColor((0,1,1))
+
         for p in self.coordPlanes.values():
             p.setRange(r0)
             p.setHeight(r0[0])
@@ -381,11 +385,11 @@ class Page(QtCore.QObject):
     
     def setupAxis(self):
         self.axis_x = Arrow(Vec3(-5, 0, 0), Vec3(5, 0, 0), parent=self)
-        self.axis_x.setDiffuseColor((1, 0, 0))
+        self.axis_x.setDiffuseColor((1, 0, 0)).setWidthFactor(.2)
         self.axis_y = Arrow(Vec3(0, -5, 0), Vec3(0, 5, 0), parent=self)
-        self.axis_y.setDiffuseColor((0, 1, 0))
+        self.axis_y.setDiffuseColor((0, 1, 0)).setWidthFactor(.2)
         self.axis_z = Arrow(Vec3(0, 0, -5), Vec3(0, 0, 5), parent=self)
-        self.axis_z.setDiffuseColor((0, 0, 1))
+        self.axis_z.setDiffuseColor((0, 0, 1)).setWidthFactor(.2)
 
 
     def setupAnimations(self, objects):

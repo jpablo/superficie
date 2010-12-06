@@ -20,7 +20,7 @@ import itertools
 
 from util import  conecta, intervalPartition, Range, malla, wrap, Vec3,\
     make_hideable
-from base import GraphicObject
+from base import GraphicObject, fluid
 from gui import Slider
 from Equation import createVars
 from VariousObjects import Arrow
@@ -205,18 +205,21 @@ class Mesh(GraphicObject):
         for quad in self.quads.values():
             quad.addVectorField(func)
 
+    @fluid
     def setMeshVisible(self, visible):
         for quad in self.quads.values():
             quad.mesh.visible = visible
             
     meshVisible = property(fset=setMeshVisible)
 
+    @fluid
     def setLinesVisible(self, visible):
         for quad in self.quads.values():
             quad.linesVisible = visible
             
     linesVisible = property(fset=setLinesVisible)
 
+    @fluid
     def setMeshDiffuseColor(self,val):
         for quad in self.quads.values():
             quad.lineColor.diffuseColor = val
@@ -249,8 +252,10 @@ class Mesh(GraphicObject):
         ## ============================
         d = self.getParametersValues()
         quad.function.updateGlobals(d)
-        ## test the return value
-        val = quad.function(1, 1)
+        ## test the return value with valid values
+        xini = self.rangeX[0]
+        yini = self.rangeY[0]
+        val = quad.function(xini,yini)
         self.checkReturnValue(quad.function, val)
         ## ============================
         self.quads[quad.function] = quad

@@ -2,9 +2,10 @@
 
 from PyQt4 import QtCore
 from superficie.util import connect
-from superficie.Animation0 import OneShot
+from superficie.util import tuplize
 
 #Animation(setNumVertices,(2000,0,npuntos))
+from superficie.Animation0 import OneShot
 
 class Animation(OneShot):
     def __init__(self,func,(duration, nmin, nmax), times = 1):
@@ -53,8 +54,9 @@ class Animation(OneShot):
         return self
 
     def onStart(self, func):
-#        connect(self, "stateChanged(QTimeLine::State)", lambda state: func() if state == 2 else None)
-        connect(self, "started()", func)
+        "Executes func at the same time that this animation"
+        for f in tuplize(func):
+            connect(self, "started()", f)
         return self
 
     def wait(self, miliseconds):

@@ -7,6 +7,8 @@ from PyQt4 import QtCore
 from random import random
 import os
 from os.path import join
+import collections
+
 import util
 modulosPath = os.path.dirname(util.__file__)
 
@@ -442,6 +444,12 @@ def fn(strfunc):
 def manipulate(*args,**kwargs):
     print args
     print kwargs
+
+
+
+def tuplize(arg):
+    "returns arg if it is already a sequence, (arg,) otherwise"
+    return arg if isinstance(arg,collections.Sequence) else (arg,)
 
 if __name__ == "__main__":
     from PyQt4 import QtGui, QtCore

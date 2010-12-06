@@ -2,7 +2,7 @@ from pivy.coin import *
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 from superficie.util import wrap, malla2
-from math import acos, pi
+from math import acos, pi, sqrt
 from collections import Sequence
 
 from superficie.util import intervalPartition, Vec3, segment
@@ -373,6 +373,7 @@ class Arrow(GraphicObject):
         ## ============================
         self.calcTransformation()
         #self.cono.height = self.cil.height.getValue() * .2
+        self.setWidthFactor(.1)
         self.addChild(sep)
 
     def calcTransformation(self):
@@ -381,9 +382,7 @@ class Arrow(GraphicObject):
         t = vec.length() if vec.length() != 0 else .00001
         self.tr1.translation = (0, t / 2.0, 0)
         self.conoTr.translation = (0, t / 2.0, 0)
-        self.setRadius(self.escala * self.widthFactor)
-        self.cil.height = t
-        self.cono.height = self.cil.height.getValue() * .2
+        self.cil.height = t ##?
         self.tr2.translation = self.p1
         if self.base:
             self.base.setOrigin(self.p1)
@@ -403,7 +402,12 @@ class Arrow(GraphicObject):
     @fluid
     def setRadius(self, r):
         self.cil.radius = r
-        self.esfera.radius = r * 1.5
+        rr = r * 1.5
+        self.esfera.radius = rr
+        self.cono.bottomRadius = rr
+        self.cono.height = 3*sqrt(3)*r
+        coneHeight = self.cono.height.getValue()
+        self.cil.height = self.cil.height.getValue() - coneHeight /2.0
 
     @fluid
     def setPoints(self, p1, p2):
@@ -425,9 +429,8 @@ class Arrow(GraphicObject):
     @fluid
     def setWidthFactor(self, factor):
         self.widthFactor = factor
-        self.setRadius(self.cil.radius.getValue() * factor)
-        self.cono.bottomRadius = self.cono.bottomRadius.getValue() * factor
-        self.esfera.radius *= factor 
+        r = self.cil.radius.getValue() * factor
+        self.setRadius(r)
 
 
 class Line(GraphicObject):
