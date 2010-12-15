@@ -376,6 +376,7 @@ class Arrow(GraphicObject):
         self.setWidthFactor(.1)
         self.addChild(sep)
 
+
     def calcTransformation(self):
         scaledP2 = segment(self.p1, self.p2inicial, self.lengthFactor)
         vec = scaledP2 - self.p1
@@ -386,15 +387,20 @@ class Arrow(GraphicObject):
         self.tr2.translation = self.p1
         if self.base:
             self.base.setOrigin(self.p1)
+
+        ## TODO: pasar a util
+        def ajustaArg(arg):
+            if arg > 1.0:
+                return 1.0
+            elif arg < -1.0:
+                return -1.0
+            return arg
+
         zt = Vec3(0, t, 0)
         ejeRot = zt.cross(vec)
-        ang = acos(zt.dot(vec) / t ** 2)
+        ang = acos(ajustaArg(zt.dot(vec) / t ** 2))
         arg = zt.dot(vec) / t ** 2
-        if arg > 1.0:
-            arg = 1.0
-        elif arg < -1.0:
-            arg = -1.0
-        ang = acos(arg)
+        ang = acos(ajustaArg(arg))
         if ejeRot.length() < .0001:
             ejeRot = Vec3(1, 0, 0)
         self.tr2.rotation.setValue(ejeRot, ang)
