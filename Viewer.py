@@ -178,9 +178,9 @@ class Viewer(QWidget):
 
 
     def initializeUI(self, uilayout,notasLayout):
-        if uilayout:
+        if uilayout is not None:
             uilayout.addWidget(self.chaptersStack)
-        if notasLayout:
+        if notasLayout is not None:
             notasLayout.addWidget(self.notasStack)
 
     @QtCore.pyqtSignature("bool")
