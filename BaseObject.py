@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
+from pivy.coin import SoWriteAction, SoSwitch, SoSeparator, SoTranslation, SoMaterial, SoTransparencyType, SoDrawStyle, SoSFPlane, SbPlane, SoClipPlane, SO_SWITCH_ALL, SO_SWITCH_NONE
+
 __author__ = "jpablo"
 __date__ = "$18/05/2009 12:47:43 AM$"
-
-from PyQt4 import QtCore
-from pivy.coin import *
-from superficie.util import nodeDict
 
 
 def fluid(method):
@@ -13,61 +11,32 @@ def fluid(method):
         return self
     return func
 
-class GraphicObject(SoSwitch):
-    '''
-    The base clase of all container graphics classes
-    '''
-    def __init__(self, visible=False, parent=None, viewer=None):
-        SoSwitch.__init__(self)
-        self.qobject = QtCore.QObject()
-        self.parent = parent
-        self.children = nodeDict()
-        ## this permits get at children by position
-        self.childrenList = []
-        self.setVisible(visible)
-        ## ============================
-        self.separator = SoSeparator()
-#        SoSwitch.addChild(self,self.separator)
-        super(SoSwitch, self).addChild(self.separator)
-        ## ============================
+class BaseObject(object):
+    'Common functionality for all graphic objects'
+
+    def __init__(self, name=''):
+        self.animation  = None
+        self.switch     = SoSwitch()
+        self.root       = SoSeparator()
+        self.drawStyle  = SoDrawStyle()
         self.translation = SoTranslation()
+
+        self.switch.setName(name)
         self.translation.translation = (0, 0, 0)
-        self.separator.addChild(self.translation)
-        self.animation = None
-        ## ============================
-        self.material = SoMaterial()
-        self.transType = SoTransparencyType()
-        self.separator.addChild(self.material)
-        self.separator.addChild(self.transType)
-        ## ============================
-        self.drawStyle = SoDrawStyle()
-        self.separator.addChild(self.drawStyle)
-        ## ============================
-        if parent:
-            parent.addChild(self)
 
-    def __getitem__(self, key):
-        return self.childrenList[key]
-
-    def addChild(self, node):
-        root = getattr(node, "root", node)
-        self.separator.addChild(root)
-        self.children[root] = node
-        self.childrenList.append(node)
-        return node
-
-    def getChildren(self):
-        return self.children.values()
+        self.switch.addChild(self.root)
+        self.root.addChild(self.drawStyle)
+        self.root.addChild(self.translation)
 
     @fluid
     def show(self):
         self.setVisible(True)
-    
-    @fluid    
+
+    @fluid
     def hide(self):
         self.setVisible(False)
-        
-    @fluid    
+
+    @fluid
     def setBoundingBox(self, xrange=None, yrange=None, zrange=None):
         '''
         @param xrange: 2-tuple
@@ -84,22 +53,22 @@ class GraphicObject(SoSwitch):
             self.clipPlaneXZ2 = SoClipPlane()
             self.clipPlaneXZ1.plane = createPlane(SbVec3f(0, 1, 0), SbVec3f(0, yrange[0], 0))
             self.clipPlaneXZ2.plane = createPlane(SbVec3f(0, -1, 0), SbVec3f(0, yrange[1], 0))
-            self.separator.insertChild(self.clipPlaneXZ1, 0)
-            self.separator.insertChild(self.clipPlaneXZ2, 1)
+            self.root.insertChild(self.clipPlaneXZ1, 0)
+            self.root.insertChild(self.clipPlaneXZ2, 1)
         if xrange is not None:
             self.clipPlaneYZ1 = SoClipPlane()
             self.clipPlaneYZ2 = SoClipPlane()
             self.clipPlaneYZ1.plane = createPlane(SbVec3f(1, 0, 0), SbVec3f(xrange[0], 0, 0))
             self.clipPlaneYZ2.plane = createPlane(SbVec3f(-1, 0, 0), SbVec3f(xrange[1], 0, 0))
-            self.separator.insertChild(self.clipPlaneYZ1, 2)    
-            self.separator.insertChild(self.clipPlaneYZ2, 3)    
+            self.root.insertChild(self.clipPlaneYZ1, 2)
+            self.root.insertChild(self.clipPlaneYZ2, 3)
         if zrange is not None:
             self.clipPlaneXY1 = SoClipPlane()
             self.clipPlaneXY2 = SoClipPlane()
             self.clipPlaneXY1.plane = createPlane(SbVec3f(0, 0, 1), SbVec3f(0, 0, zrange[0]))
             self.clipPlaneXY2.plane = createPlane(SbVec3f(0, 0, -1), SbVec3f(0, 0, zrange[1]))
-            self.separator.insertChild(self.clipPlaneXY1, 4)    
-            self.separator.insertChild(self.clipPlaneXY2, 5)
+            self.root.insertChild(self.clipPlaneXY1, 4)
+            self.root.insertChild(self.clipPlaneXY2, 5)
 
     @fluid
     def setDrawStyle(self, style):
@@ -108,23 +77,23 @@ class GraphicObject(SoSwitch):
     @fluid
     def setVisible(self, visible):
         if visible:
-            self.whichChild = SO_SWITCH_ALL
+            self.switch.whichChild = SO_SWITCH_ALL
         else:
-            self.whichChild = SO_SWITCH_NONE
+            self.switch.whichChild = SO_SWITCH_NONE
 
     def getVisible(self):
-        if self.whichChild.getValue() == SO_SWITCH_ALL:
+        if self.switch.whichChild.getValue() == SO_SWITCH_ALL:
             return True
-        elif self.whichChild.getValue() == SO_SWITCH_NONE:
+        elif self.switch.whichChild.getValue() == SO_SWITCH_NONE:
             return False
 
     visible = property(fget=getVisible, fset=setVisible)
 
     @fluid
     def setOrigin(self, pos):
-        """"""
+        ''
         self.translation.translation = pos
-        
+
     def getOrigin(self):
         return self.translation.translation.getValue()
 
@@ -135,15 +104,28 @@ class GraphicObject(SoSwitch):
 
     def resetObjectForAnimation(self):
         pass
-    
-    @fluid
-    def setColor(self, val):
-        self.setDiffuseColor(val)
-        self.setEmissiveColor(val)
-        self.setAmbientColor(val)
-        self.setSpecularColor(val)
-    
-    color = property(fset=setColor)
+
+
+
+    def toText(self):
+        'obtains the openinventor format representation'
+        wa = SoWriteAction()
+        return wa.apply(self.switch)
+
+
+
+
+class MaterialMixin(object):
+    'Material related functions'
+
+    def __init__(self):
+        self.material   = SoMaterial()
+        self.transparencyType = SoTransparencyType()
+
+        ## self.root is assumed here!
+        self.root.addChild(self.material)
+        self.root.addChild(self.transparencyType)
+
 
     @fluid
     def setTransparency(self, val):
@@ -157,14 +139,17 @@ class GraphicObject(SoSwitch):
     @fluid
     def setEmissiveColor(self, val):
         self.material.emissiveColor.setValue(val)
-        
+
     emissiveColor = property(fset=setEmissiveColor)
 
     @fluid
     def setDiffuseColor(self, val):
         self.material.diffuseColor.setValue(val)
-        
-    diffuseColor = property(fset=setDiffuseColor)
+
+    def getDiffuseColor(self):
+        return self.material.diffuseColor
+    
+    diffuseColor = property(getDiffuseColor,setDiffuseColor)
 
     @fluid
     def setAmbientColor(self, val):
@@ -180,13 +165,28 @@ class GraphicObject(SoSwitch):
 
     @fluid
     def setTransparencyType(self, trans):
-        self.transType.value = trans
-        
-    def toText(self):
-        wa = SoWriteAction()
-        return wa.apply(self)
+        self.transparencyType.value = trans
 
+    @fluid
+    def setColor(self, val):
+        'set diffuse, emissive, ambient and specular properties at once'
+        self.setDiffuseColor(val)
+        self.setEmissiveColor(val)
+        self.setAmbientColor(val)
+        self.setSpecularColor(val)
+
+    color = property(fset=setColor)
+
+
+class GraphicObject(BaseObject, MaterialMixin):
+    'The base object + material managment'
+
+    def __init__(self, name=''):
+        super(GraphicObject, self).__init__(name)
+        MaterialMixin.__init__(self)
 
 
 if __name__ == "__main__":
-    print "Hello";
+    ob = GraphicObject("objeto")
+    ob.show()
+    print ob.toText()

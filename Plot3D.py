@@ -20,10 +20,10 @@ import itertools
 
 from util import  conecta, intervalPartition, Range, malla, wrap, Vec3,\
     make_hideable
-from base import GraphicObject, fluid
+from BaseObject import GraphicObject, fluid
 from gui import Slider
 from Equation import createVars
-from VariousObjects import Arrow
+from Objects import Arrow
 from FreeVariableFunction import FreeVariableFunction
 
 import logging
@@ -435,42 +435,32 @@ if __name__ == "__main__":
     # Mesh
     #===========================================================================
     # Mesh needs visible=True, unlike the rest of the clases
-#    viewer.chapter.createPage()
+
     
     m = Mesh((-1, 1, 20), (-1, 1, 20), name="mesh", visible=True)
     m.addQuad(lambda x, y:(x,y,   u*x**2 - v*y**2)) #@UndefinedVariable
     m.addQuad(lambda x, y:(x,y, - sin(x)**2 - y**2))
-#    viewer.page.addChild(m)
+
     #===========================================================================
     # ParametricPlot3D
     #===========================================================================
-#    viewer.chapter.createPage()
-    pp = ParametricPlot3D(lambda x,y:(x,y, a*x**2 + b*y**2),(-1,1),(-1,1),name="pp") #@UndefinedVariable
-#
+    pp = ParametricPlot3D(lambda x,y:(x,y, a*x**2 + b*y**2),(-1,1),(-1,1),name="pp")
+
     for t in intervalPartition((0, 3, 4)):
-        pp.addQuad(lambda x,y,t=t:(x,y, x**2 + b*y**2 + t)) #@UndefinedVariable
+        pp.addQuad(lambda x,y,t=t:(x,y, x**2 + b*y**2 + t))
 
     pp.setRange("a", (-1, 1, 0))
     pp.setRange("b", (-1, 1, 0))
-#    viewer.page.addChild(pp)
+
     #===========================================================================
     # Plot3D
     #===========================================================================
-#    viewer.chapter.createPage()
-    Plot3D(lambda x,y: h*(x**2+y**2+z),(-1,1),(-1,1), name="p2") #@UndefinedVariable
-#    viewer.page.addChild(p2)
+    Plot3D(lambda x,y: h*(x**2+y**2+z),(-1,1),(-1,1), name="p2")
     #===========================================================================
     # RevolutionPlot3D
     #===========================================================================
-#    viewer.chapter.createPage()
     RevolutionPlot3D(lambda r,t: 1/r ,(.2,1),(.1,2*pi), name="p3")
-#    r, t = createVars(["r", "t"])
-#    p3.addEqn(t == r**2)
-#    viewer.page.addChild(p3)
     ## ============================
-#    viewer.lucesBlanca.on = False
-#    viewer.lucesColor.whichChild = SO_SWITCH_ALL
-    ## ============================    
     viewer.whichPage = 0
     viewer.resize(400, 400)
     viewer.show()
