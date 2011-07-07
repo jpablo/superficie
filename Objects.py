@@ -1,13 +1,14 @@
 from pivy.coin import *
 from PyQt4 import QtCore
 from PyQt4 import QtGui
+
 from superficie.util import wrap, malla2
 from math import acos, pi, sqrt
 from collections import Sequence
 
 from util import intervalPartition, Vec3, segment
 from util import Range
-from BaseObject import GraphicObject, fluid
+from BaseObject import GraphicObject, fluid, CompositeObject, BaseObject
 from superficie.Animation import Animation
 from util import make_hideable, _1
 
@@ -26,7 +27,7 @@ def generaPuntos(coords):
 
 
 class Points(GraphicObject):
-    'A collection of points'
+    """A collection of points"""
 
     def __init__(self, coords=[], colors=[(1, 1, 1)], name='', file=''):
         super(Points, self).__init__(name)
@@ -36,12 +37,11 @@ class Points(GraphicObject):
         ## ===============================
         self.materialBinding = SoMaterialBinding()
         self.coordinate = SoCoordinate3()
-
         self.materialBinding.value = SoMaterialBinding.PER_VERTEX
         ## ===============================
-        self.root.addChild(self.materialBinding)
-        self.root.addChild(self.coordinate)
-        self.root.addChild(SoPointSet())
+        self.separator.addChild(self.materialBinding)
+        self.separator.addChild(self.coordinate)
+        self.separator.addChild(SoPointSet())
         ## ===============================
         self.setCoords(coords)
         self.setColors(colors)
@@ -131,23 +131,20 @@ class Polygon(GraphicObject):
         coor = SoCoordinate3()
         coor.point.setValues(0, len(self.coords), self.coords)
         
-        self.root.addChild(coor)
+        self.separator.addChild(coor)
 
 
-############ portar ##########33
-#class Point(Points):
-#    def __init__(self, coords, color=(1, 1, 1)):
-#        ## coords is a triple (x,y,z)
-#        Points.__init__(self, [coords], [color])
-#
-### examples:
-### ps = Points([(0,0,0),(1,1,1),(2,2,2)])
-### ps.setPointSize(1)
-### ps.setHSVColors([(.5,1,1),(.6,1,1),(.9,1,1)])
-#
-#
-#    ## ---------------------------------- CILINDRO ----------------------------------- ##
-#
+############ portar ##########
+class Point(Points):
+    def __init__(self, coords, color=(1, 1, 1)):
+        ## coords is a triple (x,y,z)
+        Points.__init__(self, [coords], [color])
+
+## examples:
+## ps = Points([(0,0,0),(1,1,1),(2,2,2)])
+## ps.setPointSize(1)
+## ps.setHSVColors([(.5,1,1),(.6,1,1),(.9,1,1)])
+
 #def Cylinder(col, length, radius = 0.98):
 #    sep = SoSeparator()
 #
@@ -205,215 +202,137 @@ class Polygon(GraphicObject):
 #
 #
 #
-#class Sphere(BaseObject):
-#    def __init__(self, center, radius=.05, color=(1, 1, 1), visible=False, parent=None):
-#        BaseObject.__init__(self, visible, parent)
-#        self.sp = SoSphere()
-#        self.sp.radius = radius
-##        ## ===================
-#        self.addChild(self.sp)
-#        self.origin = center
-#        self.color = color
-#
-#    def radius(): #@NoSelf
-#        def fget(self):
-#            return self.sp.radius.getValue()
-#        def fset(self, radius):
-#            self.sp.radius = radius
-#        return locals()
-#    radius = property(**radius())
-#
-#
-#class Tube(object):
-#    def __init__(self, p1, p2, escala=0.01, escalaVertice=2.0, mat=None, extremos=False):
-#        self.p1 = p1
-#        self.p2inicial = self.p2 = p2
-#        self.escala = 0.01
-#        self.escalaVertice = escalaVertice
-#        ## ============================
-#        sep = SoSeparator()
-#        sep.setName("Tube")
-#        if extremos:
-#            sep.addChild(Sphere(p1, escala * escalaVertice))
-#            #~ sep.addChild(esfera(p2, escala*escalaVertice))
-#        self.tr1 = SoTransform()
-#        self.tr2 = SoTransform()
-#        if mat == None:
-#            mat = SoMaterial()
-#            mat.ambientColor.setValue(.0, .0, .0)
-#            mat.diffuseColor.setValue(.4, .4, .4)
-#            mat.specularColor.setValue(.8, .8, .8)
-#            mat.shininess = .1
-#        self.cil = wrap(SoCylinder())
-#        self.cil.setName("segmento")
-#        ## ==========================
-#        conoSep = SoSeparator()
-#        self.conoTr = SoTransform()
-#        cono = SoCone()
-#        cono.bottomRadius = .025
-#        cono.height = .1
-#        mat2 = SoMaterial()
-#        mat2.ambientColor.setValue(.33, .22, .27)
-#        mat2.diffuseColor.setValue(.78, .57, .11)
-#        mat2.specularColor.setValue(.99, .94, .81)
-#        mat2.shininess = .28
-#        conoSep.addChild(mat2)
-#        conoSep.addChild(self.conoTr)
-#        conoSep.addChild(cono)
-#        ## ==========================
-#        sep.addChild(self.tr2)
-#        sep.addChild(self.tr1)
-#        sep.addChild(mat)
-#        sep.addChild(self.cil)
-#        sep.addChild(conoSep)
-#        ## ============================
-#        self.calcTransformation()
-#        self.root = sep
-#
-#    def calcTransformation(self):
-#        vec = self.p2 - self.p1
-#        t = vec.length() if vec.length() != 0 else .00001
-#        self.tr1.translation = (0, t / 2.0, 0)
-#        self.conoTr.translation = (0, t / 2.0, 0)
-#        self.cil[0].radius = self.escala
-#        self.cil[0].height = t
-#        self.tr2.translation = self.p1
-#        zt = Vec3(0, t, 0)
-#        ejeRot = zt.cross(vec)
-#        ang = acos(zt.dot(vec) / t ** 2)
-#        if ejeRot.length() < .0001:
-#            ejeRot = Vec3(1, 0, 0)
-#        self.tr2.rotation.setValue(ejeRot, ang)
-#
-#    def setRadius(self, r):
-#        self.cil[0].radius = r
-#
-#    def setPoints(self, p1, p2):
-#        """Documentation"""
-#        self.p1 = p1
-#        self.p2 = p2
-#        self.calcTransformation()
-#
-#    def setP2(self, pt):
-#        self.p2 = pt
-#        self.calcTransformation()
-#
-#    def setLengthFactor(self, factor):
-#        self.lengthFactor = factor
-#        self.setP2(segment(self.p1, self.p2inicial, factor))
-#
-#
-#class Arrow(BaseObject):
-#    def __init__(self, p1, p2, escala=0.01, escalaVertice=2.0, extremos=True, visible=False, parent=None):
-#        "p1,p2: Vec3"
-#        super(Arrow,self).__init__(visible,parent)
-#        self.base = None
-#        self.p1 = p1
-#        self.p2inicial = self.p2 = p2
-#        self.escala = escala
-#        self.escalaVertice = escalaVertice
-#        self.lengthFactor = 1
-#        self.widthFactor = 1
-#        ## ============================
-#        sep = SoSeparator()
-#        sep.setName("Tube")
-#        if extremos:
-#            self.esfera = Sphere(p1, escala * escalaVertice, visible=True)
-#            self.base = self.addChild(self.esfera)
-#        self.tr1 = SoTransform()
-#        self.tr2 = SoTransform()
-#
-#        self.setAmbientColor((.0, .0, .0))
-#        self.setDiffuseColor((.4, .4, .4))
-#        self.setSpecularColor((.8, .8, .8))
-#        self.setShininess(.1)
-#        self.cil = make_hideable(SoCylinder())
-#        self.cil.setName("segmento")
-#        ## ==========================
-#        conoSep = SoSeparator()
-#        self.conoTr = SoTransform()
-#        self.cono = SoCone()
-#        self.cono.bottomRadius = self.escala * 2
-#        self.matHead = SoMaterial()
-#        self.matHead.ambientColor = (.33, .22, .27)
-#        self.matHead.diffuseColor = (.78, .57, .11)
-#        self.matHead.specularColor = (.99, .94, .81)
-#        self.matHead.shininess = .28
-#        conoSep.addChild(self.matHead)
-#        conoSep.addChild(self.conoTr)
-#        conoSep.addChild(self.cono)
-#        ## ==========================
-#        sep.addChild(self.tr2)
-#        sep.addChild(self.tr1)
-#        sep.addChild(self.cil.parent_switch)
-#        sep.addChild(conoSep)
-#        ## ============================
-#        self.calcTransformation()
-#        #self.cono.height = self.cil.height.getValue() * .2
-#        self.setWidthFactor(.1)
-#        self.addChild(sep)
-#
-#
-#    def calcTransformation(self):
-#        scaledP2 = segment(self.p1, self.p2inicial, self.lengthFactor)
-#        vec = scaledP2 - self.p1
-#        t = vec.length() if vec.length() != 0 else .00001
-#        self.tr1.translation = (0, t / 2.0, 0)
-#        self.conoTr.translation = (0, t / 2.0, 0)
-#        self.cil.height = t ##?
-#        self.tr2.translation = self.p1
-#        if self.base:
-#            self.base.setOrigin(self.p1)
-#
-#        ## TODO: pasar a util
-#        def ajustaArg(arg):
-#            if arg > 1.0:
-#                return 1.0
-#            elif arg < -1.0:
-#                return -1.0
-#            return arg
-#
-#        zt = Vec3(0, t, 0)
-#        ejeRot = zt.cross(vec)
-#        ang = acos(ajustaArg(zt.dot(vec) / t ** 2))
-#        arg = zt.dot(vec) / t ** 2
-#        ang = acos(ajustaArg(arg))
-#        if ejeRot.length() < .0001:
-#            ejeRot = Vec3(1, 0, 0)
-#        self.tr2.rotation.setValue(ejeRot, ang)
-#
-#    @fluid
-#    def setRadius(self, r):
-#        self.cil.radius = r
-#        rr = r * 1.5
-#        self.esfera.radius = rr
-#        self.cono.bottomRadius = rr
-#        self.cono.height = 3*sqrt(3)*r
-#        coneHeight = self.cono.height.getValue()
-#        self.cil.height = self.cil.height.getValue() - coneHeight /2.0
-#
-#    @fluid
-#    def setPoints(self, p1, p2):
-#        "p1, p2: Vec3d"
-#        self.p1 = p1
-#        self.p2inicial = self.p2 = p2
-#        self.calcTransformation()
-#
-#    @fluid
-#    def setP2(self, pt):
-#        self.p2 = pt
-#        self.calcTransformation()
-#
-#    @fluid
-#    def setLengthFactor(self, factor):
-#        self.lengthFactor = factor
-#        self.calcTransformation()
-#
-#    @fluid
-#    def setWidthFactor(self, factor):
-#        self.widthFactor = factor
-#        r = self.cil.radius.getValue() * factor
-#        self.setRadius(r)
+
+class Sphere(GraphicObject):
+
+    def __init__(self, center, radius=.05, color=(1, 1, 1), name=''):
+        super(Sphere).__init__(self, name)
+        self.sp = SoSphere()
+        self.sp.radius = radius
+#        ## ===================
+        self.addChild(self.sp)
+        self.origin = center
+        self.color = color
+
+    def getRadius(self):
+        return self.sp.radius.getValue()
+
+    def setRadius(self, radius):
+        self.sp.radius = radius
+
+    radius = property(getRadius, setRadius)
+    
+
+class Arrow(CompositeObject):
+    def __init__(self, p1, p2, scale=0.01, escalaVertice=2.0):
+        """p1,p2: Vec3"""
+        super(Arrow,self).__init__(name)
+        self.base = None
+        self.p1 = p1
+        self.p2initial = self.p2 = p2
+        self.scale = scale
+        self.escalaVertice = escalaVertice
+        self.lengthFactor = 1
+        self.widthFactor = 1
+        ## ============================
+        sep = SoSeparator()
+        sep.setName("Tube")
+        self.sphere = Sphere(p1, scale * escalaVertice)
+        self.base = self.addChild(self.sphere)
+        self.tr1 = SoTransform()
+        self.tr2 = SoTransform()
+
+        self.setAmbientColor((.0, .0, .0))
+        self.setDiffuseColor((.4, .4, .4))
+        self.setSpecularColor((.8, .8, .8))
+        self.setShininess(.1)
+        self.cil = make_hideable(SoCylinder())
+        self.cil.setName("segmento")
+        ## ==========================
+        conoSep = SoSeparator()
+        self.conoTr = SoTransform()
+        self.cono = SoCone()
+        self.cono.bottomRadius = self.scale * 2
+        self.matHead = SoMaterial()
+        self.matHead.ambientColor = (.33, .22, .27)
+        self.matHead.diffuseColor = (.78, .57, .11)
+        self.matHead.specularColor = (.99, .94, .81)
+        self.matHead.shininess = .28
+        conoSep.addChild(self.matHead)
+        conoSep.addChild(self.conoTr)
+        conoSep.addChild(self.cono)
+        ## ==========================
+        sep.addChild(self.tr2)
+        sep.addChild(self.tr1)
+        sep.addChild(self.cil.parent_switch)
+        sep.addChild(conoSep)
+        ## ============================
+        self.calcTransformation()
+        #self.cono.height = self.cil.height.getValue() * .2
+        self.setWidthFactor(.1)
+        self.addChild(sep)
+
+
+    def calcTransformation(self):
+        scaledP2 = segment(self.p1, self.p2initial, self.lengthFactor)
+        vec = scaledP2 - self.p1
+        t = vec.length() if vec.length() != 0 else .00001
+        self.tr1.translation = (0, t / 2.0, 0)
+        self.conoTr.translation = (0, t / 2.0, 0)
+        self.cil.height = t ##?
+        self.tr2.translation = self.p1
+        if self.base:
+            self.base.setOrigin(self.p1)
+
+        ## TODO: pasar a util
+        def ajustaArg(arg):
+            if arg > 1.0:
+                return 1.0
+            elif arg < -1.0:
+                return -1.0
+            return arg
+
+        zt = Vec3(0, t, 0)
+        ejeRot = zt.cross(vec)
+        ang = acos(ajustaArg(zt.dot(vec) / t ** 2))
+        arg = zt.dot(vec) / t ** 2
+        ang = acos(ajustaArg(arg))
+        if ejeRot.length() < .0001:
+            ejeRot = Vec3(1, 0, 0)
+        self.tr2.rotation.setValue(ejeRot, ang)
+
+    @fluid
+    def setRadius(self, r):
+        self.cil.radius = r
+        rr = r * 1.5
+        self.sphere.radius = rr
+        self.cono.bottomRadius = rr
+        self.cono.height = 3*sqrt(3)*r
+        coneHeight = self.cono.height.getValue()
+        self.cil.height = self.cil.height.getValue() - coneHeight /2.0
+
+    @fluid
+    def setPoints(self, p1, p2):
+        "p1, p2: Vec3d"
+        self.p1 = p1
+        self.p2inicial = self.p2 = p2
+        self.calcTransformation()
+
+    @fluid
+    def setP2(self, pt):
+        self.p2 = pt
+        self.calcTransformation()
+
+    @fluid
+    def setLengthFactor(self, factor):
+        self.lengthFactor = factor
+        self.calcTransformation()
+
+    @fluid
+    def setWidthFactor(self, factor):
+        self.widthFactor = factor
+        r = self.cil.radius.getValue() * factor
+        self.setRadius(r)
 #
 #
 #class Line(BaseObject):
@@ -925,58 +844,56 @@ class Polygon(GraphicObject):
 #        self.r0 = r0
 #        self.baseplane.setRange(self.r0)
 #
-#class BasePlane(BaseObject):
-#    def __init__(self, plane="xy", visible=True, parent=None):
-#        BaseObject.__init__(self, visible, parent)
-#        ## ============================
-#        self.plane = plane
-#        self.setDiffuseColor((.5, .5, .5))
-#        self.setAmbientColor((.5, .5, .5))
-#        ## ============================
-#        self.translation = SoTranslation()
-#        ## ============================
-#        self.coords = SoCoordinate3()
-#        self.mesh = SoQuadMesh()
-#        self.sHints = SoShapeHints()
-#        self.sHints.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
-#        self.root.addChild(self.translation)
-#        self.root.addChild(self.sHints)
-#        self.root.addChild(self.coords)
-#        self.root.addChild(self.mesh)
-#        self.setRange((-2, 2, 7), plane)
-#        self.setTransparency(0.5)
-#        self.setTransparencyType(8)
-#
-#    def setHeight(self, val):
-#        oldVal = list(self.translation.translation.getValue())
-#        oldVal[self.constantIndex] = val
-#        self.translation.translation = oldVal
-#
-#    def setRange(self, r0, plane=""):
-#        if plane == "":
-#            plane = self.plane
-#        self.plane = plane
-#        r = Range(*r0)
-#        self.ptos = []
-#        if plane == "xy":
-#            self.func = lambda x, y:(x, y, 0)
-#            ## this will be used to determine which coordinate to modify
-#            ## in setHeight
-#            self.constantIndex = 2
-#        elif plane == "yz":
-#            self.func = lambda y, z:(0, y, z)
-#            self.constantIndex = 0
-#        elif plane == "xz":
-#            self.func = lambda x, z:(x, 0, z)
-#            self.constantIndex = 1
-#        elif type(plane) == type(lambda :0):
-#            self.func = plane
-#        malla2(self.ptos, self.func, r.min, r.dt, len(r), r.min, r.dt, len(r))
-#        self.coords.point.setValues(0, len(self.ptos), self.ptos)
-#        self.mesh.verticesPerColumn = len(r)
-#        self.mesh.verticesPerRow = len(r)
-#
-#
+
+class BasePlane(GraphicObject):
+    def __init__(self, plane="xy"):
+        super(BasePlane,self).__init__()
+        ## ============================
+        self.plane = plane
+        self.setDiffuseColor((.5, .5, .5))
+        self.setAmbientColor((.5, .5, .5))
+        ## ============================
+        self.coords = SoCoordinate3()
+        self.mesh = SoQuadMesh()
+        self.sHints = SoShapeHints()
+        self.sHints.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
+        self.root.addChild(self.translation)
+        self.root.addChild(self.sHints)
+        self.root.addChild(self.coords)
+        self.root.addChild(self.mesh)
+        self.setRange((-2, 2, 7), plane)
+        self.setTransparency(0.5)
+        self.setTransparencyType(8)
+
+    def setHeight(self, val):
+        oldVal = list(self.translation.translation.getValue())
+        oldVal[self.constantIndex] = val
+        self.translation.translation = oldVal
+
+    def setRange(self, r0, plane=""):
+        if plane == "":
+            plane = self.plane
+        self.plane = plane
+        r = Range(*r0)
+        self.ptos = []
+        if plane == "xy":
+            self.func = lambda x, y:(x, y, 0)
+            ## this will be used to determine which coordinate to modify
+            ## in setHeight
+            self.constantIndex = 2
+        elif plane == "yz":
+            self.func = lambda y, z:(0, y, z)
+            self.constantIndex = 0
+        elif plane == "xz":
+            self.func = lambda x, z:(x, 0, z)
+            self.constantIndex = 1
+        elif type(plane) == type(lambda :0):
+            self.func = plane
+        malla2(self.ptos, self.func, r.min, r.dt, len(r), r.min, r.dt, len(r))
+        self.coords.point.setValues(0, len(self.ptos), self.ptos)
+        self.mesh.verticesPerColumn = len(r)
+        self.mesh.verticesPerRow = len(r)
+
 #
 #
 #

@@ -4,11 +4,11 @@ __date__ = "$18/05/2009 12:47:43 AM$"
 
 from PyQt4 import QtGui, QtCore, uic
 from pivy.coin import SoSeparator, SoSwitch
-from superficie.util import nodeDict, connect, Vec3
-from superficie.util import pegaNombres
-from superficie.VariousObjects import Arrow, BasePlane
-from superficie.Animation import Animation
-from superficie.gui import Button
+from util import nodeDict, connect, Vec3
+from util import pegaNombres
+from Objects import Arrow, BasePlane
+from Animation import Animation
+from gui import Button
 
 changePage_fclass, base_class = uic.loadUiType(pegaNombres("Viewer", "change-page.ui"))
 
@@ -20,7 +20,7 @@ class ChangePageUI(base_class, changePage_fclass):
 
 
 class Book(QtCore.QObject):
-    "Implemens a Book-like object"
+    """Implemens a Book-like object"""
     
     chapterChanged = QtCore.pyqtSignal(int)
     #===========================================================================
@@ -48,7 +48,7 @@ class Book(QtCore.QObject):
         return len(self.chapters)
 
     def createChapter(self):
-        "Creates a new empty Chapter"
+        """Creates a new empty Chapter"""
         chapter = Chapter()
         self.addChapter(chapter)
         return chapter
@@ -57,10 +57,10 @@ class Book(QtCore.QObject):
         self.pageChanged.emit(self.whichChapter, n)
 
     def addChapter(self, chapter):
-        '''
+        """
         Appends chapter to this book
         @param chapter: Chapter
-        '''
+        """
         ## we probably should check that chapter is derived
         ## from base.Chapter
         self.chaptersObjects[chapter.pagesSwitch] = chapter
@@ -75,32 +75,32 @@ class Book(QtCore.QObject):
 
     @property
     def chapterSwitch(self):
-        "the switch of the current chapter"
+        """the switch of the current chapter"""
         if self.whichChapter < 0:
             return None
         return self.chapters[self.whichChapter][0]
 
     @property
     def chapter(self):
-        "returns the current chapter"
+        """returns the current chapter"""
         if self.whichChapter < 0:
             return None
         return self.chaptersObjects[self.chapterSwitch]
 
     @property
     def page(self):
-        "returns the current page in the chapter"
+        """returns the current page in the chapter"""
         return self.chapter.page if self.whichChapter >= 0 else None
 
     def getWhichChapter(self):
-        "returns the selected chapter"
+        """returns the selected chapter"""
         return self.chapters.whichChild.getValue()
 
     def setWhichChapter(self, n):
-        '''
+        """
         Sets the current chapter
         @param n: int
-        '''
+        """
         ## only the == operator test for identity of the underlying
         ## OpenInventor object (the python proxy object is changed every time)
         chapterChanged = not(self.__previousChapter == self.chapterSwitch)
@@ -121,7 +121,7 @@ class Book(QtCore.QObject):
 
 
 class Chapter(QtCore.QObject):
-    "A Chapter"
+    """A Chapter"""
 
     pageChanged = QtCore.pyqtSignal(int)
 
@@ -152,23 +152,23 @@ class Chapter(QtCore.QObject):
 
     @property
     def pages(self):
-        "The list of pages"
+        """The list of pages"""
         return self.__pages
 
     def createPage(self):
-        '''
+        """
         Creates a new page and appends it to this chapter
-        '''
+        """
         page = Page()
         self.addPage(page)
         return page
 
     def addPage(self, page):
-        '''
+        """
         Adds 'page' to this chapter. page can be a Page or a SoNode. Searches
         page for a 'getGui' function, which should return a widget.
         @param page: Page | SoNode
-        '''
+        """
         page.viewer = self.viewer
         ## ============================
         ## page can be a Page or SoNode
@@ -213,15 +213,17 @@ class Chapter(QtCore.QObject):
         return self.notasStack
 
     def chapterSpecificIn(self):
-        "code to be executed whenever the chapter is displayed"
-        "this is intended for global changes to the scenegraph that"
-        "are needed by this chapter"
+        """code to be executed whenever the chapter is displayed
+        this is intended for global changes to the scenegraph that
+        are needed by this chapter
+        """
         print "chapterSpecificIn:", self
         pass
 
     def chapterSpecificOut(self):
-        "code to be executed whenever another chapter is displayed"
-        "restore the scenegraph to sane values"
+        """code to be executed whenever another chapter is displayed
+        restore the scenegraph to sane values
+        """
         print "chapterSpecificOut", self
         pass
 
@@ -235,23 +237,23 @@ class Chapter(QtCore.QObject):
 
     @property
     def page(self):
-        "the current page"
+        """the current page"""
         if self.whichPage < 0:
             return None
         return self.pages[self.pagesSwitch[self.whichPage]]
 
 
     def getWhichPage(self):
-        '''
+        """
         Returns the index of the current page
-        '''
+        """
         return self.pagesSwitch.whichChild.getValue()
 
     def setWhichPage(self, n):
-        '''
+        """
         Activates the n-th page
         @param n:
-        '''
+        """
         if len(self.pagesSwitch) > 0:
             self.page and self.page.post()
             node = self.pagesSwitch.getChild(n)
@@ -295,7 +297,7 @@ class Chapter(QtCore.QObject):
 
 
 class Page(QtCore.QObject):
-    "The base class of a container node"
+    """The base class of a container node"""
     def __init__(self, name=""):
         QtCore.QObject.__init__(self)
         self.viewer = None
@@ -376,9 +378,9 @@ class Page(QtCore.QObject):
             
     
     def showAxis(self,show):
-        '''
+        """
         @param show: bool
-        '''
+        """
         self.axis_x.setVisible(show)
         self.axis_y.setVisible(show)
         self.axis_z.setVisible(show)
@@ -406,13 +408,13 @@ class Page(QtCore.QObject):
 
 
     def pre(self):
-        '''
+        """
         Called before settis this page as current for the chapter
-        '''
+        """
         pass
         
     def post(self):
-        '''
+        """
         Called upon whichPage changed, but before next page's 'pre'
-        '''
+        """
         pass

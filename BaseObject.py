@@ -1,32 +1,47 @@
 # -*- coding: utf-8 -*-
-from pivy.coin import SoWriteAction, SoSwitch, SoSeparator, SoTranslation, SoMaterial, SoTransparencyType, SoDrawStyle, SoSFPlane, SbPlane, SoClipPlane, SO_SWITCH_ALL, SO_SWITCH_NONE
+from pivy.coin import SoWriteAction, SoSwitch, SoSeparator, SoTranslation, SoMaterial, SoTransparencyType, SoDrawStyle, SoSFPlane, SbPlane, SoClipPlane, SO_SWITCH_ALL, SO_SWITCH_NONE, SbVec3f
 
 __author__ = "jpablo"
 __date__ = "$18/05/2009 12:47:43 AM$"
 
 
 def fluid(method):
+    """
+    Fluiditize a method
+    """
     def func(self, *args, **kwargs):
         method(self,*args, **kwargs)
         return self
     return func
 
 class BaseObject(object):
-    'Common functionality for all graphic objects'
+    """Common functionality for all graphic objects.
+    Is just a wrapper around a SoSeparator
+    
+    It has this OI structure:
+    Switch {
+      Separator {
+        DrawStyle {}
+        Translation { translation 0 0 0 }
+      }
+    }
+    """
 
     def __init__(self, name=''):
         self.animation  = None
-        self.switch     = SoSwitch()
-        self.root       = SoSeparator()
+        self.root       = SoSwitch()
+        self.separator  = SoSeparator()
         self.drawStyle  = SoDrawStyle()
         self.translation = SoTranslation()
 
-        self.switch.setName(name)
+        self.root.setName(name)
         self.translation.translation = (0, 0, 0)
 
-        self.switch.addChild(self.root)
-        self.root.addChild(self.drawStyle)
-        self.root.addChild(self.translation)
+        self.root.addChild(self.separator)
+        self.separator.addChild(self.drawStyle)
+        self.separator.addChild(self.translation)
+
+        super(BaseObject,self).__init__()
 
     @fluid
     def show(self):
@@ -38,11 +53,11 @@ class BaseObject(object):
 
     @fluid
     def setBoundingBox(self, xrange=None, yrange=None, zrange=None):
-        '''
+        """
         @param xrange: 2-tuple
         @param yrange: 2-tuple
         @param zrange: 2-tuple
-        '''
+        """
         def createPlane(normalref, point):
             sfplane = SoSFPlane()
             sfplane.setValue(SbPlane(normalref, point))
@@ -53,22 +68,22 @@ class BaseObject(object):
             self.clipPlaneXZ2 = SoClipPlane()
             self.clipPlaneXZ1.plane = createPlane(SbVec3f(0, 1, 0), SbVec3f(0, yrange[0], 0))
             self.clipPlaneXZ2.plane = createPlane(SbVec3f(0, -1, 0), SbVec3f(0, yrange[1], 0))
-            self.root.insertChild(self.clipPlaneXZ1, 0)
-            self.root.insertChild(self.clipPlaneXZ2, 1)
+            self.separator.insertChild(self.clipPlaneXZ1, 0)
+            self.separator.insertChild(self.clipPlaneXZ2, 1)
         if xrange is not None:
             self.clipPlaneYZ1 = SoClipPlane()
             self.clipPlaneYZ2 = SoClipPlane()
             self.clipPlaneYZ1.plane = createPlane(SbVec3f(1, 0, 0), SbVec3f(xrange[0], 0, 0))
             self.clipPlaneYZ2.plane = createPlane(SbVec3f(-1, 0, 0), SbVec3f(xrange[1], 0, 0))
-            self.root.insertChild(self.clipPlaneYZ1, 2)
-            self.root.insertChild(self.clipPlaneYZ2, 3)
+            self.separator.insertChild(self.clipPlaneYZ1, 2)
+            self.separator.insertChild(self.clipPlaneYZ2, 3)
         if zrange is not None:
             self.clipPlaneXY1 = SoClipPlane()
             self.clipPlaneXY2 = SoClipPlane()
             self.clipPlaneXY1.plane = createPlane(SbVec3f(0, 0, 1), SbVec3f(0, 0, zrange[0]))
             self.clipPlaneXY2.plane = createPlane(SbVec3f(0, 0, -1), SbVec3f(0, 0, zrange[1]))
-            self.root.insertChild(self.clipPlaneXY1, 4)
-            self.root.insertChild(self.clipPlaneXY2, 5)
+            self.separator.insertChild(self.clipPlaneXY1, 4)
+            self.separator.insertChild(self.clipPlaneXY2, 5)
 
     @fluid
     def setDrawStyle(self, style):
@@ -77,14 +92,14 @@ class BaseObject(object):
     @fluid
     def setVisible(self, visible):
         if visible:
-            self.switch.whichChild = SO_SWITCH_ALL
+            self.root.whichChild = SO_SWITCH_ALL
         else:
-            self.switch.whichChild = SO_SWITCH_NONE
+            self.root.whichChild = SO_SWITCH_NONE
 
     def getVisible(self):
-        if self.switch.whichChild.getValue() == SO_SWITCH_ALL:
+        if self.root.whichChild.getValue() == SO_SWITCH_ALL:
             return True
-        elif self.switch.whichChild.getValue() == SO_SWITCH_NONE:
+        elif self.root.whichChild.getValue() == SO_SWITCH_NONE:
             return False
 
     visible = property(fget=getVisible, fset=setVisible)
@@ -106,25 +121,32 @@ class BaseObject(object):
         pass
 
 
-
     def toText(self):
-        'obtains the openinventor format representation'
+        """obtains the openinventor format representation"""
         wa = SoWriteAction()
-        return wa.apply(self.switch)
+        return wa.apply(self.root)
+
+    @classmethod
+    def Create(Cls, oi_object):
+        bo = Cls()
+        bo.separator.addChild(oi_object)
+        return bo
 
 
 
-
+# I know, I know, mixins can be dangerous and stuff...
 class MaterialMixin(object):
-    'Material related functions'
+    """Material related functions"""
 
     def __init__(self):
         self.material   = SoMaterial()
         self.transparencyType = SoTransparencyType()
 
-        ## self.root is assumed here!
-        self.root.addChild(self.material)
-        self.root.addChild(self.transparencyType)
+        ## self.separator is assumed here!
+        self.separator.addChild(self.material)
+        self.separator.addChild(self.transparencyType)
+
+        super(MaterialMixin,self).__init__()
 
 
     @fluid
@@ -169,7 +191,7 @@ class MaterialMixin(object):
 
     @fluid
     def setColor(self, val):
-        'set diffuse, emissive, ambient and specular properties at once'
+        """set diffuse, emissive, ambient and specular properties at once"""
         self.setDiffuseColor(val)
         self.setEmissiveColor(val)
         self.setAmbientColor(val)
@@ -179,14 +201,47 @@ class MaterialMixin(object):
 
 
 class GraphicObject(BaseObject, MaterialMixin):
-    'The base object + material managment'
+    """The base object + material managment"""
 
     def __init__(self, name=''):
         super(GraphicObject, self).__init__(name)
-        MaterialMixin.__init__(self)
+
+
+class CompositeObject(BaseObject):
+    """
+    A Composite object doesn't have a material.
+    It is a container of BaseObjects
+    """
+
+    def __init__(self, name=''):
+        self._children = []
+        super(CompositeObject, self).__init__(name)
+
+    @fluid
+    def addChild(self, child):
+        """
+        Add child to the graph and save a reference to it
+        """
+        if not isinstance(child,BaseObject):
+            raise Exception(child + ' is not instance of BaseObject')
+        self.separator.addChild(child.root)
+        self._children.append(child)
+
+    def getChildren(self):
+        """
+        Obtains the list of children objects
+        """
+        return self._children
+
+    children = property(getChildren)
 
 
 if __name__ == "__main__":
-    ob = GraphicObject("objeto")
-    ob.show()
-    print ob.toText()
+#    ob = GraphicObject("objet")
+#    ob.show()
+#    print ob.toText()
+    co = CompositeObject()
+    ch = GraphicObject()
+    co.addChild(ch)
+    print co.getChildren()
+    
