@@ -375,8 +375,8 @@ class Page(QtCore.QObject):
         for p in self.coordPlanes.values():
             p.setRange(r0)
             p.setHeight(r0[0])
-            
-    
+
+
     def showAxis(self,show):
         """
         @param show: bool
@@ -384,14 +384,14 @@ class Page(QtCore.QObject):
         self.axis_x.setVisible(show)
         self.axis_y.setVisible(show)
         self.axis_z.setVisible(show)
-    
+
     def setupAxis(self):
-        self.axis_x = Arrow(Vec3(-5, 0, 0), Vec3(5, 0, 0), parent=self)
-        self.axis_x.setDiffuseColor((1, 0, 0)).setWidthFactor(.2)
-        self.axis_y = Arrow(Vec3(0, -5, 0), Vec3(0, 5, 0), parent=self)
-        self.axis_y.setDiffuseColor((0, 1, 0)).setWidthFactor(.2)
-        self.axis_z = Arrow(Vec3(0, 0, -5), Vec3(0, 0, 5), parent=self)
-        self.axis_z.setDiffuseColor((0, 0, 1)).setWidthFactor(.2)
+        self.axis_x = Arrow(Vec3(-5, 0, 0), Vec3(5, 0, 0))
+        self.axis_y = Arrow(Vec3(0, -5, 0), Vec3(0, 5, 0))
+        self.axis_z = Arrow(Vec3(0, 0, -5), Vec3(0, 0, 5))
+#        self.axis_x.setDiffuseColor((1, 0, 0)).setWidthFactor(.2)
+#        self.axis_y.setDiffuseColor((0, 1, 0)).setWidthFactor(.2)
+#        self.axis_z.setDiffuseColor((0, 0, 1)).setWidthFactor(.2)
 
 
     def setupAnimations(self, objects):

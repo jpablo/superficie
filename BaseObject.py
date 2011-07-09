@@ -28,6 +28,7 @@ class BaseObject(object):
     """
 
     def __init__(self, name=''):
+        self._children  = []
         self.animation  = None
         self.root       = SoSwitch()
         self.separator  = SoSeparator()
@@ -50,6 +51,17 @@ class BaseObject(object):
     @fluid
     def hide(self):
         self.setVisible(False)
+
+
+    @fluid
+    def addChild(self, child):
+        """
+        Add child to the graph. If it has a root element, assume that it is an OI node.
+        """
+        root = getattr(child,'root',child)
+        self.separator.addChild(root)
+        self._children.append(child)
+
 
     @fluid
     def setBoundingBox(self, xrange=None, yrange=None, zrange=None):
@@ -223,7 +235,7 @@ class CompositeObject(BaseObject):
         Add child to the graph and save a reference to it
         """
         if not isinstance(child,BaseObject):
-            raise Exception(child + ' is not instance of BaseObject')
+            raise Exception(str(child) + ' is not instance of BaseObject')
         self.separator.addChild(child.root)
         self._children.append(child)
 

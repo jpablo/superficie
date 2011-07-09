@@ -2,24 +2,14 @@
 # -*- coding: utf-8 -*-
 
 from PyQt4.QtGui import QWidget
-from PyQt4 import QtCore
-from PyQt4 import QtGui
-from PyQt4 import QtOpenGL
-#import logging
+from PyQt4 import QtCore, QtGui, QtOpenGL
 
 from pivy.coin import *
 from pivy.quarter import QuarterWidget
 Quarter = True
-from superficie.util import callback
-from superficie.util import pegaNombres
-from superficie.util import readFile
-from superficie.Book import Book
+from util import callback, pegaNombres, readFile
+from Book import Book
 from superficie import globals
-#modulosPath = "superficie"
-#log = logging.getLogger("Viewer")
-#log.setLevel(logging.DEBUG)
-
-
 
 TransparencyType = [
    'SCREEN_DOOR, ADD',

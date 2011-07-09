@@ -2,9 +2,10 @@ from pivy.coin import *
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
-from superficie.util import wrap, malla2
+from util import wrap, malla2
 from math import acos, pi, sqrt
 from collections import Sequence
+from MinimalViewer import MinimalViewer
 
 from util import intervalPartition, Vec3, segment
 from util import Range
@@ -39,9 +40,9 @@ class Points(GraphicObject):
         self.coordinate = SoCoordinate3()
         self.materialBinding.value = SoMaterialBinding.PER_VERTEX
         ## ===============================
-        self.separator.addChild(self.materialBinding)
-        self.separator.addChild(self.coordinate)
-        self.separator.addChild(SoPointSet())
+        self.addChild(self.materialBinding)
+        self.addChild(self.coordinate)
+        self.addChild(SoPointSet())
         ## ===============================
         self.setCoords(coords)
         self.setColors(colors)
@@ -131,7 +132,7 @@ class Polygon(GraphicObject):
         coor = SoCoordinate3()
         coor.point.setValues(0, len(self.coords), self.coords)
         
-        self.separator.addChild(coor)
+        self.addChild(coor)
 
 
 ############ portar ##########
@@ -206,11 +207,11 @@ class Point(Points):
 class Sphere(GraphicObject):
 
     def __init__(self, center, radius=.05, color=(1, 1, 1), name=''):
-        super(Sphere).__init__(self, name)
+        super(Sphere,self).__init__(name)
         self.sp = SoSphere()
         self.sp.radius = radius
 #        ## ===================
-        self.addChild(self.sp)
+        self.root.addChild(self.sp)
         self.origin = center
         self.color = color
 
@@ -223,7 +224,7 @@ class Sphere(GraphicObject):
     radius = property(getRadius, setRadius)
     
 
-class Arrow(CompositeObject):
+class Arrow(BaseObject):
     def __init__(self, p1, p2, scale=0.01, escalaVertice=2.0):
         """p1,p2: Vec3"""
         super(Arrow,self).__init__(name)
@@ -242,10 +243,10 @@ class Arrow(CompositeObject):
         self.tr1 = SoTransform()
         self.tr2 = SoTransform()
 
-        self.setAmbientColor((.0, .0, .0))
-        self.setDiffuseColor((.4, .4, .4))
-        self.setSpecularColor((.8, .8, .8))
-        self.setShininess(.1)
+#        self.setAmbientColor((.0, .0, .0))
+#        self.setDiffuseColor((.4, .4, .4))
+#        self.setSpecularColor((.8, .8, .8))
+#        self.setShininess(.1)
         self.cil = make_hideable(SoCylinder())
         self.cil.setName("segmento")
         ## ==========================
@@ -333,75 +334,75 @@ class Arrow(CompositeObject):
         self.widthFactor = factor
         r = self.cil.radius.getValue() * factor
         self.setRadius(r)
-#
-#
-#class Line(BaseObject):
-#    def __init__(self, ptos, color=(1, 1, 1), width=1, nvertices= -1, name="Line", visible=False, parent=None):
-#        BaseObject.__init__(self, visible, parent)
-#        sep = SoSeparator()
-#        sep.setName("Line")
-#        self.coords = SoCoordinate3()
-#        self.lineset = SoLineSet()
-#        self.draw = SoDrawStyle()
-#        ## ============================
-#        self.setCoordinates(ptos, nvertices)
-#        self.setWidth(width)
-#        self.material.diffuseColor = color
-#        ## ============================
-#        sep.addChild(self.coords)
-#        sep.addChild(self.draw)
-#        sep.addChild(self.lineset)
-#        self.addChild(sep)
-#        #        self.whichChild = 0
-#        ## ============================
-#        self.animation = Animation(self.setNumVertices, (4000, 1, len(self)))
-#
-#    @fluid
-#    def setWidth(self, width):
-#        self.draw.lineWidth.setValue(width)
-#
-#    width = property(fset=setWidth)
-#
-#    def resetObjectForAnimation(self):
-#        self.setNumVertices(1)
-#
-#    def __getitem__(self, i):
-#        "overwrite BaseObject.__getitem__"
-#        ## this makes more sense in this case
-#        return self.coords.point[i]
-#
-#    def __len__(self):
-#        return len(self.coords.point)
-#
-#    def setNumVertices(self, n):
-#        "Defines the first n vertices to be drawn"
-#        self.lineset.numVertices.setValue(n)
-#
-#    def setVertexIndexes(self, lst):
-#        "Controls which vertices are drawn"
-#        self.lineset.numVertices.setValues(lst)
-#
-#    def setCoordinates(self, ptos, nvertices= -1):
-#        ## sometimes we don't want to show all points
-#        if nvertices == -1:
-#            nvertices = len(ptos)
-#        self.coords.point.setValues(0, len(ptos), ptos)
-#        self.setNumVertices(nvertices)
-#
-#    def getCoordinates(self):
-#        """return the points"""
-#        return self.coords.point.getValues()
-#
-#    def project(self, x=None, y=None, z=None, color=(1, 1, 1), width=1, nvertices= -1):
-#        """insert the projection on the given plane"""
-#        pts = self.getCoordinates()
-#        if x != None:
-#            ptosProj = [Vec3(x, p[1], p[2]) for p in pts]
-#        elif y != None:
-#            ptosProj = [Vec3(p[0], y, p[2]) for p in pts]
-#        elif z != None:
-#            ptosProj = [Vec3(p[0], p[1], z) for p in pts]
-#        return Line(ptosProj, color, width, nvertices, visible=True, parent=self.parent)
+
+
+class Line(BaseObject):
+    def __init__(self, ptos, color=(1, 1, 1), width=1, nvertices= -1, name="Line", visible=False, parent=None):
+        BaseObject.__init__(self, visible, parent)
+        sep = SoSeparator()
+        sep.setName("Line")
+        self.coords = SoCoordinate3()
+        self.lineset = SoLineSet()
+        self.draw = SoDrawStyle()
+        ## ============================
+        self.setCoordinates(ptos, nvertices)
+        self.setWidth(width)
+        self.material.diffuseColor = color
+        ## ============================
+        sep.addChild(self.coords)
+        sep.addChild(self.draw)
+        sep.addChild(self.lineset)
+        self.addChild(sep)
+        #        self.whichChild = 0
+        ## ============================
+        self.animation = Animation(self.setNumVertices, (4000, 1, len(self)))
+
+    @fluid
+    def setWidth(self, width):
+        self.draw.lineWidth.setValue(width)
+
+    width = property(fset=setWidth)
+
+    def resetObjectForAnimation(self):
+        self.setNumVertices(1)
+
+    def __getitem__(self, i):
+        "overwrite BaseObject.__getitem__"
+        ## this makes more sense in this case
+        return self.coords.point[i]
+
+    def __len__(self):
+        return len(self.coords.point)
+
+    def setNumVertices(self, n):
+        "Defines the first n vertices to be drawn"
+        self.lineset.numVertices.setValue(n)
+
+    def setVertexIndexes(self, lst):
+        "Controls which vertices are drawn"
+        self.lineset.numVertices.setValues(lst)
+
+    def setCoordinates(self, ptos, nvertices= -1):
+        ## sometimes we don't want to show all points
+        if nvertices == -1:
+            nvertices = len(ptos)
+        self.coords.point.setValues(0, len(ptos), ptos)
+        self.setNumVertices(nvertices)
+
+    def getCoordinates(self):
+        """return the points"""
+        return self.coords.point.getValues()
+
+    def project(self, x=None, y=None, z=None, color=(1, 1, 1), width=1, nvertices= -1):
+        """insert the projection on the given plane"""
+        pts = self.getCoordinates()
+        if x != None:
+            ptosProj = [Vec3(x, p[1], p[2]) for p in pts]
+        elif y != None:
+            ptosProj = [Vec3(p[0], y, p[2]) for p in pts]
+        elif z != None:
+            ptosProj = [Vec3(p[0], p[1], z) for p in pts]
+        return Line(ptosProj, color, width, nvertices, visible=True, parent=self.parent)
 #
 #
 #class CurveVectorField(Arrow):
@@ -942,7 +943,21 @@ class BasePlane(GraphicObject):
 #
 
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
+#
+#    p = Points()
+#    p.toText()
+#
 
-    p = Points()
-    p.toText()
+if __name__ == "__main__":
+    import sys
+
+    app = QtGui.QApplication(sys.argv)
+    viewer = MinimalViewer()
+    viewer.root.addChild(Sphere((0,0,0),1).root)
+    viewer.resize(400, 400)
+    viewer.show()
+    viewer.viewAll()
+
+    sys.exit(app.exec_())
+
