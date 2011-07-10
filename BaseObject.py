@@ -35,6 +35,7 @@ class BaseObject(object):
         self.drawStyle  = SoDrawStyle()
         self.translation = SoTranslation()
 
+        self.show()
         self.root.setName(name)
         self.translation.translation = (0, 0, 0)
 

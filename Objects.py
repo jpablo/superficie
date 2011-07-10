@@ -2,7 +2,7 @@ from pivy.coin import *
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 
-from util import wrap, malla2
+from util import malla2
 from math import acos, pi, sqrt
 from collections import Sequence
 from MinimalViewer import MinimalViewer
@@ -146,40 +146,6 @@ class Point(Points):
 ## ps.setPointSize(1)
 ## ps.setHSVColors([(.5,1,1),(.6,1,1),(.9,1,1)])
 
-#def Cylinder(col, length, radius = 0.98):
-#    sep = SoSeparator()
-#
-#    cyl = SoCylinder()
-#    cyl.radius.setValue(radius)
-#    cyl.height.setValue(length)
-#    cyl.parts = SoCylinder.SIDES
-#
-#    light = SoShapeHints()
-##    light.VertexOrdering = SoShapeHints.COUNTERCLOCKWISE
-##    light.ShapeType = SoShapeHints.UNKNOWN_SHAPE_TYPE
-##    light.FaceType  = SoShapeHints.UNKNOWN_FACE_TYPE
-#
-#    mat = SoMaterial()
-#    mat.emissiveColor = col
-#    mat.diffuseColor = col
-#    mat.transparency.setValue(0.5)
-#
-#    rot = SoRotationXYZ()
-#    rot.axis = SoRotationXYZ.X
-#    rot.angle = pi / 2
-#
-#    trans = SoTransparencyType()
-##    trans.value = SoTransparencyType.DELAYED_BLEND
-#    trans.value = SoTransparencyType.SORTED_OBJECT_BLEND
-##    trans.value = SoTransparencyType.SORTED_OBJECT_SORTED_TRIANGLE_BLEND
-#
-#    sep.addChild(light)
-#    sep.addChild(rot)
-#    sep.addChild(trans)
-#    sep.addChild(mat)
-#    sep.addChild(cyl)
-#
-#    return sep
 #
 #
 #def Sphere2(p, radius=.05, mat=None):
@@ -205,13 +171,14 @@ class Point(Points):
 #
 
 class Sphere(GraphicObject):
+    """A sphere"""
 
     def __init__(self, center, radius=.05, color=(1, 1, 1), name=''):
         super(Sphere,self).__init__(name)
         self.sp = SoSphere()
         self.sp.radius = radius
 #        ## ===================
-        self.root.addChild(self.sp)
+        self.addChild(self.sp)
         self.origin = center
         self.color = color
 
@@ -224,164 +191,178 @@ class Sphere(GraphicObject):
     radius = property(getRadius, setRadius)
     
 
-class Arrow(BaseObject):
+
+def adjustArg(arg):
+    if arg > 1.0:
+        return 1.0
+    elif arg < -1.0:
+        return -1.0
+    return arg
+
+
+
+class Arrow(GraphicObject):
+    """An arrow"""
     def __init__(self, p1, p2, scale=0.01, escalaVertice=2.0):
         """p1,p2: Vec3"""
         super(Arrow,self).__init__(name)
-        self.base = None
         self.p1 = p1
         self.p2initial = self.p2 = p2
+
         self.scale = scale
         self.escalaVertice = escalaVertice
         self.lengthFactor = 1
         self.widthFactor = 1
         ## ============================
-        sep = SoSeparator()
-        sep.setName("Tube")
-        self.sphere = Sphere(p1, scale * escalaVertice)
-        self.base = self.addChild(self.sphere)
+        separator = SoSeparator()
+        separator.setName("Tube")
+#        self.sphere = Sphere(p1, scale * escalaVertice, name='Sphere')
+
         self.tr1 = SoTransform()
         self.tr2 = SoTransform()
 
-#        self.setAmbientColor((.0, .0, .0))
-#        self.setDiffuseColor((.4, .4, .4))
-#        self.setSpecularColor((.8, .8, .8))
-#        self.setShininess(.1)
-        self.cil = make_hideable(SoCylinder())
-        self.cil.setName("segmento")
+        self.setAmbientColor((.0, .0, .0))
+        self.setDiffuseColor((.4, .4, .4))
+        self.setSpecularColor((.8, .8, .8))
+        self.setShininess(.1)
+        self.body = SoCylinder()
+        self.body.setName("body")
         ## ==========================
-        conoSep = SoSeparator()
-        self.conoTr = SoTransform()
-        self.cono = SoCone()
-        self.cono.bottomRadius = self.scale * 2
-        self.matHead = SoMaterial()
-        self.matHead.ambientColor = (.33, .22, .27)
-        self.matHead.diffuseColor = (.78, .57, .11)
-        self.matHead.specularColor = (.99, .94, .81)
-        self.matHead.shininess = .28
-        conoSep.addChild(self.matHead)
-        conoSep.addChild(self.conoTr)
-        conoSep.addChild(self.cono)
-        ## ==========================
-        sep.addChild(self.tr2)
-        sep.addChild(self.tr1)
-        sep.addChild(self.cil.parent_switch)
-        sep.addChild(conoSep)
+        head_separator = SoSeparator()
+
+        self.head = SoCone()
+        self.head.bottomRadius = self.scale * 2
+        self.head_transformation = SoTransform()
+        self.head_material = SoMaterial()
+        self.head_material.ambientColor = (.33, .22, .27)
+        self.head_material.diffuseColor = (.78, .57, .11)
+        self.head_material.specularColor = (.99, .94, .81)
+        self.head_material.shininess = .28
+        head_separator.addChild(self.head_material)
+        head_separator.addChild(self.head_transformation)
+        head_separator.addChild(self.head)
+        ## ==========================z
+        separator.addChild(self.tr2)
+        separator.addChild(self.tr1)
+        separator.addChild(self.body)
+        separator.addChild(head_separator)
         ## ============================
         self.calcTransformation()
-        #self.cono.height = self.cil.height.getValue() * .2
         self.setWidthFactor(.1)
-        self.addChild(sep)
+        #        self.addChild(self.sphere)
+        self.addChild(separator)
+
+    @fluid
+    def setPoints(self, p1, p2):
+        """p1, p2: Vec3d"""
+        self.p1 = p1
+        self.p2initial = self.p2 = p2
+        self.calcTransformation()
+        self.adjust_body_height()
 
 
-    def calcTransformation(self):
-        scaledP2 = segment(self.p1, self.p2initial, self.lengthFactor)
-        vec = scaledP2 - self.p1
-        t = vec.length() if vec.length() != 0 else .00001
-        self.tr1.translation = (0, t / 2.0, 0)
-        self.conoTr.translation = (0, t / 2.0, 0)
-        self.cil.height = t ##?
-        self.tr2.translation = self.p1
-        if self.base:
-            self.base.setOrigin(self.p1)
-
-        ## TODO: pasar a util
-        def ajustaArg(arg):
-            if arg > 1.0:
-                return 1.0
-            elif arg < -1.0:
-                return -1.0
-            return arg
-
-        zt = Vec3(0, t, 0)
+    @staticmethod
+    def calc_transformations(p1, p2, factor):
+        scaledP2 = segment(p1, p2, factor)
+        vec = scaledP2 - p1
+        length = vec.length() if vec.length() != 0 else .00001
+        zt = Vec3(0, length, 0)
         ejeRot = zt.cross(vec)
-        ang = acos(ajustaArg(zt.dot(vec) / t ** 2))
-        arg = zt.dot(vec) / t ** 2
-        ang = acos(ajustaArg(arg))
+        arg = zt.dot(vec) / length ** 2
+        ang = acos(adjustArg(arg))
         if ejeRot.length() < .0001:
             ejeRot = Vec3(1, 0, 0)
+        return ang, ejeRot, length
+
+    def adjust_body_height(self):
+        coneHeight = self.head.height.getValue()
+        self.body.height = self.body.height.getValue() - coneHeight /2.0
+
+    def calcTransformation(self):
+        ang, ejeRot, length = Arrow.calc_transformations(self.p1, self.p2initial, self.lengthFactor)
+        self.tr1.translation = (0, length / 2.0, 0)
+        self.head_transformation.translation = (0, length / 2.0, 0)
+        self.body.height = length
+        self.tr2.translation = self.p1
         self.tr2.rotation.setValue(ejeRot, ang)
 
     @fluid
     def setRadius(self, r):
-        self.cil.radius = r
+        self.body.radius = r
         rr = r * 1.5
-        self.sphere.radius = rr
-        self.cono.bottomRadius = rr
-        self.cono.height = 3*sqrt(3)*r
-        coneHeight = self.cono.height.getValue()
-        self.cil.height = self.cil.height.getValue() - coneHeight /2.0
+#        self.sphere.radius = rr
+        self.head.bottomRadius = rr
+        self.head.height = 3*sqrt(3)*r
+        self.adjust_body_height()
 
-    @fluid
-    def setPoints(self, p1, p2):
-        "p1, p2: Vec3d"
-        self.p1 = p1
-        self.p2inicial = self.p2 = p2
-        self.calcTransformation()
 
     @fluid
     def setP2(self, pt):
         self.p2 = pt
         self.calcTransformation()
+        self.adjust_body_height()
 
     @fluid
     def setLengthFactor(self, factor):
         self.lengthFactor = factor
         self.calcTransformation()
+        self.adjust_body_height()
 
     @fluid
     def setWidthFactor(self, factor):
         self.widthFactor = factor
-        r = self.cil.radius.getValue() * factor
+        r = self.body.radius.getValue() * factor
         self.setRadius(r)
 
 
-class Line(BaseObject):
-    def __init__(self, ptos, color=(1, 1, 1), width=1, nvertices= -1, name="Line", visible=False, parent=None):
-        BaseObject.__init__(self, visible, parent)
-        sep = SoSeparator()
-        sep.setName("Line")
+class Line(GraphicObject):
+    """A Line
+    example: segments p1:p2, p3:p4
+    [p1,p2,p3,p4] = [(0,0,0),(1,1,1),(-1,2,0),(-1,-1,1)]
+    Line([p1,p2,p3,p4]).setVertexIndexes([2,2])
+    """
+    def __init__(self, ptos, color=(1, 1, 1), width=1, nvertices= -1, name="Line"):
+        super(Line,self).__init__(name)
         self.coords = SoCoordinate3()
         self.lineset = SoLineSet()
-        self.draw = SoDrawStyle()
         ## ============================
         self.setCoordinates(ptos, nvertices)
-        self.setWidth(width)
-        self.material.diffuseColor = color
+        self.width = width
+        self.diffuseColor = color
         ## ============================
-        sep.addChild(self.coords)
-        sep.addChild(self.draw)
-        sep.addChild(self.lineset)
-        self.addChild(sep)
-        #        self.whichChild = 0
+        self.addChild(self.coords)
+        self.addChild(self.lineset)
         ## ============================
         self.animation = Animation(self.setNumVertices, (4000, 1, len(self)))
 
-    @fluid
-    def setWidth(self, width):
-        self.draw.lineWidth.setValue(width)
-
-    width = property(fset=setWidth)
-
-    def resetObjectForAnimation(self):
-        self.setNumVertices(1)
-
     def __getitem__(self, i):
-        "overwrite BaseObject.__getitem__"
+        """overwrite BaseObject.__getitem__"""
         ## this makes more sense in this case
         return self.coords.point[i]
 
     def __len__(self):
         return len(self.coords.point)
 
+    @fluid
+    def setWidth(self, width):
+        self.drawStyle.lineWidth.setValue(width)
+
+    width = property(fset=setWidth)
+
+    def resetObjectForAnimation(self):
+        self.setNumVertices(1)
+
+    @fluid
     def setNumVertices(self, n):
-        "Defines the first n vertices to be drawn"
+        """Defines the first n vertices to be drawn"""
         self.lineset.numVertices.setValue(n)
 
+    @fluid
     def setVertexIndexes(self, lst):
-        "Controls which vertices are drawn"
+        """Controls which vertices are drawn"""
         self.lineset.numVertices.setValues(lst)
 
+    @fluid
     def setCoordinates(self, ptos, nvertices= -1):
         ## sometimes we don't want to show all points
         if nvertices == -1:
@@ -395,46 +376,45 @@ class Line(BaseObject):
 
     def project(self, x=None, y=None, z=None, color=(1, 1, 1), width=1, nvertices= -1):
         """insert the projection on the given plane"""
+        assert (x,y,z) != (None,None,None)
         pts = self.getCoordinates()
-        if x != None:
+        if x is not None:
             ptosProj = [Vec3(x, p[1], p[2]) for p in pts]
-        elif y != None:
+        elif y is not None:
             ptosProj = [Vec3(p[0], y, p[2]) for p in pts]
-        elif z != None:
+        elif z is not None:
             ptosProj = [Vec3(p[0], p[1], z) for p in pts]
-        return Line(ptosProj, color, width, nvertices, visible=True, parent=self.parent)
-#
-#
-#class CurveVectorField(Arrow):
-#    '''
-#    Holds data needed to draw an arrow along a vector field
-#    '''
-#    def __init__(self, function, domain_points, base_arrow_points, visible=True, parent=None):
-#        super(CurveVectorField, self).__init__(Vec3(0,0,0), Vec3(0,0,0), escala=0.1, escalaVertice=2, extremos=True, visible=True, parent=parent)
-#        self.function = function
-#        self.domain_points = None
-#        self.base_arrow_points = None
-#        self.end_points = None
-#        self.animation = None
-#        self.last_i = 0
-#        self.updatePoints(domain_points, base_arrow_points)
-#        self.setDiffuseColor((1, 0, 0))
-#        self.cono.height = .5
-#        self.base.setDiffuseColor((1, 1, 0))
-#        self.animation = Animation(self.animate_field, (8000, 0, len(self.base_arrow_points) - 1))
-#
-#
-#    def animate_field(self, i):
-#        self.setPoints(self.base_arrow_points[i], self.base_arrow_points[i] + self.end_points[i])
-#        self.last_i = i
-#
-#    def updatePoints(self, domain_points, base_arrow_points):
-#        self.domain_points = domain_points
-#        self.base_arrow_points = base_arrow_points
-#        self.end_points = map(self.function, self.domain_points)
-#        self.animate_field(self.last_i)
-#
-#
+        return Line(ptosProj, color, width, nvertices)
+
+
+class CurveVectorField(Arrow):
+    """Holds data needed to draw an arrow along a vector field"""
+    def __init__(self, function, domain_points, base_arrow_points):
+        super(CurveVectorField, self).__init__(Vec3(0,0,0), Vec3(0,0,0), scale=0.1, escalaVertice=2)
+        self.function = function
+        self.domain_points = None
+        self.base_arrow_points = None
+        # self.end_points are calculated by appliying function to domain_points
+        self.end_points = None
+        self.animation = None
+        self.last_i = 0
+        self.updatePoints(domain_points, base_arrow_points)
+        self.setDiffuseColor((1, 0, 0))
+        self.head.height = .5
+        self.setWidthFactor(.7)
+        self.animation = Animation(self.animateArrow, (8000, 0, len(self.base_arrow_points) - 1))
+
+    def animateArrow(self, i):
+        self.setPoints(self.base_arrow_points[i], self.base_arrow_points[i] + self.end_points[i])
+        self.last_i = i
+
+    def updatePoints(self, domain_points, base_arrow_points):
+        self.domain_points = domain_points
+        self.base_arrow_points = base_arrow_points
+        self.end_points = map(self.function, self.domain_points)
+        self.animateArrow(self.last_i)
+
+
 #class CurveVectorField2(BaseObject):
 #    '''
 #    Holds data needed to draw an arrow along a vector field
@@ -476,140 +456,142 @@ class Line(BaseObject):
 #        self.end_points = map(self.function, self.domain_points)
 #        self.animate_field(self.last_i)
 #
-#class Curve3D(BaseObject):
-#    """
-#    A curve in 3D. It is composed of one or several Lines
-#    """
-#    def __init__(self, func, iter, color=(1, 1, 1), width=1, nvertices= -1, visible=True, parent=None, domTrans=None):
-#        BaseObject.__init__(self, visible, parent)
-#        self.__derivative = None
-#        self.fields = {}
-#        self.lines = []
-#        self.iter = iter
-#        c = lambda t: Vec3(func(t))
-#        ## ============================
-#        if domTrans:
-#            ptsTr = intervalPartition(self.iter, domTrans)
-#            print max(ptsTr), min(ptsTr)
-#            points = map(c, ptsTr)
-#
-#        self.func = func
-#        if not isinstance(self.iter[0], Sequence):
-#            self.iter = [self.iter]
-#        for it in self.iter:
-#            points = intervalPartition(it, c)
-#            self.lines.append(Line(points, color, width, nvertices, visible=True, parent=self))
-#
-#        self.lengths = map(len, self.lines)
-#        self.animation = Animation(self.setNumVertices, (4000, 1, len(self)))
-#
-#    def setField(self, name, function):
-#        '''
-#        Creates an arrow along each of the points of the field
-#        @param function: callable
-#        @param name: string
-#        '''
-#        field = self.fields[name] = CurveVectorField(function, self.domainPoints, self.Points,parent=self)
-#        return field
-#
-#    def getDerivative(self):
-#        return self.__derivative
-#
-#    def setDerivative(self, func):
-#        self.__derivative = func
-#        end_points = map(self.__derivative, self.domainPoints)
-#        self.tangent_vector = Arrow(self.Points[0], self.Points[0] + end_points[0], visible=False, escala=0.1, escalaVertice=2, extremos=True, parent=self)
-#        self.tangent_vector.setDiffuseColor((1, 0, 0))
-#        self.tangent_vector.cono.height = .5
-#        self.tangent_vector.base.setDiffuseColor((1, 1, 0))
-#
-#        def animate_tangent(i):
-#            self.tangent_vector.setPoints(self.Points[i], self.Points[i] + end_points[i])
-#
-#        self.tangent_vector.animation = Animation(animate_tangent, (8000, 0, len(self) - 1))
-#
-#    derivative = property(getDerivative, setDerivative)
-#
-#
-#    def __len__(self):
-#        return sum(self.lengths)
-#
-#    def setNumVertices(self, n):
-#        "shows only the first n vertices"
-##        self.lineset.numVertices.setValue(n)
-#        ## find out on which line n lies
-#        for line in self.lines:
-#            nl = len(line)
-#            if n < nl:
-#                line.setNumVertices(n)
-#                break
-#            else:
-#                ## draw the whole line
-#                line.setNumVertices(nl)
-#                n -= nl
-#
-#    def getCoordinates(self):
-#        '''
-#        returns the joined coordinates of all the lines
-#        '''
-#        coord = []
-#        for line in self.lines:
-#            #------------"l += i" it's the same that "l = l + i"
-#            #------------coord = coord + line.getCoordinates()
-#            coord += line.getCoordinates()
-#        return coord
-#
-#    def project(self, x=None, y=None, z=None, color=(1, 1, 1), width=1, nvertices= -1):
-#        for line in self.lines:
-#            line.project(x, y, z, color, width, nvertices)
-#        return line.project(x, y, z, color, width, nvertices)
-#
-#
-#    def __getitem__(self, i):
-#        '''
-#        returns the i-th point
-#        @param i: the index
-#        '''
-#        for line in self.lines:
-#            nl = len(line)
-#            if i < nl:
-#                return line[i]
-#            else:
-#                i -= nl
-#
-#    def updatePoints(self, func = None):
-#        '''
-#        recalculates points according to the function func
-#        @param func: a function  R -> R^3
-#        '''
-#        if func is not None:
-#            self.func = func
-#        #c = lambda t: Vec3(self.func(t))
-#        for it, line in zip(self.iter, self.lines):
-#            line.setCoordinates(intervalPartition(it, self.func))
-#        #-----------------------------------------------------------------------
-#        for f in self.fields.values():
-#            f.updatePoints(self.domainPoints, self.Points)
-#
-#
-#    @property
-#    def domainPoints(self):
-#        '''
-#        returns the preimages of the points
-#        '''
-#        ret = []
-#        for it in self.iter:
-#            ret += intervalPartition(it)
-#        return ret
-#
-#    @property
-#    def Points(self):
-#        ret = []
-#        for line in self.lines:
-#            ret += line.getCoordinates()
-#        return ret
-#
-#
+
+class Curve3D(BaseObject):
+    """
+    A (possible broken) curve in 3D.
+    examples:
+    Curve3D(lambda x: (0,x,x**2),(-1,1,20))
+    Curve3D(lambda x: (0,x,x**2),[(-1,0,20),(0.2,1,20)])
+    """
+    def __init__(self, func, iter, color=(1, 1, 1), width=1, nvertices= -1, domTrans=None,name=''):
+        super(Curve3D,self).__init__(name)
+        self.__derivative = None
+        self.fields = {}
+        self.lines = []
+        self.iter = iter
+        c = lambda t: Vec3(func(t))
+        ## ============================
+        if domTrans:
+            ptsTr = intervalPartition(self.iter, domTrans)
+            print max(ptsTr), min(ptsTr)
+            points = map(c, ptsTr)
+
+        self.func = func
+        if not isinstance(self.iter[0], Sequence):
+            self.iter = [self.iter]
+        for it in self.iter:
+            points = intervalPartition(it, c)
+            self.lines.append(Line(points, color, width, nvertices))
+            self.addChild(self.lines[-1])
+
+        self.lengths = map(len, self.lines)
+        self.animation = Animation(self.setNumVertices, (4000, 1, len(self)))
+
+    def __len__(self):
+        return sum(self.lengths)
+
+    def __getitem__(self, i):
+        """
+        returns the i-th point
+        """
+        for line in self.lines:
+            nl = len(line)
+            if i < nl:
+                return line[i]
+            else:
+                i -= nl
+
+    def setField(self, name, function):
+        """
+        Creates an arrow along each of the points of the field
+        """
+        field = self.fields[name] = CurveVectorField(function, self.domainPoints, self.points)
+        self.addChild(field)
+        return field
+
+    def getDerivative(self):
+        return self.__derivative
+
+    def setDerivative(self, func):
+        self.__derivative = func
+        end_points = map(self.__derivative, self.domainPoints)
+        self.tangent_vector = Arrow(self.points[0], self.points[0] + end_points[0], scale=0.1, escalaVertice=2)
+        self.tangent_vector.setDiffuseColor((1, 0, 0))
+        self.tangent_vector.head.height = .5
+
+        def animate_tangent(i):
+            self.tangent_vector.setPoints(self.points[i], self.points[i] + end_points[i])
+
+        self.tangent_vector.animation = Animation(animate_tangent, (8000, 0, len(self) - 1))
+
+    derivative = property(getDerivative, setDerivative)
+
+
+    def setNumVertices(self, n):
+        """shows only the first n vertices"""
+
+        ## find out on which line n lies
+        for line in self.lines:
+            nl = len(line)
+            if n < nl:
+                line.setNumVertices(n)
+                break
+            else:
+                ## draw the whole line
+                line.setNumVertices(nl)
+                n -= nl
+
+    def getCoordinates(self):
+        """
+        returns the joined coordinates of all the lines
+        """
+        coord = []
+        for line in self.lines:
+            coord += line.getCoordinates()
+        return coord
+
+    def project(self, x=None, y=None, z=None, color=(1, 1, 1), width=1, nvertices= -1):
+        for line in self.lines:
+            line.project(x, y, z, color, width, nvertices)
+        return line.project(x, y, z, color, width, nvertices)
+
+
+    def updatePoints(self, func = None):
+        """
+        recalculates points according to the function func
+        @param func: a function  R -> R^3
+        """
+        if func is not None:
+            self.func = func
+        for it, line in zip(self.iter, self.lines):
+            line.setCoordinates(intervalPartition(it, self.func))
+        #-----------------------------------------------------------------------
+        for f in self.fields.values():
+            f.updatePoints(self.domainPoints, self.points)
+
+
+    @property
+    def domainPoints(self):
+        """
+        returns the preimages of the points
+        """
+        ret = []
+        for it in self.iter:
+            ret += intervalPartition(it)
+        return ret
+
+    @property
+    def points(self):
+        """
+        returns the points
+        """
+        ret = []
+        for line in self.lines:
+            ret += line.getCoordinates()
+        return ret
+
+
 #class Bundle3(BaseObject):
 #    def __init__(self, curve, cp, factor=1, name="", visible=False, parent=None):
 #        """curve is something derived from Line"""
@@ -952,9 +934,15 @@ class BasePlane(GraphicObject):
 if __name__ == "__main__":
     import sys
 
+    ob = Arrow(Vec3(1,1,1),Vec3(0,0,1))
+#    ob.setPoints(Vec3(1,1,1),Vec3(0,0,0))
+
+#    ob = Line([(0,0,0),(1,1,1),(-1,2,0),(-1,-1,1)], width=5).setVertexIndexes([2,2])
+#    ob = Curve3D(lambda x: (0,x,x**2),[(-1,0,20),(0.2,1,20)])
     app = QtGui.QApplication(sys.argv)
     viewer = MinimalViewer()
-    viewer.root.addChild(Sphere((0,0,0),1).root)
+    viewer.root.addChild(ob.root)
+
     viewer.resize(400, 400)
     viewer.show()
     viewer.viewAll()

@@ -212,25 +212,27 @@ class GenIntervalo(object):
                 self.n = 0
             raise StopIteration, self.direccion
     
-def genIntervalPartition(iter,  func = None):
-    "evaluate a function on the points of the interval partition"
-    vmin, vmax, npoints = iter
+def genIntervalPartition((vmin, vmax, npoints),  func = None):
+    """evaluate a function on the points of the interval partition, returns a generator
+    >>> list(genIntervalPartition([0,1,3]))
+    [0.0,0.5,1.0]
+    >>> list(genIntervalPartition([0,1,3], lambda x: x+1))
+    [1.0,1.5,2.0]
+    """
     dt = float(vmax - vmin) / ( npoints - 1 )
     n = 0
-    if not func: func = lambda x:x
+    if not func:
+        func = lambda x:x
     while n < npoints:
         yield func(vmin + n * dt)
         n += 1
 
-def intervalPartition(iter, func=None):
-    return list(genIntervalPartition(iter, func))
-
-#def intervalPartition(a,b,n):
-#    l = b - a
-#    return [l*(i/(n-1.)) + a for i in range(n)]
+def intervalPartition((vmin, vmax, npoints), func=None):
+    """evaluate a function on the points of the interval partition"""
+    return list(genIntervalPartition((vmin, vmax, npoints), func))
 
 class Range(object):
-    "Similar to xrange() but for float values"
+    """Similar to xrange() but for float values"""
     def __init__(self, vmin, vmax, npoints = 30):
         self.min = vmin
         self.max = vmax
@@ -294,6 +296,7 @@ def projection(q, p1, p2):
 ########### Open Inventor ##################    
 
 def write(node):
+    """returns the OI text representation for node"""
     wa = SoWriteAction()
     wa.apply(node)
 
@@ -367,31 +370,19 @@ def malla3(puntos, func, rangex, rangey):
 
 
 def wrap(node, show = True):
-    '''
-    wrap node with a SoSwitch
-    @param node:
-    @param show:
-    '''
-    if hasattr(node, "root"):
-        node = node.root
+    """wrap node with a SoSwitch, returns the switch"""
     switch = SoSwitch()
-    switch.addChild(node)
-    if show:
-        switch.whichChild = 0
-    else:
-        switch.whichChild = -1
+    switch.addChild(getattr(node,'root',node))
+    switch.whichChild = SO_SWITCH_ALL if show else SO_SWITCH_NONE
     return switch
 
 
 def make_hideable(node, show = True):
-    '''
-    wrap node with a SoSwitch
-    @param node:
-    @param show: bool
-    '''
-    root = getattr(node,"root",node)
+    """
+    Creates a SoSwitch with node as children, and puts it in property node.parent_switch
+    """
     switch = SoSwitch()
-    switch.addChild(root)
+    switch.addChild(getattr(node,"root",node))
     node.parent_switch = switch
     def getVisible(self):
         return self.parent_switch.whichChild.getValue() != SO_SWITCH_NONE
@@ -399,11 +390,10 @@ def make_hideable(node, show = True):
         self.parent_switch.whichChild = SO_SWITCH_ALL if val else SO_SWITCH_NONE
     node.__class__.visible = property(getVisible, setVisible)
     node.visible = show
-    return node
 
         
 def _1(r,g,b):
-    "Converts colors from 0-255 to 0-1"
+    """Converts colors from 0-255 to 0-1"""
     vmax = 255.
     return (r/vmax,g/vmax,b/vmax)
 
@@ -448,7 +438,7 @@ def manipulate(*args,**kwargs):
 
 
 def tuplize(arg):
-    "returns arg if it is already a sequence, (arg,) otherwise"
+    """returns arg if it is already a sequence, (arg,) otherwise"""
     return arg if isinstance(arg,collections.Sequence) else (arg,)
 
 if __name__ == "__main__":
