@@ -27,7 +27,7 @@ class BaseObject(object):
     }
     """
 
-    def __init__(self, name=''):
+    def __init__(self):
         self._children  = []
         self.animation  = None
         self.root       = SoSwitch()
@@ -36,14 +36,13 @@ class BaseObject(object):
         self.translation = SoTranslation()
 
         self.show()
-        self.root.setName(name)
         self.translation.translation = (0, 0, 0)
-
         self.root.addChild(self.separator)
         self.separator.addChild(self.drawStyle)
         self.separator.addChild(self.translation)
 
         super(BaseObject,self).__init__()
+
 
     @fluid
     def show(self):
@@ -61,8 +60,21 @@ class BaseObject(object):
         """
         root = getattr(child,'root',child)
         self.separator.addChild(root)
-        self._children.append(child)
+        if isinstance(child,BaseObject):
+            self._children.append(child)
 
+    def getChildren(self):
+        """
+        Return the BaseObject children nodes
+        """
+        return self._children
+
+    def getOpenInventorChildren(self):
+        return self.separator.getChildren()
+
+    @fluid
+    def setName(self,name):
+        self.root.setName(name)
 
     @fluid
     def setBoundingBox(self, xrange=None, yrange=None, zrange=None):
@@ -119,7 +131,7 @@ class BaseObject(object):
 
     @fluid
     def setOrigin(self, pos):
-        ''
+        """"""
         self.translation.translation = pos
 
     def getOrigin(self):
@@ -190,9 +202,13 @@ class MaterialMixin(object):
     def setAmbientColor(self, val):
         self.material.ambientColor.setValue(val)
 
+    ambientColor = property(fset=setAmbientColor)
+
     @fluid
     def setSpecularColor(self, val):
         self.material.specularColor.setValue(val)
+
+    specularColor = property(fset=setSpecularColor)
 
     @fluid
     def setShininess(self, val):
@@ -216,45 +232,11 @@ class MaterialMixin(object):
 class GraphicObject(BaseObject, MaterialMixin):
     """The base object + material managment"""
 
-    def __init__(self, name=''):
-        super(GraphicObject, self).__init__(name)
-
-
-class CompositeObject(BaseObject):
-    """
-    A Composite object doesn't have a material.
-    It is a container of BaseObjects
-    """
-
-    def __init__(self, name=''):
-        self._children = []
-        super(CompositeObject, self).__init__(name)
-
-    @fluid
-    def addChild(self, child):
-        """
-        Add child to the graph and save a reference to it
-        """
-        if not isinstance(child,BaseObject):
-            raise Exception(str(child) + ' is not instance of BaseObject')
-        self.separator.addChild(child.root)
-        self._children.append(child)
-
-    def getChildren(self):
-        """
-        Obtains the list of children objects
-        """
-        return self._children
-
-    children = property(getChildren)
-
+    def __init__(self):
+        super(GraphicObject, self).__init__()
 
 if __name__ == "__main__":
-#    ob = GraphicObject("objet")
-#    ob.show()
-#    print ob.toText()
-    co = CompositeObject()
-    ch = GraphicObject()
-    co.addChild(ch)
-    print co.getChildren()
+    ch = GraphicObject(SoSeparator())
+    ch.toText()
+
     

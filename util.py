@@ -379,17 +379,18 @@ def wrap(node, show = True):
 
 def make_hideable(node, show = True):
     """
-    Creates a SoSwitch with node as children, and puts it in property node.parent_switch
+    Creates a SoSwitch with node as children, and puts it in property node.root
     """
     switch = SoSwitch()
-    switch.addChild(getattr(node,"root",node))
-    node.parent_switch = switch
+    switch.addChild(node)
+    node.root = switch
     def getVisible(self):
-        return self.parent_switch.whichChild.getValue() != SO_SWITCH_NONE
+        return self.root.whichChild.getValue() != SO_SWITCH_NONE
     def setVisible(self,val):
-        self.parent_switch.whichChild = SO_SWITCH_ALL if val else SO_SWITCH_NONE
+        self.root.whichChild = SO_SWITCH_ALL if val else SO_SWITCH_NONE
     node.__class__.visible = property(getVisible, setVisible)
     node.visible = show
+    return node
 
         
 def _1(r,g,b):

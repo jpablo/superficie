@@ -6,6 +6,7 @@ from superficie.util import tuplize
 
 #Animation(setNumVertices,(2000,0,npuntos))
 from superficie.Animation0 import OneShot
+from util import GenIntervalo
 
 class Animation(OneShot):
     def __init__(self,func,(duration, nmin, nmax), times = 1):

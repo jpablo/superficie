@@ -364,17 +364,17 @@ class Page(QtCore.QObject):
         return self.children.values()
 
     def setupPlanes(self, r0=(-1, 1, 5)):
-        self.coordPlanes["xy"] = BasePlane(plane="xy", parent=self)
-        self.coordPlanes["xz"] = BasePlane(plane="xz", parent=self)
-        self.coordPlanes["yz"] = BasePlane(plane="yz", parent=self)
-
-        self.coordPlanes["xy"].setDiffuseColor((1,1,0))
-        self.coordPlanes["xz"].setDiffuseColor((1,0,1))
-        self.coordPlanes["yz"].setDiffuseColor((0,1,1))
+        self.coordPlanes = {
+            'xy':BasePlane(plane="xy").setDiffuseColor((1,1,0)),
+            'xz':BasePlane(plane="xz").setDiffuseColor((1,0,1)),
+            'yz':BasePlane(plane="yz").setDiffuseColor((0,1,1))
+        }
 
         for p in self.coordPlanes.values():
             p.setRange(r0)
             p.setHeight(r0[0])
+            self.addChild(p)
+
 
 
     def showAxis(self,show):
@@ -395,6 +395,9 @@ class Page(QtCore.QObject):
 
 
     def setupAnimations(self, objects):
+        """
+        Extracts the 'animation' property of the objects and chains them
+        """
         self.objectsForAnimate = objects
         self.animations = [ getattr(ob, 'animation', ob) for ob in objects ]
         Animation.chain(self.animations, pause=1000)

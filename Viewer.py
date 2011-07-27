@@ -11,6 +11,7 @@ from util import callback, pegaNombres, readFile
 from Book import Book
 from superficie import globals
 
+
 TransparencyType = [
    'SCREEN_DOOR, ADD',
    'DELAYED_ADD',
@@ -45,6 +46,10 @@ class Viewer(QWidget):
         #=======================================================================
         self.book.pageChanged.connect(self.onPageChanged)
         self.book.chapterChanged.connect(self.onChapterChanged)
+
+
+    def slot(self):
+        print "Viewer.slot"
         
     
     def getWhichPage(self):
