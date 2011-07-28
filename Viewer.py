@@ -65,7 +65,7 @@ class Viewer(QWidget):
         return self.book.chapter
     
     def getWhichChapter(self):
-        "returns the selected chapter"
+        """returns the selected chapter"""
         return self.book.whichChapter
 
     def setWhichChapter(self, n):
@@ -89,12 +89,12 @@ class Viewer(QWidget):
 
     @property
     def camera(self):
-        "Gets the camera"
+        """Gets the camera"""
         return self.viewer.getSoRenderManager().getCamera()
 
 
     def setInitialCameraPosition(self):
-        "Chose an adecuate initial pov"
+        """Chose an adecuate initial pov"""
         self.camera.position = (7, 7, 7)
         self.camera.pointAt(SbVec3f(0, 0, 0), SbVec3f(0, 0, 1))
         self.camera.farDistance = 25

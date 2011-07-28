@@ -261,7 +261,8 @@ class Chapter(QtCore.QObject):
             self.pagesSwitch.whichChild = n
             self.widget.pageStack.setCurrentIndex(n)
             self.notasStack.setCurrentIndex(n)
-            self.pageChanged.emit(n)
+#            self.pageChanged.emit(n)
+
             
     whichPage = property(getWhichPage, setWhichPage)
     
@@ -273,27 +274,6 @@ class Chapter(QtCore.QObject):
 
     def prevPage(self):
         self.changePage(-1)
-
-#    def removePage(self,n):
-#        ## TODO: hay que borrar todos los objetos (en self.objetos) asociados a la figura!
-#        self.switch.removeChild(n)
-#        stack = self.ui.pageStack
-#        stack.removeWidget(stack.widget(n))
-#
-#    def removeAllPages(self):
-#        self.switch.removeAllChildren()
-#        stack = self.ui.pageStack
-#        while stack.count() > 0:
-#            stack.removeWidget(stack.widget(0))
-##        self.objetos = dictRepr()
-#
-#
-#
-#    def getPage(self):
-#        "returns a Separator"
-#        if self.chapter:
-#            return self.chapter[self.whichPage]
-#
 
 
 class Page(QtCore.QObject):
