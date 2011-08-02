@@ -31,7 +31,7 @@ class Viewer(QWidget):
     def __init__(self, parent=None, uiLayout=None, notasLayout=None, luces=True):
         super(Viewer, self).__init__(parent)
         globals.ViewerInstances.append(self)
-        self.book = Book()
+        self.book = Book(self)
         #=======================================================================
         # Copiamos algunos atributos de book
         #=======================================================================
@@ -79,7 +79,7 @@ class Viewer(QWidget):
     
     @staticmethod
     def Instance():
-        return globals.ViewerInstances[-1] #@UndefinedVariable
+        return globals.ViewerInstances[-1]
         
     def onPageChanged(self, c, n):
         self.viewAll()
@@ -92,6 +92,13 @@ class Viewer(QWidget):
         """Gets the camera"""
         return self.viewer.getSoRenderManager().getCamera()
 
+    def setCameraPosition(self, position):
+        self.camera.position = position
+
+    def getCameraPosition(self):
+        return self.camera.position.getValue().getValue()
+
+    cameraPosition = property(getCameraPosition, setCameraPosition)
 
     def setInitialCameraPosition(self):
         """Chose an adecuate initial pov"""

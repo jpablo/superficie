@@ -8,6 +8,7 @@ from random import random
 import os
 from os.path import join
 import collections
+from itertools import izip
 
 import util
 modulosPath = os.path.dirname(util.__file__)
@@ -25,6 +26,22 @@ SoInput.addDirectoryFirst(mods)
 v = Vec3 = SbVec3f
 
 
+###### vector arithmetic ######################
+
+def vsum(lst1,lst2):
+    """term-by-term sum
+    >>> vsum([1,2,3],[1,2,3])
+    [2,4,6]
+    """
+    return map(lambda (x,y): x+y ,izip(lst1,lst2))
+
+def mmap(fn):
+    """ A variant of map
+    allows this sintax:
+    >>> mmap(lambda x: x+1)([1,2,3])
+    [2,3,4]
+    """
+    return lambda lst: map(fn, lst)
 ###### Functions ######################
 
 class partial(object):
@@ -62,7 +79,7 @@ def evalIfDef(ob, fn, arg):
 def identity(x): return x
 
 class nodeDict(dict):
-    "a dictionary which searches keys using comparison operator =="
+    """a dictionary which searches keys using comparison operator =="""
     def __init__(self, **args):
         dict.__init__(self, **args)
         
@@ -70,7 +87,7 @@ class nodeDict(dict):
 #        super(nodeDict,self).__setitem__(key,value)
         
     def __getitem__(self, key):
-        "this is what diferentiates nodeDic from a regular dict"
+        """this is what diferentiates nodeDic from a regular dict"""
         for k,v in self.items():
             if k == key:
                 return v
@@ -258,7 +275,7 @@ def genCircular(lst):
 ########## Geometry ##################        
     
 def border(p1,p2,k):
-    "calcula la intersección con un círculo de radio k"
+    """calcula la intersección con un círculo de radio k"""
     (x1,y1) = p1
     (x2,y2) = p2
     x2mx1 = x2 - x1
@@ -281,7 +298,7 @@ def projection(q, p1, p2):
     c = ((x1 - x2) * (x2 - x3) + (y1 - y2) * (y2 - y3)) / ( pow(x1-x2,2) + pow(y1-y2,2) )
     x = x2 + (x2-x1) * c
     y = y2 + (y2-y1) * c
-    return (x,y)
+    return x,y
 
 #def projectionVecs(a, u):  
 #    ## segun mathworld la formula es:
