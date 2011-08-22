@@ -409,24 +409,38 @@ def make_hideable(node, show = True):
     node.visible = show
     return node
 
-        
+
 def _1(r,g,b):
     """Converts colors from 0-255 to 0-1"""
     vmax = 255.
     return (r/vmax,g/vmax,b/vmax)
 
-def main(args=None):
-    print "main"
-    if args == None:
+def main(chapter_cls=None):
+    # to run interactively with ipython:
+    # ipython -i --gui=qt script.py
+    # in this case, QtGui.QApplication.instance() will be prebuilt
+    from PyQt4 import QtGui
+    from superficie.Viewer import Viewer
+    app = QtGui.QApplication.instance()
+    run_exec = False
+    if not app:
         import sys
-        args = sys.argv
-    from pivy.gui.soqt import SoQt
-    from PyQt4 import QtCore, QtGui
-    app = QtGui.QApplication(args)
-    SoQt.init(None)
-    app.connect(app, QtCore.SIGNAL('lastWindowClosed()'), app, QtCore.SLOT('quit()'))
-    return app
-    
+        app = QtGui.QApplication(sys.argv)
+        run_exec = True
+    visor = Viewer()
+    if chapter_cls:
+        visor.addChapter(chapter_cls())
+    ## ============================
+    visor.whichPage = 0
+    visor.resize(400, 400)
+    visor.show()
+    visor.trackCameraPosition(True)
+    visor.viewAll()
+    visor.chaptersStack.show()
+#    visor.notasStack.show()
+    if run_exec:
+        sys.exit(app.exec_())
+    return visor
 
 def main2(args=None):
     if args == None:
@@ -458,6 +472,7 @@ def manipulate(*args,**kwargs):
 def tuplize(arg):
     """returns arg if it is already a sequence, (arg,) otherwise"""
     return arg if isinstance(arg,collections.Sequence) else (arg,)
+
 
 if __name__ == "__main__":
     from PyQt4 import QtGui, QtCore

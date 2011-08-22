@@ -11,6 +11,13 @@ from util import callback, pegaNombres, readFile
 from Book import Book
 from superficie import globals
 
+SoCamera.upVector = property(lambda self: self.orientation.getValue() * SbVec3f(0,1,0))
+SoCamera.cameraDirection = property(lambda self: self.orientation.getValue() * SbVec3f(0,0,-1))
+def newPointAt(self, vec):
+    self.position = vec + -self.cameraDirection
+SoCamera.newPointAt = newPointAt
+
+SbVec3f.__repr__ = lambda self: "SbVec3f(%f,%f,%f)" % self.getValue()
 
 TransparencyType = [
    'SCREEN_DOOR, ADD',
@@ -81,22 +88,25 @@ class Viewer(QWidget):
     def Instance():
         return globals.ViewerInstances[-1]
         
-    def onPageChanged(self, c, n):
-        self.viewAll()
+    def onPageChanged(self, page, n):
+        print "onPageChanged", page, n
+        if page.camera_position is None:
+            self.viewAll()
         
     def onChapterChanged(self, c):
+        print 'onChapterChanged', c
         self.viewAll()
 
-    @property
-    def camera(self):
-        """Gets the camera"""
-        return self.viewer.getSoRenderManager().getCamera()
+#    @property
+#    def camera(self):
+#        """Gets the camera"""
+#        return self.viewer.getSoRenderManager().getCamera()
 
     def setCameraPosition(self, position):
         self.camera.position = position
 
     def getCameraPosition(self):
-        return self.camera.position.getValue().getValue()
+        return self.camera.position.getValue()
 
     cameraPosition = property(getCameraPosition, setCameraPosition)
 
@@ -110,13 +120,23 @@ class Viewer(QWidget):
     def trackCameraPosition(self, val):
         if val:
             if not hasattr(self, "cameraSensor"):
-                def fn(camera, sensor):
-                    print camera.position.getValue().getValue()
-                self.cameraSensor = callback(self.camera.position, fn, self.camera)
+                def ppos(camera, sensor):
+                    print "position:", camera.position.getValue()
+                def por(camera, sensor):
+                    print "orientation:", camera.orientation.getValue().getAxisAngle()
+#                    axis,angle = camera.orientation.getValue().getAxisAngle()
+#                    print "rotation: {"
+#                    print "\taxis:", axis
+#                    print "\tvalue:", angle
+#                    print "}"
+                self.cameraSensor = callback(self.camera.position, ppos, self.camera)
+                self.cameraSensor2 = callback(self.camera.orientation, por, self.camera)
             else:
                 self.cameraSensor.attach(self.camera.position)
+                self.cameraSensor2.attach(self.camera.orientation)
         elif hasattr(self, "cameraSensor"):
             self.cameraSensor.detach()
+            self.cameraSensor2.detach()
 
     def addLights(self):
         self.lucesColor = readFile(pegaNombres("Viewer", "lights.iv")).getChild(0)
@@ -139,6 +159,12 @@ class Viewer(QWidget):
     def insertLight(self, luz):
         self.getSRoot().insertChild(luz, 0)
 
+    def viewAll(self):
+        self.viewer.viewAll()
+
+    def setTransparencyType(self, tr_type):
+        self.viewer.setTransparencyType(tr_type)
+
     def initializeViewer(self, luces):
         # ============================
         fmt = QtOpenGL.QGLFormat()
@@ -149,10 +175,6 @@ class Viewer(QWidget):
         layout = QtGui.QVBoxLayout()
         self.setLayout(layout)
         layout.addWidget(self.viewer)
-        ## ============================
-        ## copy some attributes
-        for attr in ["viewAll", "setTransparencyType"]:
-            setattr(self, attr, getattr(self.viewer, attr))
         ## ============================
         self.viewer.setSceneGraph(self.root)
         ## ============================
@@ -168,6 +190,7 @@ class Viewer(QWidget):
         self.root.addChild(rotor)
         self.rotor = rotor
         ## ============================
+        self.camera = self.viewer.getSoRenderManager().getCamera()
         self.setInitialCameraPosition()
         ## ===========================
         if luces:
