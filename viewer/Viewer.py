@@ -6,9 +6,10 @@ from PyQt4 import QtCore, QtGui, QtOpenGL
 
 from pivy.coin import *
 from pivy.quarter import QuarterWidget
+from superficie.book import Book
+
 Quarter = True
-from util import callback, pegaNombres, readFile
-from Book import Book
+from superficie.util import callback, pegaNombres, readFile
 from superficie import globals
 
 SoCamera.upVector = property(lambda self: self.orientation.getValue() * SbVec3f(0,1,0))
@@ -139,7 +140,7 @@ class Viewer(QWidget):
             self.cameraSensor2.detach()
 
     def addLights(self):
-        self.lucesColor = readFile(pegaNombres("Viewer", "lights.iv")).getChild(0)
+        self.lucesColor = readFile(pegaNombres("viewer", "lights.iv")).getChild(0)
         self.insertLight(self.lucesColor)
         self.lucesColor.whichChild = SO_SWITCH_ALL
         ## ============================

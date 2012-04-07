@@ -1,13 +1,15 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from pivy.coin import *
 
 from superficie.Viewer import Viewer
 
 from Animation import Animation
+from nodes.arroy import Arrow
+from plots.parametricplot3d import ParametricPlot3D
+from plots.revolutionplot3d import RevolutionPlot3D
+
 Quarter = True
 
-from PyQt4.QtCore import QObject, pyqtSignal
 from PyQt4 import QtGui, QtCore
 import operator
 import itertools
@@ -15,7 +17,6 @@ import itertools
 from util import  conecta, intervalPartition, Range, malla,make_hideable
 from BaseObject import GraphicObject, fluid
 from gui import Slider
-from Objects import Arrow
 from FreeVariableFunction import FreeVariableFunction
 
 ## TODO: el código necesita averiguar qué símbolos están definidos
@@ -298,45 +299,10 @@ class Mesh(GraphicObject):
         self.widget.layout().insertWidget(1,w,0, QtCore.Qt.AlignTop)
 
 
-
-class ParametricPlot3D(Mesh):
-    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = ''):
-        super(ParametricPlot3D,self).__init__(rangeX,rangeY,name)
-        funcs = toList(funcs)
-        for fn in funcs:
-            self.addQuad(fn)
-
-    def addFunction(self,func):
-        self.addQuad(func)            
-
-class Plot3D(Mesh):
-    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = ''):
-        super(Plot3D,self).__init__(rangeX,rangeY,name)
-        funcs = toList(funcs)
-        params = map(func2param, funcs)
-        for par in params:
-            self.addQuad(par)
-
-    def addFunction(self,func):
-        self.addQuad(func2param(func))            
-        
-#    def checkReturnValue(self, func, val):
 #        if not operator.isNumberType(val):
 #            raise TypeError, "function %s does not produces a number" % func
-        
-            
-class RevolutionPlot3D(Mesh):
-    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,2*pi,40), name = ''):
-        super(RevolutionPlot3D,self).__init__(rangeX,rangeY,name)
-        funcs = toList(funcs)
-        params = map(func2revolution_param, funcs)
-        for par in params:
-            self.addQuad(par)
 
-    def addFunction(self,func):
-        self.addQuad(func2revolution_param(func))            
-        
-#    def checkReturnValue(self, func, val):
+
 #        if not operator.isNumberType(val):
 #            raise TypeError, "function %s does not produces a number" % func
             
@@ -344,56 +310,6 @@ class RevolutionPlot3D(Mesh):
 #class RevolutionParametricPlot3D(ParametricPlot3D):
 #    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = True, parent = None):
 #        ParametricPlot3D.__init__(self,funcs,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
-
-
-
-class VectorField3D(GraphicObject):
-    def __init__(self, curve, cp, col, factor=1, name="", visible = False, parent = None):
-        """curve is something derived from Line"""
-        GraphicObject.__init__(self,visible,parent)
-        comp = SoComplexity()
-        comp.value.setValue(.1)
-        self.separator.addChild(comp)
-        ## ============================
-        points = curve.getPoints()
-        pointsp = [curve[i]+cp(t)*factor for i,t in enumerate(intervalPartition(curve.iter))]
-        for p,pp in zip(points,pointsp):
-            self.addChild(Arrow(p,pp,visible=True,escala=.005,extremos=True))
-
-        self.animation = Animation(lambda num: self[num-1].show(),(4000,1,len(points)))
-
-    def setMaterial(self,mat):
-        for c in self.getChildren():
-            c.material.ambientColor  = mat.ambientColor
-            c.material.diffuseColor  = mat.diffuseColor
-            c.material.specularColor = mat.specularColor
-            c.material.shininess     = mat.shininess
-
-    def setHeadMaterial(self,mat):
-        for c in self.getChildren():
-            c.matHead.ambientColor  = mat.ambientColor
-            c.matHead.diffuseColor  = mat.diffuseColor
-            c.matHead.specularColor = mat.specularColor
-            c.matHead.shininess     = mat.shininess
-
-    def resetObjectForAnimation(self):
-        self.hideAllArrows()
-
-    def setRadius(self, r):
-        for c in self.getChildren():
-            c.setRadius(r)
-
-    def setLengthFactor(self, factor):
-        for c in filter(lambda c: isinstance(c,Arrow), self.getChildren()):
-            c.setLengthFactor(factor)
-
-    def hideAllArrows(self):
-        for arrow in self.getChildren():
-            arrow.hide()
-
-    def setNumVisibleArrows(self, num):
-        """set the number of arrow to show"""
-        print "setNumVisibleArrows:", num
 
 
 
