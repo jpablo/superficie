@@ -1,8 +1,8 @@
 from collections import Sequence
 from superficie.animations.animation import Animation
-from superficie.util import Vec3, intervalPartition
+from superficie.util import Vec3, intervalPartition, vsum
 
-#from nodes.curvevectorfield import CurveVectorField
+from superficie.nodes.curve_vectorfield import CurveVectorField
 from superficie.nodes.line import Line
 from superficie.base import BaseObject
 
@@ -57,16 +57,10 @@ class Curve3D(BaseObject):
         ## self.interval[0][0] is the start of the first interval
         ## should be a valid value, anyway
         self.function = fix_function(func,self.intervals[0][0])
-#        ## ============================
-#        if domTrans:
-#            ptsTr = intervalPartition(self.interval, domTrans)
-#            points = map(c, ptsTr)
-
         for it in self.intervals:
             points = intervalPartition(it, self.function)
             self.lines.append(Line(points, color, width, nvertices))
             self.separator.addChild(self.lines[-1].root) ## <--- container feature!!
-
         self.lengths = map(len, self.lines)
         self.animation = Animation(self.setNumVertices, (4000, 1, len(self)))
 
@@ -81,32 +75,13 @@ class Curve3D(BaseObject):
         return self.lines[index][offset]
 
 
-    def setField(self, name, function):
+    def attachField(self, name, function):
         """
         Creates an arrow along each of the points of the field
         """
-        return None
         field = self.fields[name] = CurveVectorField(function, self.domainPoints, self.points)
-        self.addChild(field)
+        self.separator.addChild(field.root)
         return field
-
-    def getDerivative(self):
-        return self.__derivative
-
-    def setDerivative(self, func):
-        self.__derivative = func
-        self.end_points = map(self.__derivative, self.domainPoints)
-        self.tangent_vector = Arrow(self.points[0], self.points[0] + self.end_points[0])
-        self.tangent_vector.setDiffuseColor((1, 0, 0))
-        self.tangent_vector.head.height = .5
-
-        def animate_tangent(i):
-            self.tangent_vector.setPoints(self.points[i], self.points[i] + self.end_points[i])
-
-        self.tangent_vector.animation = Animation(animate_tangent, (8000, 0, len(self) - 1))
-
-    derivative = property(getDerivative, setDerivative)
-
 
     def setNumVertices(self, i):
         """shows only the first n vertices"""

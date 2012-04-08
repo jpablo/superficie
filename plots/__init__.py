@@ -1,1 +1,1 @@
-__author__ = 'jpablo'
+from parametric_plot3d import ParametricPlot3D

@@ -3,6 +3,7 @@ from PyQt4 import QtGui
 from pivy.coin import SoSeparator
 from superficie.animations.animation import Animation
 from superficie.widgets.button import Button
+from superficie.nodes import Arrow
 #from superficie.nodes.baseplane import BasePlane
 from superficie.util import nodeDict, Vec3
 
@@ -96,19 +97,18 @@ class Page(QtCore.QObject):
         """
         @param show: bool
         """
-        return
         self.axis_x.setVisible(show)
         self.axis_y.setVisible(show)
         self.axis_z.setVisible(show)
 
     def setupAxis(self):
-        return
         self.axis_x = Arrow(Vec3(-5, 0, 0), Vec3(5, 0, 0))
         self.axis_y = Arrow(Vec3(0, -5, 0), Vec3(0, 5, 0))
         self.axis_z = Arrow(Vec3(0, 0, -5), Vec3(0, 0, 5))
-#        self.axis_x.setDiffuseColor((1, 0, 0)).setWidthFactor(.2)
-#        self.axis_y.setDiffuseColor((0, 1, 0)).setWidthFactor(.2)
-#        self.axis_z.setDiffuseColor((0, 0, 1)).setWidthFactor(.2)
+        self.axis_x.setDiffuseColor((1, 0, 0)).setWidthFactor(.2)
+        self.axis_y.setDiffuseColor((0, 1, 0)).setWidthFactor(.2)
+        self.axis_z.setDiffuseColor((0, 0, 1)).setWidthFactor(.2)
+        self.addChildren([self.axis_x, self.axis_y, self.axis_z ])
 
 
     def setupAnimations(self, objects):

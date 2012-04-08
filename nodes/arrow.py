@@ -1,8 +1,9 @@
+
 from math import acos, sqrt
 from pivy.coin import SoSeparator, SoTransform, SoCylinder, SoCone, SoMaterial
-from BaseObject import GraphicObject, fluid
-from nodes.arrow import adjustArg
-from util import Vec3, segment
+from superficie.base import MaterialNode
+from superficie.util import Vec3, segment
+from superficie.utils import fluid
 
 
 def adjustArg(arg):
@@ -13,8 +14,24 @@ def adjustArg(arg):
     return arg
 
 
+def calc_transformations(p1, p2, factor):
+    scaledP2 = segment(p1, p2, factor)
+    vec = scaledP2 - p1
+    length = vec.length() if vec.length() != 0 else .00001
+    ## why a vector on the y axis? because by default the axis of the cylinder is the y axis
+    ## so we need to calculate the rotation from the y axis to de desired position
+    y_axis = Vec3(0, length, 0)
+    rot_axis = y_axis.cross(vec)
+    ## v.y == |v| |y| cos(t) ; where t: angle between v and y
+    ## in this case, |y_axis| == |vec| == length
+    cos_angle = y_axis.dot(vec) / length ** 2
+    angle = acos(adjustArg(cos_angle))
+    if rot_axis.length() < .0001:
+        rot_axis = Vec3(1, 0, 0)
+    return angle, rot_axis, length
 
-class Arrow(GraphicObject):
+
+class Arrow(MaterialNode):
     """An arrow
     Example: Arrow((1,1,1),(0,0,1))
     """
@@ -27,23 +44,29 @@ class Arrow(GraphicObject):
         self.lengthFactor = 1
         self.widthFactor = 1
         ## ============================
-        separator = SoSeparator()
-        separator.setName("Tube")
-
         self.tr1 = SoTransform()
         self.tr2 = SoTransform()
         self.tr1.setName('tr1')
         self.tr2.setName('tr2')
 
-        self.setAmbientColor((.0, .0, .0))
-        self.setDiffuseColor((.4, .4, .4))
-        self.setSpecularColor((.8, .8, .8))
-        self.setShininess(.1)
+        self.ambientColor = (.0, .0, .0)
+        self.diffuseColor = (.4, .4, .4)
+        self.specularColor = (.8, .8, .8)
+        self.shininess = .1
         self.body = SoCylinder()
         self.body.setName("body")
         ## ==========================
-        head_separator = SoSeparator()
+        self.separator.addChild(self.tr2)
+        self.separator.addChild(self.tr1)
+        self.separator.addChild(self.body)
+        self.separator.addChild(self.build_head())
+        ## ============================
+        self.calcTransformation()
+        self.setRadius(radius)
 
+    def build_head(self):
+        head_separator = SoSeparator()
+        head_separator.setName('head')
         self.head = SoCone()
         self.head_transformation = SoTransform()
         self.head_material = SoMaterial()
@@ -54,15 +77,7 @@ class Arrow(GraphicObject):
         head_separator.addChild(self.head_material)
         head_separator.addChild(self.head_transformation)
         head_separator.addChild(self.head)
-        ## ==========================
-        separator.addChild(self.tr2)
-        separator.addChild(self.tr1)
-        separator.addChild(self.body)
-        separator.addChild(head_separator)
-        ## ============================
-        self.calcTransformation()
-        self.setRadius(radius)
-        self.addChild(separator)
+        return head_separator
 
     @fluid
     def setPoints(self, p1, p2):
@@ -71,24 +86,6 @@ class Arrow(GraphicObject):
         self.p2initial = self.p2 = Vec3(p2)
         self.calcTransformation()
         self.adjust_body_height()
-
-
-    @staticmethod
-    def calc_transformations(p1, p2, factor):
-        scaledP2 = segment(p1, p2, factor)
-        vec = scaledP2 - p1
-        length = vec.length() if vec.length() != 0 else .00001
-        ## why a vector on the y axis? because by default the axis of the cylinder is the y axis
-        ## so we need to calculate the rotation from the y axis to de desired position
-        y_axis = Vec3(0, length, 0)
-        rot_axis = y_axis.cross(vec)
-        ## v.y == |v| |y| cos(t) ; where t: angle between v and y
-        ## in this case, |y_axis| == |vec| == length
-        cos_angle = y_axis.dot(vec) / length ** 2
-        angle = acos(adjustArg(cos_angle))
-        if rot_axis.length() < .0001:
-            rot_axis = Vec3(1, 0, 0)
-        return angle, rot_axis, length
 
     @property
     def body_height(self):
@@ -106,7 +103,7 @@ class Arrow(GraphicObject):
         self.head_transformation.translation = (0, self.body_height/2 + self.head_height/2, 0)
 
     def calcTransformation(self):
-        angle, rot_axis, length = Arrow.calc_transformations(self.p1, self.p2initial, self.lengthFactor)
+        angle, rot_axis, length = calc_transformations(self.p1, self.p2initial, self.lengthFactor)
         self.full_body_height = length
         self.set_body_height(length)
         self.tr2.translation = self.p1

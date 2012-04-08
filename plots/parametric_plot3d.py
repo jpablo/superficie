@@ -1,6 +1,4 @@
-from plots.Plot3D import Mesh, toList
-
-__author__ = 'jpablo'
+from base import Mesh, toList
 
 class ParametricPlot3D(Mesh):
     def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = ''):

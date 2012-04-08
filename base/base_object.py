@@ -35,16 +35,10 @@ class BaseObject(object):
 
     @fluid
     def setVisible(self, visible):
-        if visible:
-            self.root.whichChild = SO_SWITCH_ALL
-        else:
-            self.root.whichChild = SO_SWITCH_NONE
+        self.root.whichChild = SO_SWITCH_ALL if visible else SO_SWITCH_NONE
 
     def getVisible(self):
-        if self.root.whichChild.getValue() == SO_SWITCH_ALL:
-            return True
-        elif self.root.whichChild.getValue() == SO_SWITCH_NONE:
-            return False
+        return self.root.whichChild.getValue() == SO_SWITCH_ALL
 
     visible = property(fget=getVisible, fset=setVisible)
 
@@ -55,7 +49,6 @@ class BaseObject(object):
     @fluid
     def hide(self):
         self.setVisible(False)
-
 
     @fluid
     def setName(self,name):
@@ -101,7 +94,6 @@ class BaseObject(object):
 
     @fluid
     def setOrigin(self, pos):
-        """"""
         self.translation.translation = pos
 
     def getOrigin(self):
@@ -114,7 +106,6 @@ class BaseObject(object):
 
     def resetObjectForAnimation(self):
         pass
-
 
     def toText(self):
         """obtains the openinventor format representation"""

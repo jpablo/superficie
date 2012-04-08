@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 from pivy.coin import *
 
-from superficie.Viewer import Viewer
+from superficie.viewer.Viewer import Viewer
 
-from Animation import Animation
-from nodes.arroy import Arrow
-from plots.parametricplot3d import ParametricPlot3D
-from plots.revolutionplot3d import RevolutionPlot3D
+from superficie.animations.animation import Animation
 
 Quarter = True
 
@@ -15,7 +12,6 @@ import operator
 import itertools
 
 from util import  conecta, intervalPartition, Range, malla,make_hideable
-from BaseObject import GraphicObject, fluid
 from gui import Slider
 from FreeVariableFunction import FreeVariableFunction
 
@@ -315,6 +311,8 @@ class Mesh(GraphicObject):
 
 if __name__ == "__main__":
     import sys
+    from parametric_plot3d import ParametricPlot3D
+    from revolution_plot3d import RevolutionPlot3D
 
     app = QtGui.QApplication(sys.argv)
     Mesh.autoAdd = True

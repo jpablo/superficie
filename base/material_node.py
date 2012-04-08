@@ -15,8 +15,6 @@ class MaterialNode(BaseObject):
         self.separator.addChild(self.material)
         self.separator.addChild(self.transparencyType)
 
-
-
     @fluid
     def setTransparency(self, val):
         self.material.transparency.setValue(val)

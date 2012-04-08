@@ -1,8 +1,8 @@
 from PyQt4 import QtGui
-from nodes.arroy import Arrow
-from nodes.line import Line
+from superficie.nodes.arrow import Arrow
+from superficie.nodes.line import Line
 
-from MinimalViewer import MinimalViewer
+from superficie.viewer.MinimalViewer import MinimalViewer
 
 if __name__ == "__main__":
     import sys
