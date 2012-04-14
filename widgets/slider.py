@@ -1,6 +1,4 @@
-import PyQt4.QtCore
-import PyQt4.QtGui
-import PyQt4.uic
+from PyQt4 import QtGui, QtCore, uic
 from superficie.util import identity, pegaNombres, partial, segment, conecta
 
 __author__ = 'jpablo'

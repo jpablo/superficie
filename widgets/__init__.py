@@ -1,1 +1,2 @@
-__author__ = 'jpablo'
+from slider import Slider
+from visible_checkbox import VisibleCheckBox

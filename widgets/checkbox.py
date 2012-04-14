@@ -1,4 +1,4 @@
-import PyQt4.QtGui
+from PyQt4 import QtGui
 from superficie.util import connect
 
 __author__ = 'jpablo'

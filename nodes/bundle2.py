@@ -1,21 +1,21 @@
 from pivy.coin import SoComplexity
-from superficie.Animation import Animation
-from BaseObject import BaseObject
+from superficie.animations import Animation
+from superficie.base import MaterialNode
+from superficie.nodes import Arrow
 
-__author__ = 'jpablo'
 
-class Bundle2(BaseObject):
+class Bundle2(MaterialNode):
     def __init__(self, curve3D, function, col, factor=1):
         """curve is something derived from Curve3D"""
         super(Bundle2,self).__init__()
         comp = SoComplexity()
         comp.value.setValue(.1)
-        self.addChild(comp)
+        self.separator.addChild(comp)
         ## ============================
-        points = curve3D.getCoordinates()
+        points = curve3D.points
         pointsp = [curve3D[i] + function(t) * factor for i, t in enumerate(curve3D.domainPoints)]
         for p, pp in zip(points, pointsp):
-            self.addChild(Arrow(p, pp))
+            self.separator.addChild(Arrow(p, pp).root)
 
         self.animation = Animation(lambda num: self[num - 1].show(), (4000, 1, len(points)))
 
@@ -27,6 +27,7 @@ class Bundle2(BaseObject):
             c.material.shininess = mat.shininess
 
     def setHeadMaterial(self, mat):
+        return
         for c in self.getChildren():
             c.head_material.ambientColor = mat.ambientColor
             c.head_material.diffuseColor = mat.diffuseColor

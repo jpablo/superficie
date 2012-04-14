@@ -3,8 +3,7 @@ from PyQt4 import QtGui
 from pivy.coin import SoSeparator
 from superficie.animations.animation import Animation
 from superficie.widgets.button import Button
-from superficie.nodes import Arrow
-#from superficie.nodes.baseplane import BasePlane
+from superficie.nodes import Arrow, BasePlane
 from superficie.util import nodeDict, Vec3
 
 class Page(QtCore.QObject):

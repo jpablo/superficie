@@ -374,7 +374,7 @@ def malla(puntos,func,xmin,xinc,nx,ymin,yinc,ny):
         for y in xrange(ny):
             puntos[ny*x+y] = func(xmin+xinc*x,ymin+yinc*y)
 
-def malla2(puntos, func,xmin, xinc,nx,ymin, yinc, ny):
+def mesh2(puntos, func,xmin, xinc,nx,ymin, yinc, ny):
     for x in xrange(nx):
         for y in xrange(ny):
             puntos.append( func(xmin+xinc*x,ymin+yinc*y) )

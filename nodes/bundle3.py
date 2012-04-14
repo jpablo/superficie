@@ -1,11 +1,13 @@
 from pivy.coin import SoCoordinate3, SoQuadMesh, SoNormalBinding, SoShapeHints, SoScale, SoSeparator
-from superficie.Animation import Animation
-from BaseObject import GraphicObject
 from nodes.line import Line
+
+from superficie.animations import Animation
+from superficie.base import MaterialNode
+
 
 __author__ = 'jpablo'
 
-class Bundle3(GraphicObject):
+class Bundle3(MaterialNode):
     def __init__(self, curve, cp, factor=1):
         """curve is something derived from Line"""
         super(Bundle3,self).__init__()
@@ -34,7 +36,7 @@ class Bundle3(GraphicObject):
         sep.addChild(self.coords)
         sep.addChild(self.mesh)
 #        self.addChild(self.line)
-        self.addChild(sep)
+        self.separator.addChild(sep)
 
         self.animation = Animation(lambda num: float(num) / len(curve) * self.material.transparency.getValue(), (4000, 1, len(curve)))
 
@@ -54,7 +56,7 @@ class Bundle3(GraphicObject):
         """
         create the arrows
         """
-        points = self.curve.getCoordinates()
+        points = self.curve.points
         #pointsp = [self.curve[i]+self.cp(t)*self.factor for i,t in enumerate(intervalPartition(self.curve.iter))]
         pointsp = [self.curve[i] + self.cp(t) * self.factor for i, t in enumerate(self.curve.domainPoints)]
         pointsRow = zip(map(tuple, points), map(tuple, pointsp))

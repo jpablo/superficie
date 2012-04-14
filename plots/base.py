@@ -10,10 +10,11 @@ Quarter = True
 from PyQt4 import QtGui, QtCore
 import operator
 import itertools
-
-from util import  conecta, intervalPartition, Range, malla,make_hideable
-from gui import Slider
-from FreeVariableFunction import FreeVariableFunction
+from superficie.base import MaterialNode
+from superficie.util import  conecta, intervalPartition, Range, malla,make_hideable
+from superficie.utils import fluid
+from superficie.widgets import Slider
+from superficie.FreeVariableFunction import FreeVariableFunction
 
 ## TODO: el código necesita averiguar qué símbolos están definidos
 ## en el bloque que llama a *Plot3D, para que este código
@@ -57,7 +58,7 @@ class Quad(object):
         if self.function.argCount() < 2:
             raise TypeError, "function %s needs at least 2 arguments" % func
         self.vectorFieldFunc = None
-        self.coords = SoCoordinate3()
+        self.coordinates = SoCoordinate3()
         self.mesh = make_hideable(SoQuadMesh())
         self.mesh.verticesPerColumn = nx
         self.mesh.verticesPerRow = ny
@@ -74,7 +75,7 @@ class Quad(object):
         self.root = SoSeparator()
         self.root.addChild(normal_binding)
         self.root.addChild(self.scale)
-        self.root.addChild(self.coords)
+        self.root.addChild(self.coordinates)
         self.root.addChild(self.mesh.root)
         self.root.addChild(self.lineColor)
         self.root.addChild(self.lineSetX.root)
@@ -104,7 +105,7 @@ class Quad(object):
     def update(self, rangeX, rangeY):
         vertices = range(len(rangeX) * len(rangeY))
         malla(vertices, self.function, rangeX.min, rangeX.dt, len(rangeX), rangeY.min, rangeY.dt, len(rangeY))
-        self.coords.point.setValues(0, len(vertices), vertices)
+        self.coordinates.point.setValues(0, len(vertices), vertices)
         ## ============================
         ## the lines
         vpc = self.verticesPerColumn
@@ -127,7 +128,7 @@ class Quad(object):
 
 
         
-class Mesh(GraphicObject):
+class Mesh(MaterialNode):
     """A Set of Quads which share the same generating function"""
     ## ============================
     autoAdd = False
@@ -139,7 +140,7 @@ class Mesh(GraphicObject):
         self.sHints = SoShapeHints()
         self.sHints.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
         self.sHints.creaseAngle = 0.0
-        self.addChild(self.sHints)
+        self.separator.addChild(self.sHints)
         ## ============================
         self.quads = {}
         self.parameters = {}
@@ -228,7 +229,7 @@ class Mesh(GraphicObject):
         self.checkReturnValue(quad.function, val)
         ## ============================
         self.quads[quad.function] = quad
-        self.addChild(quad)
+        self.separator.addChild(quad.root)
         ## ============================
         self.updateAll()        
         
@@ -294,14 +295,6 @@ class Mesh(GraphicObject):
         layout.addStretch()
         self.widget.layout().insertWidget(1,w,0, QtCore.Qt.AlignTop)
 
-
-#        if not operator.isNumberType(val):
-#            raise TypeError, "function %s does not produces a number" % func
-
-
-#        if not operator.isNumberType(val):
-#            raise TypeError, "function %s does not produces a number" % func
-            
 
 #class RevolutionParametricPlot3D(ParametricPlot3D):
 #    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = True, parent = None):

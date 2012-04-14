@@ -1,1 +1,2 @@
-__author__ = 'jpablo'
+from group import AnimationGroup
+from animation import Animation

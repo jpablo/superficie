@@ -1,10 +1,10 @@
 from pivy.coin import SoCoordinate3, SoQuadMesh, SoShapeHints
-from BaseObject import GraphicObject
-from util import Range, malla2
+from superficie.base import GeometryNode
+from superficie.util import Range, mesh2
 
 __author__ = 'jpablo'
 
-class BasePlane(GraphicObject):
+class BasePlane(GeometryNode):
     def __init__(self, plane="xy"):
         super(BasePlane,self).__init__()
         ## ============================
@@ -12,7 +12,6 @@ class BasePlane(GraphicObject):
         self.setDiffuseColor((.5, .5, .5))
         self.setAmbientColor((.5, .5, .5))
         ## ============================
-        self.coords = SoCoordinate3()
         self.mesh = SoQuadMesh()
         self.sHints = SoShapeHints()
         self.sHints.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
@@ -20,9 +19,8 @@ class BasePlane(GraphicObject):
         self.setTransparency(0.5)
         self.setTransparencyType(8)
         ## ============================
-        self.addChild(self.sHints)
-        self.addChild(self.coords)
-        self.addChild(self.mesh)
+        self.separator.addChild(self.sHints)
+        self.separator.addChild(self.mesh)
 
     def setHeight(self, val):
         oldVal = list(self.translation.translation.getValue())
@@ -34,7 +32,7 @@ class BasePlane(GraphicObject):
             plane = self.plane
         self.plane = plane
         r = Range(*r0)
-        self.ptos = []
+        self.points = []
         if plane == "xy":
             self.func = lambda x, y:(x, y, 0)
             ## this will be used to determine which coordinate to modify
@@ -48,7 +46,7 @@ class BasePlane(GraphicObject):
             self.constantIndex = 1
         elif type(plane) == type(lambda :0):
             self.func = plane
-        malla2(self.ptos, self.func, r.min, r.dt, len(r), r.min, r.dt, len(r))
-        self.coords.point.setValues(0, len(self.ptos), self.ptos)
+        mesh2(self.points, self.func, r.min, r.dt, len(r), r.min, r.dt, len(r))
+        self.coordinates.point.setValues(0, len(self.points), self.points)
         self.mesh.verticesPerColumn = len(r)
         self.mesh.verticesPerRow = len(r)
