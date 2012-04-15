@@ -1,17 +1,18 @@
 from collections import Sequence
 from superficie.animations.animation import Animation
 from superficie.util import Vec3, intervalPartition, vsum
+from superficie.utils import refine_by_distance, refine_by_angle
 
 from superficie.nodes.curve_vectorfield import CurveVectorField
 from superficie.nodes.line import Line
 from superficie.base import BaseObject
 
 
-def fix_interval(it):
+def normalize_interval(it):
     """
-    >>> fix_interval( (-1,1,20) )
+    >>> normalize_interval( (-1,1,20) )
     [(-1, 1, 20)]
-    >>> fix_interval( [(-1,1,20)] )
+    >>> normalize_interval( [(-1,1,20)] )
     [(-1, 1, 20)]
     """
     return [it] if not isinstance(it[0], Sequence) else it
@@ -34,12 +35,16 @@ def find_line_index(lengths,i):
     (0, 1)
     >>> find_line_index([2,3],4)
     (1, 2)
+    >>> find_line_index([100],99)
+    (0, 99)
     """
     for index,n in enumerate(lengths):
         if i < n:
             return index, i
         else:
             i -= n
+    else:
+        raise IndexError("index out of range", i)
 
 class Curve3D(BaseObject):
     """
@@ -48,21 +53,24 @@ class Curve3D(BaseObject):
     Curve3D(lambda x: (0,x,x**2),(-1,1,20))
     Curve3D(lambda x: (0,x,x**2),[(-1,0,20),(0.2,1,20)])
     """
-    def __init__(self, func, interval, color=(1, 1, 1), width=1, nvertices= -1, domTrans=None):
+    def __init__(self, func, interval, color=(1, 1, 1), width=1, nvertices= -1, max_distance = None):
         super(Curve3D,self).__init__()
         self.__derivative = None
         self.fields = {}
         self.lines = []
-        self.intervals = fix_interval(interval)
+        self.intervals = normalize_interval(interval)
+        self.domainPoints = []
+        self.max_distance = max_distance
         ## self.interval[0][0] is the start of the first interval
         ## should be a valid value, anyway
         self.function = fix_function(func,self.intervals[0][0])
         for it in self.intervals:
-            points = intervalPartition(it, self.function)
+            domain, points = refine_by_angle(self.function, it, max_distance)
+            self.domainPoints += domain
             self.lines.append(Line(points, color, width, nvertices))
             self.separator.addChild(self.lines[-1].root) ## <--- container feature!!
         self.lengths = map(len, self.lines)
-        self.animation = Animation(self.setNumVertices, (4000, 1, len(self)))
+        self.animation = Animation(self.setNumVertices, (4000, 1, len(self)-1))
 
     def __len__(self):
         return sum(self.lengths)
@@ -85,9 +93,8 @@ class Curve3D(BaseObject):
 
     def setNumVertices(self, i):
         """shows only the first n vertices"""
-
         index, offset = find_line_index(self.lengths,i)
-
+        print offset
         for j in range(index-1):
             ## draw the whole line
             self.lines[j].setNumVertices(self.lengths[j])
@@ -110,19 +117,15 @@ class Curve3D(BaseObject):
         """
         if func is not None:
             self.function = fix_function(func,self.intervals[0][0])
+
+        self.domainPoints = []
         for it, line in zip(self.intervals, self.lines):
-            line.setPoints(intervalPartition(it, self.function))
-        #-----------------------------------------------------------------------
+            domain, points = refine_by_distance(self.function, it, self.max_distance)
+            self.domainPoints += domain
+            line.setPoints(points)
+
         for f in self.fields.values():
             f.updatePoints(self.domainPoints, self.points)
-
-
-    @property
-    def domainPoints(self):
-        """
-        returns the preimages of the points
-        """
-        return sum(map(intervalPartition, self.intervals),[])
 
     @property
     def points(self):

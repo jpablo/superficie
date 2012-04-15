@@ -23,6 +23,7 @@ class Page(QtCore.QObject):
         ## =========================
         self.setupGui()
         self.setupAxis()
+        self.showAxis(False)
 
     def setupGui(self):
         layout = QtGui.QVBoxLayout()

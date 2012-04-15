@@ -9,7 +9,7 @@ class CurveVectorField(Arrow):
     If you want to use an arrow for representing f', this arrow should start in f(t)
     and end in f(t) + f'(t).
 
-    Now, suppose you have already precalculated all the points
+    Now, suppose you have already pre-calculated all the points
         { p_i = f(t_i) }
 
     then the tip of the arrow for each point t_i is at
@@ -20,7 +20,7 @@ class CurveVectorField(Arrow):
 
     The arguments of the constructor are:
     function: f'
-    base_arrow_ponts: { p_i }
+    base_arrow_points: { p_i }
     domain_points: { t_i }
     """
     def __init__(self, function, domain_points, base_arrow_points):
@@ -36,6 +36,7 @@ class CurveVectorField(Arrow):
         self.animation = Animation(self.animateArrow, (8000, 0, len(self.base_arrow_points) - 1))
 
     def animateArrow(self, i):
+        print i
         self.setPoints(self.base_arrow_points[i], self.end_points[i])
         self.last_i = i
 

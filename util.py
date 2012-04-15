@@ -183,7 +183,7 @@ class GenIntervalo(object):
         self.begin()
     
     def update(self, *vals):
-        if self.iterFunc != None:
+        if self.iterFunc is not None:
             prev_points = self.npoints
             self.vmin, self.vmax, self.npoints = self.iterFunc(*vals)
             self.dt = float(self.vmax - self.vmin) / ( self.npoints - 1 )
@@ -193,8 +193,7 @@ class GenIntervalo(object):
             nprop = self.n / float(prev_points)
             self.n = int(round(nprop * self.npoints))
             self.t = self.n * self.dt  + self.vmin
-#            print "update:",  self.name,  self.vmax,  self.vmin +  self.dt * (self.npoints-1)
-            
+
     def iter(self):
         return (self.name, self.vmin, self.vmax, self.npoints)
     
@@ -208,9 +207,9 @@ class GenIntervalo(object):
     def reset(self, n=None,  t=None):
         ## n es un entero entre 0 y npoints - 1
         ## t es un real entre vmin y vmax        
-        if n != None:
+        if n is not None:
             self.n = int(n)
-        elif t != None:
+        elif t is not None:
             self.n = int(round((t-self.vmin) / self.dt))
         self.t = self.n * self.dt  + self.vmin
         
@@ -232,9 +231,9 @@ class GenIntervalo(object):
 def genIntervalPartition((vmin, vmax, npoints),  func = None):
     """evaluate a function on the points of the interval partition, returns a generator
     >>> list(genIntervalPartition([0,1,3]))
-    [0.0,0.5,1.0]
+    [0.0, 0.5, 1.0]
     >>> list(genIntervalPartition([0,1,3], lambda x: x+1))
-    [1.0,1.5,2.0]
+    [1.0, 1.5, 2.0]
     """
     dt = float(vmax - vmin) / ( npoints - 1 )
     n = 0
@@ -266,8 +265,8 @@ class Range(object):
 
 def genCircular(lst): 
     n = 0
-    while 1:
-        if len(lst) == 0:
+    while True:
+        if not len(lst):
             return
         yield lst[n]
         n = (n + 1) % len(lst)
