@@ -13,20 +13,6 @@ def fluid(method):
 def refine(function, (vmin, vmax, n_points), test, tolerance):
     """ Evaluates function on the n points between vmin and vmax, refining if necessary,
     making sure the distance between any two consecutive points is less than max_distance
-
-    >>> from pivy.coin import SbVec2f as v
-
-    >>> d, i = refine(lambda t: v(t,0), (0,1,3), .5)
-    >>> map(tuple, i)
-    [(0.0, 0.0), (0.5, 0.0), (1.0, 0.0)]
-    >>> len(d) == len(i)
-    True
-
-    >>> d, i = refine(lambda t: v(t,0), (0,1,3), .4)
-    >>> map(tuple, i)
-    [(0.0, 0.0), (0.25, 0.0), (0.5, 0.0), (0.75, 0.0), (1.0, 0.0)]
-    >>> len(d) == len(i)
-    True
     """
     dt = float(vmax - vmin) / ( n_points - 1 )
     domain = [vmin + n*dt for n in xrange(n_points)]
@@ -36,9 +22,11 @@ def refine(function, (vmin, vmax, n_points), test, tolerance):
         n = n_points
         while i < n - 2:
             if test(image,i) > tolerance:
-                domain.insert( i+1, (domain[i] + domain[i+1])/2 )
-                image.insert ( i+1, function(domain[i+1]) )
-                n += 1
+                p1 = (domain[i] + domain[i+1])/2
+                p2 = (domain[i+1] + domain[i+2])/2
+                domain.insert( i+2, p2 ); image.insert ( i+2, function(p2) )
+                domain.insert( i+1, p1 ); image.insert ( i+1, function(p1) )
+                n += 2
             else:
                 i += 1
     return domain, image
@@ -68,11 +56,12 @@ def refine_by_angle(function, (vmin, vmax, n_points), max_angle):
     def test(points, i):
         v1 = points[i+1] - points[i]
         v2 = points[i+2] - points[i+1]
-        d = distance(v1, v2)
         length1 = v1.length()
         length2 = v2.length()
+#        print 'i: ', i
         if length1 < delta or length2 < delta:
             return 0
+#        print 'angle: ', abs(angle(v1, v2, length1, length2))
         return abs(angle(v1, v2, length1, length2))
     return refine(function, (vmin, vmax, n_points), test, max_angle)
 
@@ -84,8 +73,8 @@ def adjustArg(arg):
     return arg
 
 
-def distance(v1,v2):
-    return (v1-v2).length()
+def distance(points, i):
+    return (points[i]-points[i+1]).length()
 
 
 def angle(v1,v2, length1, length2):

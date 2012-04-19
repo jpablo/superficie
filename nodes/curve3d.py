@@ -94,7 +94,6 @@ class Curve3D(BaseObject):
     def setNumVertices(self, i):
         """shows only the first n vertices"""
         index, offset = find_line_index(self.lengths,i)
-        print offset
         for j in range(index-1):
             ## draw the whole line
             self.lines[j].setNumVertices(self.lengths[j])
