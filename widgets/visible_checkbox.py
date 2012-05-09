@@ -1,4 +1,4 @@
-from widgets.checkbox import CheckBox
+from checkbox import CheckBox
 
 __author__ = 'jpablo'
 

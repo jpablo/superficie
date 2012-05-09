@@ -1,5 +1,5 @@
 from pivy.coin import SoCoordinate3, SoQuadMesh, SoNormalBinding, SoShapeHints, SoScale, SoSeparator
-from nodes.line import Line
+from line import Line
 
 from superficie.animations import Animation
 from superficie.base import MaterialNode

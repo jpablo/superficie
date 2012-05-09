@@ -1,5 +1,5 @@
 from pivy.coin import SoShapeHints, SoCoordinate3, SoQuadMesh, SoNormalBinding, SoMaterial, SoSeparator
-from BaseObject import BaseObject
+from superficie.base.base_object import BaseObject
 
 __author__ = 'jpablo'
 
@@ -7,7 +7,8 @@ class Plane(BaseObject):
     """
     """
     def __init__(self, pos, visible=True, parent=None):
-        BaseObject.__init__(self, visible, parent)
+        BaseObject.__init__(self)#, visible, parent)
+        self.setVisible(visible)
         self.altura = -1
         vertices = [[-1, 1], [1, 1], [-1, -1], [1, -1]]
         for p in vertices:
@@ -25,7 +26,8 @@ class Plane(BaseObject):
 #            nb.value = SoNormalBinding.PER_VERTEX_INDEXED
         mat = SoMaterial()
         mat.transparency = 0.5
-        self.setTransparencyType(8)
+        #self.setTransparencyType(8)
+        #self.separator.setTransparencyType(8)
         ## ============================
         root = SoSeparator()
         root.addChild(sh)
@@ -33,4 +35,5 @@ class Plane(BaseObject):
         root.addChild(nb)
         root.addChild(coords)
         root.addChild(mesh)
-        self.addChild(root)
+        #self.addChild(root)
+        self.separator.addChild(root)
