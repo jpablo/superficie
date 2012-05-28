@@ -1,7 +1,7 @@
 from collections import Sequence
 from superficie.animations.animation import Animation
 from superficie.util import Vec3, intervalPartition, vsum
-from superficie.utils import refine_by_distance, refine_by_angle
+from superficie.utils import refine
 
 from superficie.nodes.curve_vectorfield import CurveVectorField
 from superficie.nodes.line import Line
@@ -53,7 +53,7 @@ class Curve3D(BaseObject):
     Curve3D(lambda x: (0,x,x**2),(-1,1,20))
     Curve3D(lambda x: (0,x,x**2),[(-1,0,20),(0.2,1,20)])
     """
-    def __init__(self, func, interval, color=(1, 1, 1), width=1, nvertices= -1, max_distance = None):
+    def __init__(self, func, interval, color=(1, 1, 1), width=1, nvertices= -1, max_distance = None, max_angle = None):
         super(Curve3D,self).__init__()
         self.__derivative = None
         self.fields = {}
@@ -61,11 +61,12 @@ class Curve3D(BaseObject):
         self.intervals = normalize_interval(interval)
         self.domainPoints = []
         self.max_distance = max_distance
+        self.max_angle = max_angle
         ## self.interval[0][0] is the start of the first interval
         ## should be a valid value, anyway
         self.function = fix_function(func,self.intervals[0][0])
         for it in self.intervals:
-            domain, points = refine_by_angle(self.function, it, max_distance)
+            domain, points = refine(self.function, it, max_angle, max_distance)
             self.domainPoints += domain
             self.lines.append(Line(points, color, width, nvertices))
             self.separator.addChild(self.lines[-1].root) ## <--- container feature!!
@@ -119,7 +120,7 @@ class Curve3D(BaseObject):
 
         self.domainPoints = []
         for it, line in zip(self.intervals, self.lines):
-            domain, points = refine_by_distance(self.function, it, self.max_distance)
+            domain, points = refine(self.function, it, self.max_angle, self.max_distance)
             self.domainPoints += domain
             line.setPoints(points)
 
