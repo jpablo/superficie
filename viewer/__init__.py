@@ -1,1 +1,1 @@
-__author__ = 'jpablo'
+from Viewer import Viewer as viewer
