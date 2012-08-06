@@ -1,7 +1,5 @@
 from math import pi
-from plots.base import Mesh, toList, func2revolution_param
-
-__author__ = 'jpablo'
+from base import Mesh, toList, func2revolution_param
 
 class RevolutionPlot3D(Mesh):
     def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,2*pi,40), name = ''):

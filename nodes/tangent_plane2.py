@@ -1,8 +1,8 @@
-from BaseObject import BaseObject
-from nodes.baseplane import BasePlane
-from nodes.line import Line
-from nodes.sphere import Sphere
-from util import Vec3
+from superficie.base import BaseObject
+from superficie.util import Vec3
+from superficie.nodes.base_plane import BasePlane
+from superficie.nodes.line import Line
+from superficie.nodes.sphere import Sphere
 
 __author__ = 'jpablo'
 
@@ -17,14 +17,14 @@ class TangentPlane2(BaseObject):
 
         self.baseplane = BasePlane()
         self.baseplane.setTransparency(.4).setDiffuseColor(color).setEmissiveColor(color)
-        self.addChild(self.baseplane)
+        self.separator.addChild(self.baseplane.root)
         self.localOriginSphere = Sphere(param(*self.localOrigin), radius=.03, color=(1,0,0))
-        self.addChild(self.localOriginSphere)
+        self.separator.addChild(self.localOriginSphere.root)
 
         self.localXAxis = Line([], color=(1,0,0))
         self.localYAxis = Line([], color=(1,0,0))
-        self.addChild(self.localXAxis)
-        self.addChild(self.localYAxis)
+        self.separator.addChild(self.localXAxis.root)
+        self.separator.addChild(self.localYAxis.root)
         ## ============================
         self.setLocalOrigin(self.localOrigin)
 

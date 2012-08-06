@@ -419,7 +419,7 @@ def main(chapter_cls=None):
     # ipython -i --gui=qt script.py
     # in this case, QtGui.QApplication.instance() will be prebuilt
     from PyQt4 import QtGui
-    from superficie.Viewer import Viewer
+    from superficie.viewer.Viewer import Viewer
     app = QtGui.QApplication.instance()
     run_exec = False
     if not app:

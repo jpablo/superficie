@@ -1,6 +1,4 @@
-from plots.base import Mesh, toList, func2param
-
-__author__ = 'jpablo'
+from base import Mesh, toList, func2param
 
 class Plot3D(Mesh):
     def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = ''):
