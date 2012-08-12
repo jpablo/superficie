@@ -1,5 +1,6 @@
 from PyQt4 import QtGui, QtCore, uic
 from superficie.util import identity, pegaNombres, partial, segment, conecta
+from superficie.animations import Animation, AnimationGroup
 
 __author__ = 'jpablo'
 
