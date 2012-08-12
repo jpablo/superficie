@@ -1,9 +1,9 @@
 from pivy.coin import SoSphere
-from BaseObject import GraphicObject
+from superficie.base import MaterialNode
 
 __author__ = 'jpablo'
 
-class Sphere(GraphicObject):
+class Sphere(MaterialNode):
     """A sphere"""
 
     def __init__(self, center, radius=.05, color=(1, 1, 1)):
@@ -11,7 +11,7 @@ class Sphere(GraphicObject):
         self.sp = SoSphere()
         self.sp.radius = radius
 #        ## ===================
-        self.addChild(self.sp)
+        self.separator.addChild(self.sp)
         self.origin = center
         self.color = color
 

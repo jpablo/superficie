@@ -36,7 +36,6 @@ class CurveVectorField(Arrow):
         self.animation = Animation(self.animateArrow, (8000, 0, len(self.base_arrow_points) - 1))
 
     def animateArrow(self, i):
-        print i
         self.setPoints(self.base_arrow_points[i], self.end_points[i])
         self.last_i = i
 

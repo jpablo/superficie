@@ -1,4 +1,4 @@
-__author__ = 'jpablo'
+from superficie.base import BaseObject
 
 class TangentPlane(BaseObject):
     def __init__(self, param, par1, par2, pt, color, visible=False, parent=None):
