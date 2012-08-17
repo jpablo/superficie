@@ -1,5 +1,5 @@
 from pivy.coin import SoShapeHints, SoCoordinate3, SoQuadMesh, SoNormalBinding, SoMaterial, SoSeparator
-from BaseObject import BaseObject
+from ..base import BaseObject
 
 __author__ = 'jpablo'
 
