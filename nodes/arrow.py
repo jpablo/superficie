@@ -52,13 +52,23 @@ class Arrow(MaterialNode):
         self.tr1.setName('tr1')
         self.tr2.setName('tr2')
 
-        self.ambientColor = (.0, .0, .0)
-        self.diffuseColor = (.4, .4, .4)
-        self.specularColor = (.8, .8, .8)
-        self.shininess = .1
+#        self.material.ambientColor = (.0, .0, .0)
+#        self.material.diffuseColor = (.4, .4, .4)
+#        self.material.specularColor = (.8, .8, .8)
+#        self.material.shininess = .1
+        self.material.ambientColor = (0,0,1)
+        self.material.diffuseColor = (0,0,1)
+#        self.setAmbientColor((0,0,1))
+#        self.setDiffuseColor((0,0,1))
         self.body = SoCylinder()
         self.body.setName("body")
+
+#        self.hmaterial = SoMaterial()
+#        self.material.ambientColor = (0, 0, 1)
+#        self.material.diffuseColor = (0,0,1)
+
         ## ==========================
+#        self.separator.addChild(self.hmaterial)
         self.separator.addChild(self.tr2)
         self.separator.addChild(self.tr1)
         self.separator.addChild(self.body)
