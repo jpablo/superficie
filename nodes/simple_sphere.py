@@ -1,13 +1,14 @@
-__author__ = 'jpablo'
+from pivy.coin import SoSeparator, SoMaterial, SoSphere, SoTranslation
 
-def Sphere2(p, radius=.05, mat=None):
+
+def SimpleSphere(p, radius=.05, mat=None):
     sep = SoSeparator()
     sep.setName("Sphere")
     tr = SoTranslation()
     sp = SoSphere()
     sp.radius = radius
     tr.translation = p
-    if mat == None:
+    if mat is None:
         mat = SoMaterial()
         mat.ambientColor.setValue(.33, .22, .27)
         mat.diffuseColor.setValue(.78, .57, .11)
