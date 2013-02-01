@@ -11,3 +11,4 @@ from cylinder import Cylinder
 from sphere import Sphere
 from tangent_plane import TangentPlane
 from tangent_plane2 import TangentPlane2
+from simple_sphere import SimpleSphere

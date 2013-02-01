@@ -1,6 +1,6 @@
 
 from math import acos, sqrt
-from pivy.coin import SoSeparator, SoTransform, SoCylinder, SoCone, SoMaterial
+from pivy.coin import SoSeparator, SoTransform, SoCylinder, SoCone, SoMaterial, SoSphere
 from superficie.base import MaterialNode
 from superficie.util import Vec3, segment
 from superficie.utils import fluid
@@ -34,11 +34,13 @@ def calc_transformations(p1, p2, factor):
     return angle, rot_axis, length
 
 
+default_tail_radius = 0.1
+
 class Arrow(MaterialNode):
     """An arrow
     Example: Arrow((1,1,1),(0,0,1))
     """
-    def __init__(self, p1, p2, radius = 0.04):
+    def __init__(self, p1, p2, radius = 0.04, tail = False):
         """p1,p2: Vec3"""
         super(Arrow,self).__init__()
         self.p1 = Vec3(p1)
@@ -46,33 +48,24 @@ class Arrow(MaterialNode):
         self.full_body_height = 1
         self.lengthFactor = 1
         self.widthFactor = 1
+        self.has_tail = tail
         ## ============================
         self.tr1 = SoTransform()
         self.tr2 = SoTransform()
         self.tr1.setName('tr1')
         self.tr2.setName('tr2')
 
-#        self.material.ambientColor = (.0, .0, .0)
-#        self.material.diffuseColor = (.4, .4, .4)
-#        self.material.specularColor = (.8, .8, .8)
-#        self.material.shininess = .1
         self.material.ambientColor = (0,0,1)
         self.material.diffuseColor = (0,0,1)
-#        self.setAmbientColor((0,0,1))
-#        self.setDiffuseColor((0,0,1))
         self.body = SoCylinder()
         self.body.setName("body")
 
-#        self.hmaterial = SoMaterial()
-#        self.material.ambientColor = (0, 0, 1)
-#        self.material.diffuseColor = (0,0,1)
-
         ## ==========================
-#        self.separator.addChild(self.hmaterial)
         self.separator.addChild(self.tr2)
         self.separator.addChild(self.tr1)
         self.separator.addChild(self.body)
         self.separator.addChild(self.build_head())
+        self.has_tail and self.separator.addChild(self.build_tail())
         ## ============================
         self.calcTransformation()
         self.setRadius(radius)
@@ -91,6 +84,23 @@ class Arrow(MaterialNode):
         head_separator.addChild(self.head_transformation)
         head_separator.addChild(self.head)
         return head_separator
+
+    def build_tail(self):
+        separator = SoSeparator()
+        separator.setName('tail')
+        self.tail = SoSphere()
+        self.tail.radius = default_tail_radius
+        self.tail_transformation = SoTransform()
+        self.tail_material = SoMaterial()
+        self.tail_material.ambientColor = (.33, .22, .27)
+        self.tail_material.diffuseColor = (.78, .57, .11)
+        self.tail_material.specularColor = (.99, .94, .81)
+        self.tail_material.shininess = .28
+        separator.addChild(self.tail_material)
+        separator.addChild(self.tail_transformation)
+        separator.addChild(self.tail)
+        return separator
+
 
     @fluid
     def setPoints(self, p1, p2):
@@ -114,6 +124,8 @@ class Arrow(MaterialNode):
         """
         self.set_body_height(self.full_body_height - self.head_height)
         self.head_transformation.translation = (0, self.body_height/2 + self.head_height/2, 0)
+        if self.has_tail:
+            self.tail_transformation.translation = (0, -self.body_height/2, 0)
 
     def calcTransformation(self):
         angle, rot_axis, length = calc_transformations(self.p1, self.p2initial, self.lengthFactor)
@@ -148,4 +160,10 @@ class Arrow(MaterialNode):
         self.body.radius = r
         self.head.bottomRadius = r * 1.5
         self.head.height = 3*sqrt(3)*r
+        self.adjust_body_height()
+
+    def add_tail(self, radius = default_tail_radius):
+        self.has_tail = True
+        self.separator.addChild(self.build_tail())
+        self.tail.radius = radius
         self.adjust_body_height()
