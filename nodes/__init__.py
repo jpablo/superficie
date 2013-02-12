@@ -1,5 +1,3 @@
-__author__ = 'jpablo'
-
 from line import Line
 from curve3d import Curve3D
 from arrow import Arrow
@@ -12,3 +10,5 @@ from sphere import Sphere
 from tangent_plane import TangentPlane
 from tangent_plane2 import TangentPlane2
 from simple_sphere import SimpleSphere
+from polygon import Polygon
+from plane import Plane

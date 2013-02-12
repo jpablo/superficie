@@ -23,8 +23,9 @@ class CurveVectorField(Arrow):
     base_arrow_points: { p_i }
     domain_points: { t_i }
     """
+
     def __init__(self, function, domain_points, base_arrow_points):
-        super(CurveVectorField, self).__init__(Vec3(0,0,0), Vec3(0,0,0))
+        super(CurveVectorField, self).__init__(Vec3(0, 0, 0), Vec3(0, 0, 0))
         self.function = function
         self.domain_points = None
         self.base_arrow_points = None

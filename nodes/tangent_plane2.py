@@ -4,30 +4,27 @@ from superficie.nodes.base_plane import BasePlane
 from superficie.nodes.line import Line
 from superficie.nodes.sphere import Sphere
 
-__author__ = 'jpablo'
-
 class TangentPlane2(BaseObject):
-    def __init__(self, param, par1, par2, (xorig,yorig), color):
-        super(TangentPlane2,self).__init__()
+    def __init__(self, param, par1, par2, (xorig, yorig), color):
+        super(TangentPlane2, self).__init__()
         self.par1 = par1
         self.par2 = par2
         self.param = param
-        self.localOrigin = (xorig,yorig)
+        self.localOrigin = (xorig, yorig)
         self.r0 = (-1, 1, 30)
 
         self.baseplane = BasePlane()
         self.baseplane.setTransparency(.4).setDiffuseColor(color).setEmissiveColor(color)
         self.separator.addChild(self.baseplane.root)
-        self.localOriginSphere = Sphere(param(*self.localOrigin), radius=.03, color=(1,0,0))
+        self.localOriginSphere = Sphere(param(*self.localOrigin), radius=.03, color=(1, 0, 0))
         self.separator.addChild(self.localOriginSphere.root)
 
-        self.localXAxis = Line([], color=(1,0,0))
-        self.localYAxis = Line([], color=(1,0,0))
+        self.localXAxis = Line([], color=(1, 0, 0))
+        self.localYAxis = Line([], color=(1, 0, 0))
         self.separator.addChild(self.localXAxis.root)
         self.separator.addChild(self.localYAxis.root)
         ## ============================
         self.setLocalOrigin(self.localOrigin)
-
 
     def setLocalOrigin(self, pt):
         self.localOrigin = pt
@@ -39,8 +36,8 @@ class TangentPlane2(BaseObject):
         self.planeParam = lambda h, t: tuple(orig + h * ve + t * ue)
         self.baseplane.setRange(self.r0, plane=self.planeParam)
         self.localOriginSphere.setOrigin(orig)
-        self.localXAxis.setPoints([self.planeParam(*pt) for pt in [(self.r0[0],0),(self.r0[1],0)]])
-        self.localYAxis.setPoints([self.planeParam(*pt) for pt in [(0,self.r0[0]),(0,self.r0[1])]])
+        self.localXAxis.setPoints([self.planeParam(*pt) for pt in [(self.r0[0], 0), (self.r0[1], 0)]])
+        self.localYAxis.setPoints([self.planeParam(*pt) for pt in [(0, self.r0[0]), (0, self.r0[1])]])
 
     def setU(self, val):
         self.setLocalOrigin((val, self.localOrigin[1]))
