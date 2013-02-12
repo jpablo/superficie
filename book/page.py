@@ -44,7 +44,6 @@ class Page(QtCore.QObject):
         self.notasWidget = QtGui.QWidget()
         self.notasWidget.setLayout(notas_layout)
 
-
     def getGui(self):
         return self.widget
 
@@ -56,7 +55,6 @@ class Page(QtCore.QObject):
 
     def addLayout(self, layout):
         self.widget.layout().addLayout(layout)
-
 
     def addChild(self, node):
         root = getattr(node, "root", node)
@@ -81,19 +79,16 @@ class Page(QtCore.QObject):
 
     def setupPlanes(self, r0=(-1, 1, 5)):
         self.coordPlanes = {
-            'xy':BasePlane(plane="xy").setDiffuseColor((1,1,0)),
-            'xz':BasePlane(plane="xz").setDiffuseColor((1,0,1)),
-            'yz':BasePlane(plane="yz").setDiffuseColor((0,1,1))
+            'xy': BasePlane(plane="xy").setDiffuseColor((1, 1, 0)),
+            'xz': BasePlane(plane="xz").setDiffuseColor((1, 0, 1)),
+            'yz': BasePlane(plane="yz").setDiffuseColor((0, 1, 1))
         }
-
         for p in self.coordPlanes.values():
             p.setRange(r0)
             p.setHeight(r0[0])
             self.addChild(p)
 
-
-
-    def showAxis(self,show):
+    def showAxis(self, show):
         """
         @param show: bool
         """
@@ -110,7 +105,6 @@ class Page(QtCore.QObject):
         self.axis_z.setDiffuseColor((0, 0, 1)).setWidthFactor(.2)
         self.addChildren([self.axis_x, self.axis_y, self.axis_z ])
 
-
     def setupAnimations(self, objects):
         """
         Extracts the 'animation' property of the objects and chains them
@@ -125,7 +119,6 @@ class Page(QtCore.QObject):
         for ob in self.objectsForAnimate:
             ob.resetObjectForAnimation()
         self.animations[0].start()
-
 
     def pre(self):
         """
