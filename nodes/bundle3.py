@@ -1,11 +1,9 @@
 from pivy.coin import SoCoordinate3, SoQuadMesh, SoNormalBinding, SoShapeHints, SoScale, SoSeparator
-from nodes.line import Line
+from superficie.nodes.line import Line
 
 from superficie.animations import Animation
 from superficie.base import MaterialNode
 
-
-__author__ = 'jpablo'
 
 class Bundle3(MaterialNode):
     def __init__(self, curve, cp, factor=1):

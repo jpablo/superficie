@@ -1,4 +1,4 @@
-from widgets.checkbox import CheckBox
+from superficie.widgets.checkbox import CheckBox
 
 __author__ = 'jpablo'
 

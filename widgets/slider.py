@@ -2,14 +2,13 @@ from PyQt4 import QtGui, QtCore, uic
 from superficie.util import identity, pegaNombres, partial, segment, conecta
 from superficie.animations import Animation
 
-__author__ = 'jpablo'
 
 class Slider(QtGui.QWidget):
     def __init__(self, rangep=('w', 0, 1, 0, 10), func=identity, duration=1000, parent=None):
         # TODO: cambiar el orden: func, rangep...
         ## rangep = (name, vmin, vmax, vini, npoints)
         QtGui.QWidget.__init__(self)
-        uic.loadUi(pegaNombres("Gui","paramTemplate2.ui"), self)
+        uic.loadUi(pegaNombres("Gui","paramTemplate.ui"), self)
         self.timeline = QtCore.QTimeLine(duration)
         self.name = rangep[0]
         self.npoints = rangep[-1]
@@ -36,7 +35,7 @@ class Slider(QtGui.QWidget):
         conecta(self.timeline, QtCore.SIGNAL("frameChanged(int)"), self.updateSlider)
         ## ============================
 #        self.nombre.setTitle(self.name + ": %.3f" % self.vini)
-        self.nombre.setText(self.name + ": %.3f" % self.vini)
+        hasattr(self, 'nombre') and self.nombre.setText(self.name + ": %.3f" % self.vini)
         self.slider.setValue(self.timeline.currentFrame())
 
     def setupUi(self,):
