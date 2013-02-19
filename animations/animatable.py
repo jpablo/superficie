@@ -1,4 +1,4 @@
-from animations import Animation
+from superficie.animations import Animation
 
 class Animatable(object):
     '''
