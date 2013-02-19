@@ -5,6 +5,7 @@ def SimpleSphere(p, radius=.05, mat=None):
     sep = SoSeparator()
     sep.setName("Sphere")
     tr = SoTranslation()
+    tr.setName("Translation")
     sp = SoSphere()
     sp.radius = radius
     tr.translation = p

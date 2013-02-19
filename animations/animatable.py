@@ -1,6 +1,4 @@
-from animations.Animation import Animation
-
-__author__ = 'jpablo'
+from animations import Animation
 
 class Animatable(object):
     '''

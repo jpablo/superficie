@@ -1,9 +1,8 @@
 from pivy.coin import SoCoordinate3
-from BaseObject import GraphicObject
+from superficie.base import GeometryNode
 
-__author__ = 'jpablo'
 
-class Polygon(GraphicObject):
+class Polygon(GeometryNode):
     def __init__(self, coords, name=""):
         super(Polygon, self).__init__()
 
@@ -20,6 +19,6 @@ class Polygon(GraphicObject):
         coor = SoCoordinate3()
         coor.point.setValues(0, len(self.coords), self.coords)
 
-        self.addChild(coor)
+        self.separator.addChild(coor)
 
 
