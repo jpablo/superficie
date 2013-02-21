@@ -5,12 +5,21 @@ from superficie.nodes.line import Line
 from superficie.nodes.sphere import Sphere
 
 class TangentPlane2(BaseObject):
-    def __init__(self, param, par1, par2, (xorig, yorig), color):
+    def __init__(self, param, par1, par2, (x0, y0), color):
+        """The tangent plane of a surface in space.
+
+        The plane has its origin at the point param(x0,y0)
+
+        @param param: function f: R^2 -> R^3
+        @param par1: partial derivative of f wrt the 1st variable
+        @param par2: partial derivative of f wrt the 2nd variable
+        @param color: diffuse/emissive color of the plane
+        """
         super(TangentPlane2, self).__init__()
         self.par1 = par1
         self.par2 = par2
         self.param = param
-        self.localOrigin = (xorig, yorig)
+        self.localOrigin = (x0, y0)
         self.r0 = (-1, 1, 30)
 
         self.baseplane = BasePlane()
@@ -48,3 +57,4 @@ class TangentPlane2(BaseObject):
     def setRange(self, r0):
         self.r0 = r0
         self.baseplane.setRange(self.r0)
+        self.setLocalOrigin(self.localOrigin)
