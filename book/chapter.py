@@ -33,7 +33,6 @@ class Chapter(QtCore.QObject):
     def setupGui(self):
         ## self.wiget has next, prev buttons, plus a QStackedWidget for holding per page controls
         self.widget = ChangePageUI()
-        self.widget.setStyleSheet("QWidget { background:white }")
         ## the initial state
         self.widget.previa.hide()
         self.widget.siguiente.hide()
