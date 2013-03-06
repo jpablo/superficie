@@ -57,6 +57,8 @@ class Page(QtCore.QObject):
         self.widget.layout().addLayout(layout)
 
     def addChild(self, node):
+        # if `node` has an attribute root, we assume it is the OpenInventor root object
+        # otherwise node is assumed to be an OI object
         root = getattr(node, "root", node)
         self.root.addChild(root)
         self.children[root] = node
