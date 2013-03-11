@@ -46,7 +46,8 @@ class Viewer(QWidget):
         super(Viewer, self).__init__(parent)
         globals.ViewerInstances.append(self)
         # camera defaults
-        self.camera_point_at = [SbVec3f(0, 0, 0), SbVec3f(0, 1, 0)]
+        self.camera_point_at = [SbVec3f(0, 0, 0), SbVec3f(0, 0, 1)]
+        self.camera_position = (7, 7, 7)
         # call viewAll when switching to a new page
         self.camera_viewAll = True
         self.book = Book()
@@ -99,6 +100,8 @@ class Viewer(QWidget):
         logger.debug('adjustCameraForPage %s', n)
         if page.camera_position:
             self.setCameraPosition(page.camera_position)
+        else:
+            self.setCameraPosition(self.camera_position)
         if page.camera_point_at:
             self.camera.pointAt(*page.camera_point_at)
         else:
@@ -128,7 +131,7 @@ class Viewer(QWidget):
     def setInitialCameraPosition(self):
         """Chose an adecuate initial pov"""
         logger.debug('setInitialCameraPosition')
-        self.setCameraPosition((7, 7, 7))
+        self.setCameraPosition(self.camera_position)
         self.camera.pointAt(*self.camera_point_at)
         self.camera.farDistance = 25
         self.camera.nearDistance = .01
