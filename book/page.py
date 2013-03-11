@@ -6,6 +6,7 @@ from superficie.widgets.button import Button
 from superficie.nodes import Arrow, BasePlane
 from superficie.util import nodeDict, Vec3
 
+
 class Page(QtCore.QObject):
     """The base class of a container node"""
 
@@ -16,6 +17,8 @@ class Page(QtCore.QObject):
         self.root.setName("Page:root")
         self.children = nodeDict()
         self.camera_position = None
+        self.camera_point_at = None
+        self.camera_viewAll = True
         ## =========================
         self.animations = []
         self.objectsForAnimate = []
@@ -30,19 +33,19 @@ class Page(QtCore.QObject):
         self.widget = QtGui.QWidget()
         self.widget.setLayout(layout)
         if self.name != "":
-            titulo = QtGui.QLabel("<center><h1>%s</h1></center>" % self.name)
-            titulo.setWordWrap(True)
-            layout.addWidget(titulo)
+            title = QtGui.QLabel("<center><h1>%s</h1></center>" % self.name)
+            title.setWordWrap(True)
+            layout.addWidget(title)
             layout.addStretch()
             ## ============================
-        notas = QtGui.QLabel(self.__doc__)
-        notas.setWordWrap(True)
-        notas.setTextFormat(QtCore.Qt.RichText)
-        notas_layout = QtGui.QVBoxLayout()
-        notas_layout.addWidget(notas)
-        notas_layout.addStretch()
+        notes = QtGui.QLabel(self.__doc__)
+        notes.setWordWrap(True)
+        notes.setTextFormat(QtCore.Qt.RichText)
+        notes_layout = QtGui.QVBoxLayout()
+        notes_layout.addWidget(notes)
+        notes_layout.addStretch()
         self.notasWidget = QtGui.QWidget()
-        self.notasWidget.setLayout(notas_layout)
+        self.notasWidget.setLayout(notes_layout)
 
     def getGui(self):
         return self.widget
@@ -121,15 +124,3 @@ class Page(QtCore.QObject):
         for ob in self.objectsForAnimate:
             ob.resetObjectForAnimation()
         self.animations[0].start()
-
-    def pre(self):
-        """
-        Called before settis this page as current for the chapter
-        """
-        pass
-
-    def post(self):
-        """
-        Called upon whichPage changed, but before next page's 'pre'
-        """
-        pass

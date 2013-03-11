@@ -42,7 +42,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="previa">
+      <widget class="QPushButton" name="previous">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -58,7 +58,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="siguiente">
+      <widget class="QPushButton" name="next">
        <property name="enabled">
         <bool>true</bool>
        </property>

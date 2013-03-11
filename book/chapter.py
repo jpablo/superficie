@@ -1,3 +1,4 @@
+import logging
 from PyQt4 import QtGui, uic, QtCore
 from pivy.coin import SoSeparator, SoSwitch
 from page import Page
@@ -5,8 +6,14 @@ from superficie.util import nodeDict, connect, pegaNombres
 
 changePage_fclass, base_class = uic.loadUiType(pegaNombres("viewer", "change-page.ui"))
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logging.basicConfig()
+
+
 class ChangePageUI(base_class, changePage_fclass):
     def __init__(self, *args):
+        # noinspection PyCallByClass
         QtGui.QWidget.__init__(self, *args)
         self.setupUi(self)
 
@@ -14,7 +21,7 @@ class ChangePageUI(base_class, changePage_fclass):
 class Chapter(QtCore.QObject):
     """A Chapter"""
 
-    pageChanged = QtCore.pyqtSignal(Page,int)
+    pageChanged = QtCore.pyqtSignal(Page, int)
 
     def __init__(self, name=""):
         super(Chapter, self).__init__()
@@ -31,20 +38,19 @@ class Chapter(QtCore.QObject):
         self.setupGui()
 
     def setupGui(self):
-        ## self.wiget has next, prev buttons, plus a QStackedWidget for holding per page controls
+        ## self.widget has next, prev buttons, plus a QStackedWidget for holding per page controls
         self.widget = ChangePageUI()
         ## the initial state
-        self.widget.previa.hide()
-        self.widget.siguiente.hide()
-        connect(self.widget.siguiente, "clicked(bool)", self.nextPage)
-        connect(self.widget.previa, "clicked(bool)", self.prevPage)
+        self.widget.previous.hide()
+        self.widget.next.hide()
+        connect(self.widget.next, "clicked(bool)", self.nextPage)
+        connect(self.widget.previous, "clicked(bool)", self.prevPage)
         ## ============================
         self.notasStack = QtGui.QStackedWidget()
         ## ============================
 
-    def setBook(self,book):
+    def setBook(self, book):
         self.book = book
-
 
     @property
     def pages(self):
@@ -98,9 +104,8 @@ class Chapter(QtCore.QObject):
             notasLayout.addWidget(page.getNotas())
         ## ============================
         if len(self.pagesSwitch) == 2:
-            self.widget.previa.show()
-            self.widget.siguiente.show()
-
+            self.widget.previous.show()
+            self.widget.next.show()
 
     def getGui(self):
         return self.widget
@@ -113,16 +118,7 @@ class Chapter(QtCore.QObject):
         this is intended for global changes to the scenegraph that
         are needed by this chapter
         """
-        print "chapterSpecificIn:", self
         pass
-
-    def chapterSpecificOut(self):
-        """code to be executed whenever another chapter is displayed
-        restore the scenegraph to sane values
-        """
-        print "chapterSpecificOut", self
-        pass
-
 
     @property
     def page(self):
@@ -130,7 +126,6 @@ class Chapter(QtCore.QObject):
         if self.whichPage < 0:
             return None
         return self.pages[self.pagesSwitch[self.whichPage]]
-
 
     def getWhichPage(self):
         """
@@ -144,31 +139,19 @@ class Chapter(QtCore.QObject):
         @param n:
         """
         if len(self.pagesSwitch) > 0:
-            self.page and self.onPageUnload(self.page)
-            node = self.pagesSwitch.getChild(n)
-            self.onPageEnter(self.pages[node])
+            self.pagesSwitch.getChild(n)
             self.pagesSwitch.whichChild = n
             self.widget.pageStack.setCurrentIndex(n)
             self.notasStack.setCurrentIndex(n)
             self.pageChanged.emit(self.page, n)
 
-
     whichPage = property(getWhichPage, setWhichPage)
 
-    def changePage(self, dir):
-        self.whichPage = (self.whichPage + dir) % len(self.pagesSwitch)
+    def changePage(self, direction):
+        self.whichPage = (self.whichPage + direction) % len(self.pagesSwitch)
 
     def nextPage(self):
         self.changePage(1)
 
     def prevPage(self):
         self.changePage(-1)
-
-    def onPageUnload(self, page):
-        if page.camera_position is not None and self.book is not None:
-            self.book.viewer.cameraPosition = self.__camera_position
-
-    def onPageEnter(self, page):
-        if page.camera_position is not None and self.book is not None:
-            self.__camera_position = self.book.viewer.cameraPosition
-            self.book.viewer.cameraPosition = page.camera_position

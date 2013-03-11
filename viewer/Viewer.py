@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import logging
+
 from PyQt4.QtGui import QWidget
 from PyQt4 import QtCore, QtGui, QtOpenGL
 
@@ -8,41 +10,47 @@ from pivy.coin import *
 from pivy.quarter import QuarterWidget
 from superficie.book import Book
 
-Quarter = True
 from superficie.util import callback, pegaNombres, readFile
 from superficie import globals
 
 SoCamera.upVector = property(lambda self: self.orientation.getValue() * SbVec3f(0,1,0))
 SoCamera.cameraDirection = property(lambda self: self.orientation.getValue() * SbVec3f(0,0,-1))
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+
 def newPointAt(self, vec):
     self.position = vec + -self.cameraDirection
+
 SoCamera.newPointAt = newPointAt
 
 SbVec3f.__repr__ = lambda self: "SbVec3f(%f,%f,%f)" % self.getValue()
 
 TransparencyType = [
-   'SCREEN_DOOR, ADD',
-   'DELAYED_ADD',
-   'SORTED_OBJECT_ADD',
-   'BLEND, DELAYED_BLEND',
-   'SORTED_OBJECT_BLEND',
-   'SORTED_OBJECT_SORTED_TRIANGLE_ADD',
-   'SORTED_OBJECT_SORTED_TRIANGLE_BLEND',
-   'NONE',
-   'SORTED_LAYERS_BLEND'
- ]
-
+    'SCREEN_DOOR, ADD',
+    'DELAYED_ADD',
+    'SORTED_OBJECT_ADD',
+    'BLEND, DELAYED_BLEND',
+    'SORTED_OBJECT_BLEND',
+    'SORTED_OBJECT_SORTED_TRIANGLE_ADD',
+    'SORTED_OBJECT_SORTED_TRIANGLE_BLEND',
+    'NONE',
+    'SORTED_LAYERS_BLEND'
+]
 
 
 class Viewer(QWidget):
-    
+
     def __init__(self, parent=None, uiLayout=None, notasLayout=None, luces=True):
         super(Viewer, self).__init__(parent)
         globals.ViewerInstances.append(self)
-        self.book = Book(self)
-        #=======================================================================
-        # Copiamos algunos atributos de book
-        #=======================================================================
+        # camera defaults
+        self.camera_point_at = [SbVec3f(0, 0, 0), SbVec3f(0, 1, 0)]
+        # call viewAll when switching to a new page
+        self.camera_viewAll = True
+        self.book = Book()
+        # copy some attributes from book
         self.root = self.book.root
         self.createChapter = self.book.createChapter
         self.addChapter = self.book.addChapter
@@ -50,28 +58,26 @@ class Viewer(QWidget):
         self.notasStack = self.book.notasStack
         #=======================================================================
         self.initializeViewer(luces)
-        self.initializeUI(uiLayout,notasLayout)
+        self.initializeUI(uiLayout, notasLayout)
         #=======================================================================
-        self.book.pageChanged.connect(self.onPageChanged)
-        self.book.chapterChanged.connect(self.onChapterChanged)
-
+        self.book.pageChanged.connect(self.adjustCameraForPage)
+        # self.book.chapterChanged.connect(self.onChapterChanged)
 
     def slot(self):
         print "Viewer.slot"
-        
-    
+
     def getWhichPage(self):
         return self.chapter.whichPage
-    
+
     def setWhichPage(self, n):
         self.chapter.whichPage = n
-    
+
     whichPage = property(getWhichPage, setWhichPage)
-    
+
     @property
     def chapter(self):
         return self.book.chapter
-    
+
     def getWhichChapter(self):
         """returns the selected chapter"""
         return self.book.whichChapter
@@ -80,23 +86,29 @@ class Viewer(QWidget):
         self.book.whichChapter = n
 
     whichChapter = property(getWhichChapter, setWhichChapter)
-    
+
     @property
     def page(self):
         return self.book.page
-    
+
     @staticmethod
     def Instance():
         return globals.ViewerInstances[-1]
-        
-    def onPageChanged(self, page, n):
-        print "onPageChanged", page, n
-        if page.camera_position is None:
+
+    def adjustCameraForPage(self, page, n):
+        logger.debug('adjustCameraForPage %s', n)
+        if page.camera_position:
+            self.setCameraPosition(page.camera_position)
+        if page.camera_point_at:
+            self.camera.pointAt(*page.camera_point_at)
+        else:
+            self.camera.pointAt(*self.camera_point_at)
+        if page.camera_viewAll:
             self.viewAll()
-        
-    def onChapterChanged(self, c):
-        print 'onChapterChanged', c
-        self.viewAll()
+
+    # def onChapterChanged(self, c):
+    #     logger.debug('onChapterChanged %s', c)
+    #     self.viewAll()
 
 #    @property
 #    def camera(self):
@@ -104,7 +116,9 @@ class Viewer(QWidget):
 #        return self.viewer.getSoRenderManager().getCamera()
 
     def setCameraPosition(self, position):
+        self.__camera_position = self.camera.position
         self.camera.position = position
+        logger.debug('setCameraPosition: %s, %s, %s', position, self.getCameraPosition(), self.camera)
 
     def getCameraPosition(self):
         return self.camera.position.getValue()
@@ -113,8 +127,9 @@ class Viewer(QWidget):
 
     def setInitialCameraPosition(self):
         """Chose an adecuate initial pov"""
-        self.camera.position = (7, 7, 7)
-        self.camera.pointAt(SbVec3f(0, 0, 0), SbVec3f(0, 0, 1))
+        logger.debug('setInitialCameraPosition')
+        self.setCameraPosition((7, 7, 7))
+        self.camera.pointAt(*self.camera_point_at)
         self.camera.farDistance = 25
         self.camera.nearDistance = .01
 
@@ -161,12 +176,13 @@ class Viewer(QWidget):
         self.getSRoot().insertChild(luz, 0)
 
     def viewAll(self):
+        # logger.debug('Viewer.viewAll')
         self.viewer.viewAll()
 
     def setTransparencyType(self, tr_type):
         self.viewer.setTransparencyType(tr_type)
 
-    def initializeViewer(self, luces):
+    def initializeViewer(self, lights):
         # ============================
         fmt = QtOpenGL.QGLFormat()
         fmt.setAlpha(True)
@@ -182,7 +198,6 @@ class Viewer(QWidget):
         self.mouseEventCB = SoEventCallback()
         self.getSRoot().addChild(self.mouseEventCB)
         ## ============================
-        ## esto es un poco pesado
         rotor = SoRotor()
         rotor.on = False
         rotor.setName("rotor")
@@ -194,7 +209,7 @@ class Viewer(QWidget):
         self.camera = self.viewer.getSoRenderManager().getCamera()
         self.setInitialCameraPosition()
         ## ===========================
-        if luces:
+        if lights:
             self.addLights()
         hints = SoShapeHints()
         hints.vertexOrdering = SoShapeHints.COUNTERCLOCKWISE
@@ -202,10 +217,9 @@ class Viewer(QWidget):
         hints.faceType = SoShapeHints.CONVEX
         self.root.addChild(hints)
 
-
-    def initializeUI(self, uilayout,notasLayout):
-        if uilayout is not None:
-            uilayout.addWidget(self.chaptersStack)
+    def initializeUI(self, uiLayout, notasLayout):
+        if uiLayout is not None:
+            uiLayout.addWidget(self.chaptersStack)
         if notasLayout is not None:
             notasLayout.addWidget(self.notasStack)
 
@@ -214,36 +228,32 @@ class Viewer(QWidget):
         self.ejes.show(b)
 
     def getSRoot(self):
-        if Quarter:
-            return self.viewer.getSoRenderManager().getSceneGraph()
-        else:
-            return self.viewer.getSceneManager().getSceneGraph()
-
+        return self.viewer.getSoRenderManager().getSceneGraph()
 
 if __name__ == "__main__":
     import sys
     app = QtGui.QApplication(sys.argv)
-    visor = Viewer()
+    viewer = Viewer()
     ## ============================
-    visor.createChapter()
+    viewer.createChapter()
     ## ============================
-    visor.chapter.createPage()
+    viewer.chapter.createPage()
     sep = SoSeparator()
-    sep.getGui = lambda: QtGui.QLabel("<center><h1>Esfera+Cono</h1></center>")
-    esfera = SoSphere()
-    cono = SoCone()
-    sep.addChild(esfera)
-    sep.addChild(cono)
-    visor.page.addChild(sep)
+    sep.getGui = lambda: QtGui.QLabel("<center><h1>Sphere+Cone</h1></center>")
+    sphere = SoSphere()
+    cone = SoCone()
+    sep.addChild(sphere)
+    sep.addChild(cone)
+    viewer.page.addChild(sep)
     ## ============================
-    visor.chapter.createPage()
-    cubo = SoCube()
-    cubo.getGui = lambda: QtGui.QLabel("<center><h1>Cubo</h1></center>")
-    visor.page.addChild(cubo)
+    viewer.chapter.createPage()
+    cube = SoCube()
+    cube.getGui = lambda: QtGui.QLabel("<center><h1>Cubo</h1></center>")
+    viewer.page.addChild(cube)
     ## ============================
-    visor.whichPage = 0
-    visor.resize(400, 400)
-    visor.show()
-    visor.chaptersStack.show()
-    
+    viewer.whichPage = 0
+    viewer.resize(400, 400)
+    viewer.show()
+    viewer.chaptersStack.show()
+
     sys.exit(app.exec_())
