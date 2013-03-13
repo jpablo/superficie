@@ -50,8 +50,23 @@ class MinimalViewer(QWidget):
         # call viewAll when switching to a new page
         self.camera_viewAll = True
         # the scene root
-        self.root = coin.SoSeparator()
-        self.initializeViewer(True)
+        self.root = self.getRoot()
+        self.initializeViewer()
+        self.setupGui()
+        self.camera = self.viewer.getSoRenderManager().getCamera()
+        self.setInitialCameraPosition()
+        self.getSRoot().addChild(self.mouseEventCB)
+        self.addLights()
+
+    def getRoot(self):
+        return coin.SoSeparator()
+
+    def setupGui(self):
+        self.viewer = QuarterWidget()
+        layout = QtGui.QVBoxLayout()
+        layout.addWidget(self.viewer)
+        self.setLayout(layout)
+        self.viewer.setSceneGraph(self.root)
 
     def setCameraPosition(self, position):
         self.__camera_position = self.camera.position
@@ -99,10 +114,7 @@ class MinimalViewer(QWidget):
         self.whiteLight.on = False
 
     def setColorLightOn(self, val):
-        if val:
-            self.colorLights.whichChild = coin.SO_SWITCH_ALL
-        else:
-            self.colorLights.whichChild = coin.SO_SWITCH_NONE
+        self.colorLights.whichChild = coin.SO_SWITCH_ALL if val else coin.SO_SWITCH_NONE
 
     def setWhiteLightOn(self, val):
         self.whiteLight.on = val
@@ -116,28 +128,21 @@ class MinimalViewer(QWidget):
     def setTransparencyType(self, tr_type):
         self.viewer.setTransparencyType(tr_type)
 
-    def initializeViewer(self, lights):
-        fmt = QtOpenGL.QGLFormat()
-        fmt.setAlpha(True)
-        QtOpenGL.QGLFormat.setDefaultFormat(fmt)
-        self.viewer = QuarterWidget()
-        layout = QtGui.QVBoxLayout()
-        layout.addWidget(self.viewer)
-        self.setLayout(layout)
-        self.viewer.setSceneGraph(self.root)
-        self.mouseEventCB = coin.SoEventCallback()
-        self.getSRoot().addChild(self.mouseEventCB)
+    def buildRotor(self):
         rotor = coin.SoRotor()
         rotor.on = False
         rotor.setName("rotor")
         rotor.speed = 0.005
         rotor.rotation = (0, 0, 1, 0)
-        self.root.addChild(rotor)
-        self.rotor = rotor
-        self.camera = self.viewer.getSoRenderManager().getCamera()
-        self.setInitialCameraPosition()
-        if lights:
-            self.addLights()
+        return rotor
+
+    def initializeViewer(self):
+        fmt = QtOpenGL.QGLFormat()
+        fmt.setAlpha(True)
+        QtOpenGL.QGLFormat.setDefaultFormat(fmt)
+        self.mouseEventCB = coin.SoEventCallback()
+        self.rotor = self.buildRotor()
+        self.root.addChild(self.rotor)
         hints = coin.SoShapeHints()
         hints.vertexOrdering = coin.SoShapeHints.COUNTERCLOCKWISE
         hints.shapeType = coin.SoShapeHints.SOLID

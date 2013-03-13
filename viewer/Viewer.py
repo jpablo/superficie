@@ -13,26 +13,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class Viewer(MinimalViewer):
+class BookProxy:
     """
-    Extends MinimalViewer with a Book-like structure
+    Proxy methods for managing the current chapter and page
     """
-
-    def __init__(self, parent=None, uiLayout=None, notesLayout=None, lights=True):
-        QtGui.QWidget.__init__(self)
-        # camera defaults
-        self.camera_point_at = [SbVec3f(0, 0, 0), SbVec3f(0, 0, 1)]
-        self.camera_position = (7, 7, 7)
-        # call viewAll when switching to a new page
-        self.camera_viewAll = True
-        self.book = Book()
-        # copy some attributes from book
-        self.chaptersStack = self.book.chaptersStack
-        self.notesStack = self.book.notasStack
-        self.root = self.book.root
-        self.initializeViewer(lights)
-        self.initializeUI(uiLayout, notesLayout)
-        self.book.pageChanged.connect(self.adjustCameraForPage)
 
     def getWhichPage(self):
         return self.chapter.whichPage
@@ -59,6 +43,25 @@ class Viewer(MinimalViewer):
     def page(self):
         return self.book.page
 
+
+class Viewer(MinimalViewer, BookProxy):
+    """
+    Extends MinimalViewer with a Book-like structure
+    """
+
+    def __init__(self, parent=None, uiLayout=None, notesLayout=None, lights=True):
+        self.book = Book()
+        # copy some attributes from book
+        self.chaptersStack = self.book.chaptersStack
+        self.notesStack = self.book.notasStack
+        self.initializeUI(uiLayout, notesLayout)
+        self.book.pageChanged.connect(self.adjustCameraForPage)
+        # initialize the MinimalViewer
+        MinimalViewer.__init__(self)
+
+    def getRoot(self):
+        return self.book.root
+
     @staticmethod
     def Instance():
         return globals.ViewerInstances[-1]
@@ -81,6 +84,7 @@ class Viewer(MinimalViewer):
             uiLayout.addWidget(self.chaptersStack)
         if notesLayout is not None:
             notesLayout.addWidget(self.notesStack)
+
 
 if __name__ == "__main__":
     import sys
