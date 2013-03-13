@@ -1,6 +1,5 @@
 from animations.Animation import Animation
 
-__author__ = 'jpablo'
 
 class AnimationCurve(Animation):
     def __init__(self,func,curve,duration):

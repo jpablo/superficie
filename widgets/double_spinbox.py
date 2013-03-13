@@ -1,7 +1,6 @@
 import PyQt4.QtGui
 from superficie.util import connect
 
-__author__ = 'jpablo'
 
 class DoubleSpinBox(QtGui.QDoubleSpinBox):
     def __init__(self, text,iter,func,parent=None):

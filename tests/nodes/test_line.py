@@ -1,5 +1,3 @@
-__author__ = 'jpablo'
-
 import sys
 import unittest
 from superficie.nodes import Line

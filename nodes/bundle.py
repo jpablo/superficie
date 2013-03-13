@@ -1,4 +1,4 @@
-__author__ = 'jpablo'
+
 
 class Bundle(BaseObject):
     def __init__(self, c, cp, partition, col, factor=1, name="", visible=False, parent=None):

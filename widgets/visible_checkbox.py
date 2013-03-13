@@ -1,6 +1,5 @@
 from superficie.widgets.checkbox import CheckBox
 
-__author__ = 'jpablo'
 
 class VisibleCheckBox(CheckBox):
     def __init__(self, text,ob, state=True, parent = None):

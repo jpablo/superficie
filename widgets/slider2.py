@@ -4,7 +4,6 @@ import PyQt4.uic
 from superficie.Animation0 import AnimeType, Timer
 from superficie.util import identity, filePath, conecta, partial
 
-__author__ = 'jpablo'
 
 class Slider2(QtGui.QWidget):
     def __init__(self, iter=('w', 0, 1, 101), tini=0,  func=identity,  preF = None,  postF = None,  tipoAnim = AnimeType.unavez, parent=None):

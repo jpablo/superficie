@@ -3,7 +3,6 @@ import PyQt4.QtCore
 from superficie.util import connect
 from util import GenIntervalo
 
-__author__ = 'jpablo'
 
 class Timer(QtCore.QTimer):
     "evalua automaticamente una funcion en los puntos del intervalo dado"

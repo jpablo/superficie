@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class BookProxy:
+class BookProxy(object):
     """
     Proxy methods for managing the current chapter and page
     """

@@ -1,5 +1,3 @@
-__author__ = 'jpablo'
-
 from superficie.Objects import Arrow
 from superficie.util import Vec3
 

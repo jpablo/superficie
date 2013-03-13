@@ -157,6 +157,9 @@ class MinimalViewer(QWidget):
         wa = coin.SoWriteAction()
         return wa.apply(root)
 
+    def setStereoAdjustment(self, val):
+        self.camera.setStereoAdjustment(val)
+
 
 if __name__ == "__main__":
     import sys
