@@ -8,6 +8,7 @@ from superficie.viewer import MinimalViewer
 x = [(0, 0, 0), (1, 0, 0)]
 y = [(0, 0, 0), (0, 1, 0)]
 z = [(0, 0, 0), (0, 0, 1)]
+
 lx = Line(x, width=5).setColor((1, 0, 0))
 ly = Line(y, width=7).setColor((0, 1, 0))
 lz = Line(z, width=5).setColor((0, 0, 1))
@@ -19,12 +20,12 @@ ob3 = Arrow(*z)
 
 app = QtGui.QApplication(sys.argv)
 viewer = MinimalViewer()
-viewer.root.addChild(ob.root)
-viewer.root.addChild(ob2.root)
-viewer.root.addChild(ob3.root)
-viewer.root.addChild(lx.root)
-viewer.root.addChild(ly.root)
-viewer.root.addChild(lz.root)
+viewer.addChild(ob)
+viewer.addChild(ob2)
+viewer.addChild(ob3)
+viewer.addChild(lx)
+viewer.addChild(ly)
+viewer.addChild(lz)
 
 viewer.resize(400, 400)
 viewer.show()

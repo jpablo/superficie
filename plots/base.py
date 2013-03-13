@@ -121,19 +121,10 @@ class Quad(object):
                 verticesY.append(vertices[j * vpr + i])
         self.linesetYcoor.point.setValues(0, len(verticesY), verticesY)
         self.lineSetY.numVertices.setValues(lstY)
-        ## ============================
-        ## the vector field
-
-#        if quad.vectorFieldFunc:
-#            for v in vertices:
-#                vf = quad.vectorFieldFunc(Vec3(v))
-#                self.addChild(Arrow(Vec3(v), vf, visible=True, escala=.005, extremos=True))
 
 
 class Mesh(MaterialNode):
     """A Set of Quads which share the same generating function"""
-    ## ============================
-    autoAdd = False
 
     def __init__(self, rangeX=(0, 1, 40), rangeY=(0, 1, 40), name=''):
         super(Mesh, self).__init__()
@@ -148,22 +139,19 @@ class Mesh(MaterialNode):
         self.parameters = {}
         self.rangeX = Range(*rangeX)
         self.rangeY = Range(*rangeY)
-        ## ============================
+        self.setupGui()
+        self.animation = Animation(lambda x: x, (1000, 1, 2))
+
+    def __len__(self):
+        return len(self.rangeX) * len(self.rangeY)
+
+    def setupGui(self):
         # TODO: factorize gui code out of BaseObject subtypes as much as possible.
         layout = QtGui.QVBoxLayout()
         self.widget = QtGui.QWidget()
         self.widget.setLayout(layout)
         if self.name != "":
             layout.addWidget(QtGui.QLabel("<center><h1>%s</h1></center>" % self.name))
-        if Mesh.autoAdd:
-            viewer = Viewer.Instance()
-            viewer.chapter.createPage()
-            viewer.page.addChild(self)
-            ## ===============================
-        self.animation = Animation(lambda x: x, (1000, 1, 2))
-
-    def __len__(self):
-        return len(self.rangeX) * len(self.rangeY)
 
     def getGui(self):
         return self.widget
@@ -305,7 +293,6 @@ if __name__ == "__main__":
     from revolution_plot3d import RevolutionPlot3D
 
     app = QtGui.QApplication(sys.argv)
-    Mesh.autoAdd = True
     viewer = Viewer()
     viewer.book.createChapter()
     #===========================================================================
