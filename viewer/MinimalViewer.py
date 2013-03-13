@@ -61,6 +61,9 @@ class MinimalViewer(QWidget):
     def getRoot(self):
         return coin.SoSeparator()
 
+    def addChild(self, node):
+        self.root.addChild(getattr(node, "root", node))
+
     def setupGui(self):
         self.viewer = QuarterWidget()
         layout = QtGui.QVBoxLayout()
