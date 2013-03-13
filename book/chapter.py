@@ -108,7 +108,7 @@ class Chapter(QtCore.QObject):
     def getGui(self):
         return self.widget
 
-    def getNotas(self):
+    def getNotes(self):
         return self.notesStack
 
     def chapterSpecificIn(self):
