@@ -57,6 +57,9 @@ class MinimalViewer(QWidget):
         self.setInitialCameraPosition()
         self.getSRoot().addChild(self.mouseEventCB)
         self.addLights()
+        self.setColorLightOn(False)
+        self.setWhiteLightOn(False)
+
 
     def getRoot(self):
         return coin.SoSeparator()
@@ -111,7 +114,7 @@ class MinimalViewer(QWidget):
         self.colorLights = readFile(filePath("viewer", "lights.iv")).getChild(0)
         self.insertLight(self.colorLights)
         self.colorLights.whichChild = coin.SO_SWITCH_ALL
-        ## ============================
+        # ============================
         self.whiteLight = coin.SoDirectionalLight()
         self.insertLight(self.whiteLight)
         self.whiteLight.on = False
