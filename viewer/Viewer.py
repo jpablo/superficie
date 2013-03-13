@@ -53,7 +53,7 @@ class Viewer(MinimalViewer, BookProxy):
         self.book = Book()
         # copy some attributes from book
         self.chaptersStack = self.book.chaptersStack
-        self.notesStack = self.book.notasStack
+        self.notesStack = self.book.notesStack
         self.initializeUI(uiLayout, notesLayout)
         self.book.pageChanged.connect(self.adjustCameraForPage)
         # initialize the MinimalViewer

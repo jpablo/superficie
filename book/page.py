@@ -44,14 +44,14 @@ class Page(QtCore.QObject):
         notes_layout = QtGui.QVBoxLayout()
         notes_layout.addWidget(notes)
         notes_layout.addStretch()
-        self.notasWidget = QtGui.QWidget()
-        self.notasWidget.setLayout(notes_layout)
+        self.notesWidget = QtGui.QWidget()
+        self.notesWidget.setLayout(notes_layout)
 
     def getGui(self):
         return self.widget
 
-    def getNotas(self):
-        return self.notasWidget
+    def getNotes(self):
+        return self.notesWidget
 
     def addWidget(self, widget):
         self.widget.layout().addWidget(widget)

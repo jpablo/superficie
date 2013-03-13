@@ -36,7 +36,7 @@ class Book(QtCore.QObject):
     def setupGui(self):
         ## chapterStack has one widget (of controls) per chapter
         self.chaptersStack = QtGui.QStackedWidget()
-        self.notasStack = QtGui.QStackedWidget()
+        self.notesStack = QtGui.QStackedWidget()
 
     def createChapter(self):
         """Creates a new empty Chapter"""
@@ -57,7 +57,7 @@ class Book(QtCore.QObject):
         ## ============================
         ## setup the UI
         self.chaptersStack.addWidget(chapter.getGui())
-        self.notasStack.addWidget(chapter.getNotas())
+        self.notesStack.addWidget(chapter.getNotes())
         self.whichChapter = len(self.chapters) - 1
         #=======================================================================
         chapter.pageChanged.connect(self.relayPageChangedSignal)
@@ -96,7 +96,7 @@ class Book(QtCore.QObject):
         """
         self.chapters.whichChild = n
         self.chaptersStack.setCurrentIndex(n)
-        self.notasStack.setCurrentIndex(n)
+        self.notesStack.setCurrentIndex(n)
         self.chapter.chapterSpecificIn()
         self.chapterChanged.emit(n)
         # noinspection PyStatementEffect

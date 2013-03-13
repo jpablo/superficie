@@ -46,7 +46,7 @@ class Chapter(QtCore.QObject):
         connect(self.widget.next, "clicked(bool)", self.nextPage)
         connect(self.widget.previous, "clicked(bool)", self.prevPage)
         ## ============================
-        self.notasStack = QtGui.QStackedWidget()
+        self.notesStack = QtGui.QStackedWidget()
         ## ============================
 
     def setBook(self, book):
@@ -91,17 +91,15 @@ class Chapter(QtCore.QObject):
         widget = QtGui.QWidget()
         widget.setObjectName("PageNotas")
         widget.setLayout(notasLayout)
-        self.notasStack.addWidget(widget)
+        self.notesStack.addWidget(widget)
         ## ============================
         ## this sets self.pagesSwitch, self.widget.pageStack, self.notasStack
         ## only change the page if theres a book already
         if self.book is not None:
             self.whichPage = len(self.pagesSwitch) - 1
         ## ============================
-        if hasattr(page, "getGui"):
-            guiLayout.addWidget(page.getGui())
-        if hasattr(page, "getNotas"):
-            notasLayout.addWidget(page.getNotas())
+        guiLayout.addWidget(page.getGui())
+        notasLayout.addWidget(page.getNotes())
         ## ============================
         if len(self.pagesSwitch) == 2:
             self.widget.previous.show()
@@ -111,7 +109,7 @@ class Chapter(QtCore.QObject):
         return self.widget
 
     def getNotas(self):
-        return self.notasStack
+        return self.notesStack
 
     def chapterSpecificIn(self):
         """code to be executed whenever the chapter is displayed
@@ -142,7 +140,7 @@ class Chapter(QtCore.QObject):
             self.pagesSwitch.getChild(n)
             self.pagesSwitch.whichChild = n
             self.widget.pageStack.setCurrentIndex(n)
-            self.notasStack.setCurrentIndex(n)
+            self.notesStack.setCurrentIndex(n)
             self.pageChanged.emit(self.page, n)
 
     whichPage = property(getWhichPage, setWhichPage)
