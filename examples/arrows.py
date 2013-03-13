@@ -1,8 +1,6 @@
 import sys
 from PyQt4 import QtGui
-from superficie.nodes.arrow import Arrow
-from superficie.nodes.line import Line
-
+from superficie.nodes import Arrow, Line
 from superficie.viewer import MinimalViewer
 
 x = [(0, 0, 0), (1, 0, 0)]
