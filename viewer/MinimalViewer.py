@@ -42,7 +42,7 @@ class MinimalViewer(QWidget):
     A QWidget which contains a child QuarterWidget
     """
 
-    def __init__(self):
+    def __init__(self, colorLights=True):
         QWidget.__init__(self)
         # camera defaults
         self.camera_point_at = [coin.SbVec3f(0, 0, 0), coin.SbVec3f(0, 0, 1)]
@@ -53,13 +53,16 @@ class MinimalViewer(QWidget):
         self.root = self.getRoot()
         self.initializeViewer()
         self.setupGui()
+        self.viewer.setSceneGraph(self.root)
         self.camera = self.viewer.getSoRenderManager().getCamera()
         self.setInitialCameraPosition()
+        self.mouseEventCB = coin.SoEventCallback()
         self.getSRoot().addChild(self.mouseEventCB)
-        self.addLights()
-        self.setColorLightOn(False)
-        self.setWhiteLightOn(False)
-
+        if colorLights:
+            self.addLights()
+            self.setColorLightOn(True)
+            # no need the default headlight in this case
+            self.viewer.enableHeadlight(False)
 
     def getRoot(self):
         return coin.SoSeparator()
@@ -72,7 +75,6 @@ class MinimalViewer(QWidget):
         layout = QtGui.QVBoxLayout()
         layout.addWidget(self.viewer)
         self.setLayout(layout)
-        self.viewer.setSceneGraph(self.root)
 
     def setCameraPosition(self, position):
         self.__camera_position = self.camera.position
@@ -114,16 +116,10 @@ class MinimalViewer(QWidget):
         self.colorLights = readFile(filePath("viewer", "lights.iv")).getChild(0)
         self.insertLight(self.colorLights)
         self.colorLights.whichChild = coin.SO_SWITCH_ALL
-        # ============================
-        self.whiteLight = coin.SoDirectionalLight()
-        self.insertLight(self.whiteLight)
-        self.whiteLight.on = False
 
     def setColorLightOn(self, val):
-        self.colorLights.whichChild = coin.SO_SWITCH_ALL if val else coin.SO_SWITCH_NONE
-
-    def setWhiteLightOn(self, val):
-        self.whiteLight.on = val
+        if self.colorLights:
+            self.colorLights.whichChild = coin.SO_SWITCH_ALL if val else coin.SO_SWITCH_NONE
 
     def insertLight(self, luz):
         self.getSRoot().insertChild(luz, 0)
@@ -146,17 +142,20 @@ class MinimalViewer(QWidget):
         fmt = QtOpenGL.QGLFormat()
         fmt.setAlpha(True)
         QtOpenGL.QGLFormat.setDefaultFormat(fmt)
-        self.mouseEventCB = coin.SoEventCallback()
         self.rotor = self.buildRotor()
-        self.root.addChild(self.rotor)
         hints = coin.SoShapeHints()
         hints.vertexOrdering = coin.SoShapeHints.COUNTERCLOCKWISE
         hints.shapeType = coin.SoShapeHints.SOLID
         hints.faceType = coin.SoShapeHints.CONVEX
+        self.root.addChild(self.rotor)
         self.root.addChild(hints)
 
     def getSRoot(self):
         return self.viewer.getSoRenderManager().getSceneGraph()
+
+    def toText(self, root):
+        wa = coin.SoWriteAction()
+        return wa.apply(root)
 
 
 if __name__ == "__main__":
