@@ -16,7 +16,7 @@ except ImportError:
     Quarter = False
 from superficie.util import callback
 from superficie.util import conecta
-from superficie.util import pegaNombres
+from superficie.util import filePath
 from superficie.util import readFile
 from superficie.Book import Book
 
@@ -109,7 +109,7 @@ class Viewer(Book,QWidget):
             self.cameraSensor.detach()
 
     def agregaLuces(self, root):
-        self.lucesColor = readFile(pegaNombres("Viewer","lights.iv")).getChild(0)
+        self.lucesColor = readFile(filePath("Viewer","lights.iv")).getChild(0)
         self.insertaLuz(self.lucesColor)
         self.lucesColor.whichChild = SO_SWITCH_ALL
         ## ============================

@@ -2,9 +2,9 @@ import logging
 from PyQt4 import QtGui, uic, QtCore
 from pivy.coin import SoSeparator, SoSwitch
 from page import Page
-from superficie.util import nodeDict, connect, pegaNombres
+from superficie.util import nodeDict, connect, filePath
 
-changePage_fclass, base_class = uic.loadUiType(pegaNombres("viewer", "change-page.ui"))
+changePage_fclass, base_class = uic.loadUiType(filePath("viewer", "change-page.ui"))
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

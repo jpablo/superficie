@@ -15,7 +15,7 @@ import util
 modulosPath = os.path.dirname(util.__file__)
 
 
-def pegaNombres(folder, archivo):
+def filePath(folder, archivo):
     return join(modulosPath, folder, archivo)
 
 
@@ -463,7 +463,7 @@ def main(chapter_cls=None):
         run_exec = True
     visor = Viewer()
     if chapter_cls:
-        visor.addChapter(chapter_cls())
+        visor.book.addChapter(chapter_cls())
         ## ============================
     visor.whichPage = 0
     visor.resize(400, 400)

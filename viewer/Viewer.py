@@ -3,7 +3,7 @@
 import logging
 
 from PyQt4 import QtGui
-from pivy.coin import *
+from pivy.coin import SbVec3f
 
 from superficie.book import Book
 from superficie import globals
@@ -14,6 +14,9 @@ logger.setLevel(logging.DEBUG)
 
 
 class Viewer(MinimalViewer):
+    """
+    Extends MinimalViewer with a Book-like structure
+    """
 
     def __init__(self, parent=None, uiLayout=None, notesLayout=None, lights=True):
         QtGui.QWidget.__init__(self)
@@ -24,10 +27,8 @@ class Viewer(MinimalViewer):
         self.camera_viewAll = True
         self.book = Book()
         # copy some attributes from book
-        self.createChapter = self.book.createChapter
-        self.addChapter = self.book.addChapter
         self.chaptersStack = self.book.chaptersStack
-        self.notasStack = self.book.notasStack
+        self.notesStack = self.book.notasStack
         self.root = self.book.root
         self.initializeViewer(lights)
         self.initializeUI(uiLayout, notesLayout)
@@ -75,19 +76,20 @@ class Viewer(MinimalViewer):
         if page.camera_viewAll:
             self.viewAll()
 
-    def initializeUI(self, uiLayout, notasLayout):
+    def initializeUI(self, uiLayout, notesLayout):
         if uiLayout is not None:
             uiLayout.addWidget(self.chaptersStack)
-        if notasLayout is not None:
-            notasLayout.addWidget(self.notasStack)
+        if notesLayout is not None:
+            notesLayout.addWidget(self.notesStack)
 
 if __name__ == "__main__":
     import sys
     from PyQt4 import QtGui
+    from pivy.coin import SoSeparator, SoCone, SoSphere, SoCube
     app = QtGui.QApplication(sys.argv)
     viewer = Viewer(lights=False)
     ## ============================
-    viewer.createChapter()
+    viewer.book.createChapter()
     ## ============================
     viewer.chapter.createPage()
     sep = SoSeparator()

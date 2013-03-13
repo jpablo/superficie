@@ -19,7 +19,6 @@ class Book(QtCore.QObject):
 
     def __init__(self):
         super(Book, self).__init__()
-        # self.viewer = viewer
         self.root = SoSeparator()
         self.root.setName("Book:root")
         self.chapters = SoSwitch()

@@ -6,7 +6,7 @@ from PyQt4 import QtCore, QtGui, QtOpenGL
 
 from pivy import coin
 from pivy.quarter import QuarterWidget
-from superficie.util import callback, readFile, pegaNombres
+from superficie.util import callback, readFile, filePath
 
 
 coin.SoCamera.upVector = property(lambda self: self.orientation.getValue() * coin.SbVec3f(0, 1, 0))
@@ -38,6 +38,10 @@ TransparencyType = [
 
 
 class MinimalViewer(QWidget):
+    """
+    A QWidget which contains a child QuarterWidget
+    """
+
     def __init__(self):
         QWidget.__init__(self)
         # camera defaults
@@ -45,7 +49,7 @@ class MinimalViewer(QWidget):
         self.camera_position = (7, 7, 7)
         # call viewAll when switching to a new page
         self.camera_viewAll = True
-
+        # the scene root
         self.root = coin.SoSeparator()
         self.initializeViewer(True)
 
@@ -60,7 +64,7 @@ class MinimalViewer(QWidget):
     cameraPosition = property(getCameraPosition, setCameraPosition)
 
     def setInitialCameraPosition(self):
-        """Chose an adecuate initial pov"""
+        """Chose an adequate initial pov"""
         logger.debug('setInitialCameraPosition')
         self.setCameraPosition(self.camera_position)
         self.camera.pointAt(*self.camera_point_at)
@@ -70,14 +74,14 @@ class MinimalViewer(QWidget):
     def trackCameraPosition(self, val):
         if val:
             if not hasattr(self, "cameraSensor"):
-                def ppos(camera, sensor):
+                def print_pos(camera, sensor):
                     print "position:", camera.position.getValue()
 
-                def por(camera, sensor):
+                def print_or(camera, sensor):
                     print "orientation:", camera.orientation.getValue().getAxisAngle()
 
-                self.cameraSensor = callback(self.camera.position, ppos, self.camera)
-                self.cameraSensor2 = callback(self.camera.orientation, por, self.camera)
+                self.cameraSensor = callback(self.camera.position, print_pos, self.camera)
+                self.cameraSensor2 = callback(self.camera.orientation, print_or, self.camera)
             else:
                 self.cameraSensor.attach(self.camera.position)
                 self.cameraSensor2.attach(self.camera.orientation)
@@ -86,7 +90,7 @@ class MinimalViewer(QWidget):
             self.cameraSensor2.detach()
 
     def addLights(self):
-        self.colorLights = readFile(pegaNombres("viewer", "lights.iv")).getChild(0)
+        self.colorLights = readFile(filePath("viewer", "lights.iv")).getChild(0)
         self.insertLight(self.colorLights)
         self.colorLights.whichChild = coin.SO_SWITCH_ALL
         ## ============================

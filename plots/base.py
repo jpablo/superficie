@@ -307,7 +307,7 @@ if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     Mesh.autoAdd = True
     viewer = Viewer()
-    viewer.createChapter()
+    viewer.book.createChapter()
     #===========================================================================
     # Mesh
     #===========================================================================

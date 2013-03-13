@@ -17,14 +17,14 @@ import superficie.base
 from superficie.util import callback
 from superficie.util import conecta
 from superficie.util import nodeDict
-from superficie.util import pegaNombres
+from superficie.util import filePath
 from superficie.util import readFile
 
 #modulosPath = "superficie"
 #log = logging.getLogger("Viewer")
 #log.setLevel(logging.DEBUG)
 
-cambia_figura_fclass, base_class = uic.loadUiType(pegaNombres("Viewer","change-page.ui"))
+cambia_figura_fclass, base_class = uic.loadUiType(filePath("Viewer","change-page.ui"))
 
 ## para no tener que cargar el mismo archivo varias veces
 class CambiaFigura(base_class, cambia_figura_fclass):
@@ -109,7 +109,7 @@ class Viewer(QtGui.QWidget):
             self.cameraSensor.detach()
         
     def agregaLuces(self, root):
-        self.lucesColor = readFile(pegaNombres("Viewer","lights.iv")).getChild(0)
+        self.lucesColor = readFile(filePath("Viewer","lights.iv")).getChild(0)
         self.insertaLuz(self.lucesColor)
         self.lucesColor.whichChild = SO_SWITCH_ALL
         ## ============================
