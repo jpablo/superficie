@@ -1,22 +1,16 @@
-# -*- coding: utf-8 -*-
 from math import *
 
 from PyQt4 import QtGui
-from pivy.coin import *
-
 from superficie.nodes import Line, Curve3D
 from superficie.book import Chapter, Page
-from superficie.util import Vec3, _1, partial
-from superficie.widgets import VisibleCheckBox, Slider, SpinBox
-from superficie.plots import ParametricPlot3D
-from superficie.animations import AnimationGroup
+from superficie.util import Vec3
 
 
 class PlanePage(Page):
     def __init__(self, name):
         Page.__init__(self, name)
         self.camera_position = (0, 0, 13)
-        self.camera_point_at = [SbVec3f(0, 0, 0), SbVec3f(0, 1, 0)]
+        self.camera_point_at = [Vec3(0, 0, 0), Vec3(0, 1, 0)]
         self.showAxis(True)
         self.axis_z.setVisible(False)
 
