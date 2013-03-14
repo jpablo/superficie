@@ -3,7 +3,6 @@ from PyQt4 import QtGui
 from superficie.plots import Plot3D
 from superficie.viewer import MinimalViewer
 
-
 app = QtGui.QApplication(sys.argv)
 
 viewer = MinimalViewer()
