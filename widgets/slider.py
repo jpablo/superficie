@@ -42,7 +42,7 @@ class Slider(QtGui.QWidget):
         self.slider.setMaximum(self.npoints-1)
         conecta(self.slider, QtCore.SIGNAL("valueChanged(int)"), self.updateFromSlider)
         self._d = []
-        for f, i in zip([self.atras, self.pausa, self.adelante], [-1, 0, 1]):
+        for f, i in zip([self.atras, self.adelante], [-1, 1]):
             self._d.append(partial(self.estadoAnimacion,i))
             conecta(f, QtCore.SIGNAL("clicked()"), self._d[-1])
 
