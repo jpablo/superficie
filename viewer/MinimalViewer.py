@@ -7,7 +7,7 @@ from PyQt4 import QtCore, QtGui, QtOpenGL
 from pivy import coin
 from pivy.quarter import QuarterWidget
 from superficie.util import callback, readFile, filePath
-
+from superficie.utils import fluid
 
 coin.SoCamera.upVector = property(lambda self: self.orientation.getValue() * coin.SbVec3f(0, 1, 0))
 coin.SoCamera.cameraDirection = property(lambda self: self.orientation.getValue() * coin.SbVec3f(0, 0, -1))
@@ -67,6 +67,7 @@ class MinimalViewer(QWidget):
     def getRoot(self):
         return coin.SoSeparator()
 
+    @fluid
     def addChild(self, node):
         self.root.addChild(getattr(node, "root", node))
 
@@ -124,6 +125,7 @@ class MinimalViewer(QWidget):
     def insertLight(self, luz):
         self.getSRoot().insertChild(luz, 0)
 
+    @fluid
     def viewAll(self):
         self.viewer.viewAll()
 
