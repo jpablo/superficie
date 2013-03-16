@@ -1,25 +1,15 @@
-# -*- coding: utf-8 -*-
-from pivy.coin import *
-
-from superficie.viewer.Viewer import Viewer
-
-from superficie.animations.animation import Animation
-
-Quarter = True
-
-from PyQt4 import QtGui, QtCore
 import operator
 import itertools
+from math import *
+from PyQt4 import QtGui, QtCore
+from pivy.coin import *
+from superficie.viewer.Viewer import Viewer
+from superficie.animations.animation import Animation
 from superficie.base import MaterialNode
 from superficie.util import conecta, intervalPartition, Range, malla, make_hideable
 from superficie.utils import fluid
 from superficie.widgets import Slider
-from superficie.FreeVariableFunction import FreeVariableFunction
-
-## TODO: el código necesita averiguar qué símbolos están definidos
-## en el bloque que llama a *Plot3D, para que este código
-## use las funciones ya definidas, y no tener que definirlas aquí
-from math import *
+from superficie.plots.parametrized_function import ParametrizedFunction
 
 
 def genVarsVals(vars, args):
@@ -28,17 +18,27 @@ def genVarsVals(vars, args):
 
 def func2param(func):
     """
-    Transforms a function f:R^2 -> R into f(x,y) => (x,y,f(x,y)
+    Transforms a function f:R^2 -> R into f(x,y) => (x,y,f(x,y))
     @param func:
     """
-    return lambda x, y: (x, y, func(x, y))
+
+    def param(x, y, *args, **kwargs):
+        return x, y, func(x, y, *args, **kwargs)
+
+    return param
+
 
 def func2revolution_param(func):
     """
-    Transforms a function f:R^2 -> R into f(r,t) => (r cos(t), r sin(t),f(r,t)
+    Transforms a function f:R^2 -> R into f(r,t) => (r cos(t), r sin(t),f(r,t))
     @param func:
     """
-    return lambda r,t: (r*cos(t),r*sin(t),func(r,t))
+
+    def param(r, t, *args, **kwargs):
+        return r * cos(t), r * sin(t), func(r, t, *args, **kwargs)
+
+    return param
+
 
 def toList(obj_or_lst):
     """
@@ -54,11 +54,10 @@ def toList(obj_or_lst):
 class Quad(object):
     """A Mesh"""
 
-    def __init__(self, func=None, nx=10, ny=10):
-        self.function = FreeVariableFunction(func)
-        #        print self.function.usedFreeVariables
+    def __init__(self, func=None, nx=10, ny=10, extraVars=()):
+        self.function = ParametrizedFunction(func, extraVars)
         if self.function.argCount() < 2:
-            raise TypeError, "function %s needs at least 2 arguments" % func
+            raise (TypeError, "function %s needs at least 2 arguments" % func)
         self.vectorFieldFunc = None
         self.coordinates = SoCoordinate3()
         self.mesh = make_hideable(SoQuadMesh())
@@ -199,17 +198,18 @@ class Mesh(MaterialNode):
     def getParametersValues(self):
         return dict((par.name, par.getValue()) for par in self.parameters.values())
 
-    def addQuad(self, func):
+    def addQuad(self, func, extraVars=()):
         """
         Adds a Quad object.
         @param func: the function used to generate the points
         """
-        quad = Quad(func, len(self.rangeX), len(self.rangeY))
-        for v in sorted(quad.function.freeVariables):
-            self.addParameter((v, 0, 1, 0))
-            ## ============================
+        quad = Quad(func, len(self.rangeX), len(self.rangeY), extraVars)
+        for v in sorted(quad.function.extraVariables):
+            if not v in self.parameters:
+                self.addParameter((v, 0, 1, 0))
+            #     ## ============================
         d = self.getParametersValues()
-        quad.function.updateGlobals(d)
+        quad.function.updateExtraVariables(d)
         ## test the return value with valid values
         x_ini = self.rangeX[0]
         y_ini = self.rangeY[0]
@@ -224,7 +224,7 @@ class Mesh(MaterialNode):
     def updateParameters(self):
         d = self.getParametersValues()
         for function in self.quads:
-            function.updateGlobals(d)
+            function.updateExtraVariables(d)
 
     def updateAll(self, val=0):
         if hasattr(self, "parameters"):
@@ -280,52 +280,3 @@ class Mesh(MaterialNode):
         ## ============================
         layout.addStretch()
         self.widget.layout().insertWidget(1, w, 0, QtCore.Qt.AlignTop)
-
-
-#class RevolutionParametricPlot3D(ParametricPlot3D):
-#    def __init__(self, funcs, rangeX=(0,1,40), rangeY=(0,1,40), name = '', eq = None,visible = True, parent = None):
-#        ParametricPlot3D.__init__(self,funcs,rangeX=rangeX,rangeY=rangeY,name=name,visible=visible,parent=parent)
-
-
-if __name__ == "__main__":
-    import sys
-    from parametric_plot3d import ParametricPlot3D
-    from revolution_plot3d import RevolutionPlot3D
-
-    app = QtGui.QApplication(sys.argv)
-    viewer = Viewer()
-    viewer.book.createChapter()
-    #===========================================================================
-    # Mesh
-    #===========================================================================
-    m = Mesh((-1, 1, 20), (-1, 1, 20))
-    m.addQuad(lambda x, y: (x, y, u * x ** 2 - v * y ** 2))
-    m.addQuad(lambda x, y: (x, y, - sin(x) ** 2 - y ** 2))
-
-    #===========================================================================
-    # ParametricPlot3D
-    #===========================================================================
-    pp = ParametricPlot3D(lambda x, y: (x, y, a * x ** 2 + b * y ** 2), (-1, 1), (-1, 1), name="pp")
-
-    for t in intervalPartition((0, 3, 4)):
-        pp.addQuad(lambda x, y, t=t: (x, y, x ** 2 + b * y ** 2 + t))
-
-    pp.setRange("a", (-1, 1, 0))
-    pp.setRange("b", (-1, 1, 0))
-
-    #===========================================================================
-    # Plot3D
-    #===========================================================================
-    Plot3D(lambda x, y: h * (x ** 2 + y ** 2 + z), (-1, 1), (-1, 1), name="p2")
-    #===========================================================================
-    # RevolutionPlot3D
-    #===========================================================================
-    RevolutionPlot3D(lambda r, t: 1 / r, (.2, 1), (.1, 2 * pi), name="p3")
-    ## ============================
-    viewer.whichPage = 0
-    viewer.resize(400, 400)
-    viewer.show()
-    viewer.chaptersStack.show()
-    viewer.viewAll()
-
-    sys.exit(app.exec_())

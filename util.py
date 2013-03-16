@@ -471,7 +471,7 @@ def main(chapter_cls=None):
     visor.trackCameraPosition(True)
     visor.viewAll()
     visor.chaptersStack.show()
-    #    visor.notasStack.show()
+    visor.notesStack.show()
     if run_exec:
         sys.exit(app.exec_())
     return visor
