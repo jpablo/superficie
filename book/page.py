@@ -41,8 +41,15 @@ class Page(QtCore.QObject):
         notes = QtGui.QLabel(self.__doc__)
         notes.setWordWrap(True)
         notes.setTextFormat(QtCore.Qt.RichText)
+
+        sa = QtGui.QScrollArea()
+        sa.setWidget(notes)
+        sa.setWidgetResizable(True)
+        sa.setHorizontalScrollBarPolicy(1)
+        sa.setFrameStyle(QtGui.QFrame.Plain)
+
         notes_layout = QtGui.QVBoxLayout()
-        notes_layout.addWidget(notes)
+        notes_layout.addWidget(sa)
         notes_layout.addStretch()
         self.notesWidget = QtGui.QWidget()
         self.notesWidget.setLayout(notes_layout)

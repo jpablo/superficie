@@ -85,12 +85,12 @@ class Chapter(QtCore.QObject):
         widget.setLayout(guiLayout)
         self.widget.pageStack.addWidget(widget)
         ## ============================
-        notasLayout = QtGui.QVBoxLayout()
-        notasLayout.setMargin(0)
-        notasLayout.setSpacing(0)
+        notesLayout = QtGui.QVBoxLayout()
+        notesLayout.setMargin(0)
+        notesLayout.setSpacing(0)
         widget = QtGui.QWidget()
         widget.setObjectName("PageNotas")
-        widget.setLayout(notasLayout)
+        widget.setLayout(notesLayout)
         self.notesStack.addWidget(widget)
         ## ============================
         ## this sets self.pagesSwitch, self.widget.pageStack, self.notasStack
@@ -99,7 +99,7 @@ class Chapter(QtCore.QObject):
             self.whichPage = len(self.pagesSwitch) - 1
         ## ============================
         guiLayout.addWidget(page.getGui())
-        notasLayout.addWidget(page.getNotes())
+        notesLayout.addWidget(page.getNotes())
         ## ============================
         if len(self.pagesSwitch) == 2:
             self.widget.previous.show()
