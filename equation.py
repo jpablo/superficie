@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 from PyQt4 import QtCore, QtGui, uic
 
-def grande(txt):
+
+def big(txt):
     return "<font size=+3 face=Serif>%s</font>" % txt
+
 
 class Eq(object):
     def __init__(self, expr):
@@ -82,14 +84,14 @@ class Eq(object):
     @staticmethod
     def pow(layout, x, n):
         Eq.formato(layout, x)
-        layout.addWidget(QtGui.QLabel(grande("<sup>%s</sup>" % n)))
+        layout.addWidget(QtGui.QLabel(big("<sup>%s</sup>" % n)))
 
     @staticmethod
     def plus(layout, *expr):
         op = expr[0]
         for a in expr[1:-1]:
             Eq.formato(layout, a)
-            layout.addWidget(QtGui.QLabel(grande(" "+op+"")))
+            layout.addWidget(QtGui.QLabel(big(" "+op+"")))
         else:
             Eq.formato(layout, expr[-1])
 
@@ -102,16 +104,16 @@ class Eq(object):
     @staticmethod
     def func(layout, args):
         fn = args[0].expr
-        layout.addWidget(QtGui.QLabel(grande(fn + '(')))
+        layout.addWidget(QtGui.QLabel(big(fn + '(')))
         for a in args[1:]:
             Eq.formato(layout, a)
-        layout.addWidget(QtGui.QLabel(grande(')')))
+        layout.addWidget(QtGui.QLabel(big(')')))
 
     @staticmethod
     def var(layout, expr):
         if len(unicode(expr)) == 1 and unicode(expr).isalpha():
             expr = '<em>%s</em>' % expr
-        label = QtGui.QLabel(grande(expr))
+        label = QtGui.QLabel(big(expr))
         label.setAlignment(QtCore.Qt.AlignCenter)
         layout.addWidget(label)
 
@@ -124,7 +126,7 @@ class Eq(object):
         if not hasattr(ob,  "labels"):
             ob.labels = []
         exprRoja = '<em style="color:red">%s</em>' % ob.expr[1]
-        label = QtGui.QLabel(grande(exprRoja))
+        label = QtGui.QLabel(big(exprRoja))
         label.setAlignment(QtCore.Qt.AlignCenter)
         layout.addWidget(label)
         ob.labels.append(label)
@@ -137,7 +139,7 @@ class Eq(object):
             ob.labels = []
         ## en general el valor inicial es 0
         ## hacer esto mas general!
-        ob.labels.append(QtGui.QLabel(grande('<em style="color:red">%s</em>' % name)))
+        ob.labels.append(QtGui.QLabel(big('<em style="color:red">%s</em>' % name)))
         layout.addWidget(ob.labels[-1])
 
     def setParamValue(self, val):
@@ -148,12 +150,12 @@ class Eq(object):
             valstr = "0"
         if self.expr[0] == "par":
             for label in self.labels:
-                label.setText(grande('<span style="color:red">%s</span>' % valstr))
+                label.setText(big('<span style="color:red">%s</span>' % valstr))
         elif self.expr[0] == "operacion":
             ## self.expr == ("operacion", expr, val)
             num = eval(self.expr[1].replace(self.expr[2], valstr))
             for label in self.labels:
-                label.setText(grande('<span style="color:red">%s</span>' % num))
+                label.setText(big('<span style="color:red">%s</span>' % num))
 
     @staticmethod
     def formato(layout, ob):

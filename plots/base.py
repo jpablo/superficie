@@ -274,9 +274,8 @@ class Mesh(MaterialNode):
         layout.setSpacing(0)
         w = QtGui.QWidget()
         w.setLayout(layout)
+        # the equation is centered
         layout.addStretch()
-        ## ============================
         eqn.eval(layout)
-        ## ============================
         layout.addStretch()
-        self.widget.layout().insertWidget(1, w, 0, QtCore.Qt.AlignTop)
+        self.addWidget(w)
