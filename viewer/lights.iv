@@ -11,7 +11,7 @@ DEF root Switch {
     }
     Environment {
       ambientIntensity 1
-      ambientColor 1 1 1
+      ambientColor 0.3 0.3 0.3
 
     }
     DEF principal TransformSeparator {

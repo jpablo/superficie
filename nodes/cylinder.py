@@ -1,7 +1,6 @@
 from math import pi
 from pivy.coin import SoSeparator, SoCylinder, SoShapeHints, SoMaterial, SoRotationXYZ, SoTransparencyType
 
-__author__ = 'jpablo'
 
 def Cylinder(col, length, radius = 0.98):
     sep = SoSeparator()

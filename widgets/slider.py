@@ -1,6 +1,6 @@
 from PyQt4 import QtGui, QtCore, uic
-from superficie.util import identity, pegaNombres, partial, segment, conecta
-from superficie.animations import Animation
+from superficie.util import identity, filePath, partial, segment, conecta
+from superficie.animations import Animation, AnimationGroup
 
 
 class Slider(QtGui.QWidget):
@@ -8,7 +8,7 @@ class Slider(QtGui.QWidget):
         # TODO: cambiar el orden: func, rangep...
         ## rangep = (name, vmin, vmax, vini, npoints)
         QtGui.QWidget.__init__(self)
-        uic.loadUi(pegaNombres("Gui","paramTemplate2.ui"), self)
+        uic.loadUi(filePath("Gui","paramTemplate2.ui"), self)
         self.timeline = QtCore.QTimeLine(duration)
         self.name = rangep[0]
         self.npoints = rangep[-1]
@@ -42,7 +42,7 @@ class Slider(QtGui.QWidget):
         self.slider.setMaximum(self.npoints-1)
         conecta(self.slider, QtCore.SIGNAL("valueChanged(int)"), self.updateFromSlider)
         self._d = []
-        for f, i in zip([self.atras, self.pausa, self.adelante], [-1, 0, 1]):
+        for f, i in zip([self.atras, self.adelante], [-1, 1]):
             self._d.append(partial(self.estadoAnimacion,i))
             conecta(f, QtCore.SIGNAL("clicked()"), self._d[-1])
 

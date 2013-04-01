@@ -1,4 +1,4 @@
-__author__ = 'jpablo'
+
 
 class Planes(BaseObject):
     def __init__(self, visible=False, parent=None):

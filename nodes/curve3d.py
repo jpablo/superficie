@@ -17,9 +17,9 @@ def normalize_interval(it):
     """
     return [it] if not isinstance(it[0], Sequence) else it
 
-def fix_function(func,test_point):
+def fix_function(func, test_point):
     val = func(test_point)
-    if isinstance(val,Vec3):
+    if isinstance(val, Vec3):
         return func
     else:
         ## not the most efficient, but...
@@ -54,7 +54,7 @@ class Curve3D(BaseObject):
     Curve3D(lambda x: (0,x,x**2),[(-1,0,20),(0.2,1,20)])
     """
     def __init__(self, func, interval, color=(1, 1, 1), width=1, nvertices= -1, max_distance = None, max_angle = None):
-        super(Curve3D,self).__init__()
+        super(Curve3D, self).__init__()
         self.__derivative = None
         self.fields = {}
         self.lines = []
@@ -64,7 +64,7 @@ class Curve3D(BaseObject):
         self.max_angle = max_angle
         ## self.interval[0][0] is the start of the first interval
         ## should be a valid value, anyway
-        self.function = fix_function(func,self.intervals[0][0])
+        self.function = fix_function(func, self.intervals[0][0])
         for it in self.intervals:
             domain, points = refine(self.function, it, max_angle, max_distance)
             self.domainPoints += domain

@@ -1,7 +1,6 @@
 from PyQt4 import QtGui
 from superficie.util import connect
 
-__author__ = 'jpablo'
 
 class SpinBox(QtGui.QSpinBox):
     def __init__(self, text,iter,func,parent=None):

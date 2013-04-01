@@ -2,7 +2,6 @@ from PyQt4 import QtCore
 from pivy.coin import SoOneShot, SoSFFloat, SoFieldSensor
 from superficie.util import connect
 
-__author__ = 'jpablo'
 
 class OneShot(QtCore.QObject):
     def __init__(self, duration, times):

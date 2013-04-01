@@ -24,6 +24,9 @@ def calc_transformations(p1, p2, factor):
     rot_axis = y_axis.cross(vec)
     ## v.y == |v| |y| cos(t) ; where t: angle between v and y
     ## in this case, |y_axis| == |vec| == length
+    #if length < 0.0001:
+    #    cos_angle = 0.0
+    #else:
     cos_angle = y_axis.dot(vec) / length ** 2
     angle = acos(adjustArg(cos_angle))
     if rot_axis.length() < .0001:

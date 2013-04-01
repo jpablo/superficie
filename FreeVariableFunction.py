@@ -51,7 +51,7 @@ class FreeVariableFunction(object):
 
 if __name__ == "__main__":
     from math import sin 
-    from Plot3D import func2param
+    from superficie.plots.plot3d import func2param
     par = func2param(lambda u,v: h* u + sin(v)-w)
     fvf = FreeVariableFunction(par)
     print fvf.freeVariables

@@ -2,8 +2,6 @@ import PyQt4.QtCore
 from superficie.util import connect
 from animations.Animation import Animation
 
-__author__ = 'jpablo'
-
 class Animation2(QtCore.QTimeLine):
     def __init__(self,func,(duration, nmin, nmax)):
         self.functions = [func]

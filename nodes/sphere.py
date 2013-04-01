@@ -1,7 +1,6 @@
 from pivy.coin import SoSphere
 from superficie.base import MaterialNode
 
-__author__ = 'jpablo'
 
 class Sphere(MaterialNode):
     """A sphere"""

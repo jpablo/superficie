@@ -2,7 +2,6 @@ from pivy.coin import SoComplexity
 from Animation import Animation
 from util import intervalPartition
 
-__author__ = 'jpablo'
 
 class VectorField3D(GraphicObject):
     def __init__(self, curve, cp, col, factor=1, name="", visible = False, parent = None):

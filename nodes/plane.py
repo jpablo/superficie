@@ -1,12 +1,10 @@
 from pivy.coin import SoShapeHints, SoCoordinate3, SoQuadMesh, SoNormalBinding, SoMaterial, SoSeparator
-from superficie.base import BaseObject
+from superficie.base.base_object import BaseObject
 from superficie.nodes import BasePlane, Line
 from superficie.util import Vec3
 
-
 class Plane(BaseObject):
     """A plane that contains the points: origin, p1, p2 """
-
     def __init__(self, color, origin, p1, p2):
         BaseObject.__init__(self)
 
