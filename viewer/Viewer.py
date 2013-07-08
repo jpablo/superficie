@@ -7,7 +7,8 @@ from pivy.coin import SbVec3f
 
 from superficie.book import Book
 from superficie import globals
-from superficie.viewer.MinimalViewer import MinimalViewer
+# from superficie.viewer.MinimalViewer import MinimalViewer
+from superficie.viewer.MinimalViewerSoQt import MinimalViewer
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -90,6 +91,9 @@ if __name__ == "__main__":
     import sys
     from PyQt4 import QtGui
     from pivy.coin import SoSeparator, SoCone, SoSphere, SoCube
+    # from pivy.gui.soqt import SoQt
+    # SoQt.init(None)
+
     app = QtGui.QApplication(sys.argv)
     viewer = Viewer(lights=False)
     ## ============================
