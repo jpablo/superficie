@@ -6,9 +6,9 @@ class AnimationGroup(object):
     Runs several animations in parallel
     """
     # TODO: this could be the basis for an "animatable" interface like object
-    def __init__(self, objects, config, times=1):
+    def __init__(self, objects, config):
         self.objects = objects
-        self.animation = Animation(self.eachFrame, config, times)
+        self.animation = Animation(self.eachFrame, config)
 
     def getAnimation(self):
         return self.animation

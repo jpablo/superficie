@@ -47,3 +47,34 @@ class OneShot(QtCore.QObject):
         self.timesleft -= 1
         if self.timesleft > 0:
             self.start()
+
+    def setDuration(self, milliseconds):
+        self.oneshot.duration = milliseconds / 1000.0
+
+
+class OneShotTimeLine(QtCore.QObject):
+    def __init__(self, duration):
+        QtCore.QObject.__init__(self)
+        self.time_line = QtCore.QTimeLine(duration)
+        connect(self.time_line, "frameChanged(int)", self.relay_frame_changed)
+        connect(self.time_line, "finished()", self.relay_finished)
+
+    def relay_frame_changed(self, i):
+        QtCore.QObject.emit(self, QtCore.SIGNAL("frameChanged(int)"), i)
+
+    def relay_finished(self):
+        self.emit(QtCore.SIGNAL("finished()"))
+
+    def start(self):
+        self.time_line.start()
+        self.emit(QtCore.SIGNAL("started()"))
+
+    def stop(self):
+        self.time_line.stop()
+
+    def setFrameRange(self, nmin, nmax):
+        self.startFrame = nmin
+        self.time_line.setFrameRange(nmin, nmax)
+
+    def setDuration(self, milliseconds):
+        self.time_line.setDuration(milliseconds)

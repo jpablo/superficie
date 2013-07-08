@@ -69,7 +69,7 @@ class Slider(QtGui.QWidget):
                 tl.setPaused(True)
         elif dir == 1 and tl.currentValue() < 1.0:
             tl.setDirection(tl.Forward)
-            if tl.state()  != tl.Running:
+            if tl.state() != tl.Running:
                 tl.resume()
                 ## ======================
                 self.adelante.setText("||")

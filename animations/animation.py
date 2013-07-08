@@ -3,17 +3,15 @@
 from PyQt4 import QtCore
 from superficie.util import connect
 from superficie.util import tuplize
-from one_shot import OneShot
+from one_shot import OneShot, OneShotTimeLine
 
 
-class Animation(OneShot):
-    def __init__(self, func, (duration, nmin, nmax), times=1):
+class Animation(OneShotTimeLine):
+    def __init__(self, func, (duration, nmin, nmax)):
         self.functions = [func]
-        super(Animation, self).__init__(duration / 1000.0, times)
-        #        self.setCurveShape(self.LinearCurve)
+        super(Animation, self).__init__(duration)
         self.setFrameRange(nmin, nmax)
         connect(self, "frameChanged(int)", self.functions[-1])
-        #        connect(self, "ramp(float)", self.functions[-1])
         ## ======================================
         ## This is used for the static method "chain"
         ## it is the pause between animations
@@ -58,8 +56,8 @@ class Animation(OneShot):
             connect(self, "started()", f)
         return self
 
-    def wait(self, miliseconds):
-        return self.afterThis(Animation(lambda x: None, (miliseconds, 0, 1)))
+    def wait(self, milliseconds):
+        return self.afterThis(Animation(lambda x: None, (milliseconds, 0, 1)))
 
     def execute(self, func):
         return self.afterThis(Animation(lambda x: func(), (1, 0, 1)))
@@ -69,9 +67,8 @@ class Animation(OneShot):
         for fn in self.functions:
             fn(self.startFrame)
 
-    def setDuration(self, msecs):
-        self.oneshot.duration = msecs / 1000.0
-
+    def setDuration(self, milliseconds):
+        super(Animation, self).setDuration(milliseconds)
 
 if __name__ == "__main__":
     import sys
